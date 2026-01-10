@@ -7,6 +7,7 @@ import {
   Cpu,
   Rocket,
   BarChart3,
+  Briefcase,
   Menu,
   X,
   Github,
@@ -58,6 +59,12 @@ const navItems: NavItem[] = [
     href: "/analysis",
     icon: <BarChart3 className="w-5 h-5" />,
     description: "Comprehensive Analysis",
+  },
+  {
+    title: "Use Cases",
+    href: "/use-cases",
+    icon: <Briefcase className="w-5 h-5" />,
+    description: "Real-World Applications",
   },
 ];
 
