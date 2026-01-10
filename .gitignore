@@ -24,6 +24,9 @@ htmlcov/
 .gemini/
 _bmad/
 
+# Private research & competitive analysis (keep local only)
+DOCUMENTATION/
+
 # Beads - keep issues/epics, ignore local config
 .beads/config.json
 
