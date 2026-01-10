@@ -1,7 +1,10 @@
 # Question: How to Handle Context Window Limits?
 
+**File Name:** `2026-01-10_solutioning_context-window-limits_open.md`
+
 **Date:** 2026-01-10
 **Author:** R&D Team
+**Phase:** Solutioning
 **Status:** Open
 
 ---

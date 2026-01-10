@@ -1,7 +1,10 @@
 # Question: [Your Question Title]
 
+**File Name:** `YYYY-MM-DD_phase_topic_status.md`
+
 **Date:** YYYY-MM-DD
 **Author:** [Your Name]
+**Phase:** [analysis | planning | solutioning | implementation]
 **Status:** Open
 
 ---
@@ -12,7 +15,7 @@
 
 ## Context
 
-[Why are you asking this question? What are you trying to achieve?]
+[Why are you asking this question? What are you trying to achieve? What phase of BMAD are you in?]
 
 ## What I've Tried
 
@@ -27,6 +30,26 @@
 
 [Provide a detailed answer to the question. Include code examples, diagrams, and links to resources.]
 
+---
+
+## Follow-up (Optional)
+
+[If there are follow-up questions or clarifications needed, add them here. Change status to `In-Progress`.]
+
+---
+
 ## Decision
 
-[What is the final decision based on this answer?]
+**Status:** Approved
+
+[What is the final decision based on this answer? This becomes the source of truth.]
+
+---
+
+## Instructions
+
+1. **Create:** Copy this template to `YYYY-MM-DD_phase_topic_open.md`
+2. **Ask:** Fill out the question and commit with `q:` prefix
+3. **Answer:** Edit to add answer, commit with `a:` prefix
+4. **Iterate:** Add follow-ups if needed, change status to `In-Progress`
+5. **Finalize:** Document decision, change status to `Approved`, rename to `_approved.md`

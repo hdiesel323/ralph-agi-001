@@ -1,6 +1,8 @@
 # RALPH-AGI R&D Workspace
 
-**Purpose:** Central knowledge base and collaboration workspace for the RALPH-AGI development team.
+**Purpose:** Central knowledge base and collaboration workspace for the RALPH-AGI development team using the BMAD Method.
+
+**BMAD Phase:** Phase 3: Solutioning → Phase 4: Implementation
 
 ---
 
@@ -9,25 +11,31 @@
 ```
 rnd/
 ├── README.md                    # This file - start here
+├── BMAD-WORKFLOW-GUIDE.md      # BMAD naming conventions and workflow
+├── PROJECT-ONBOARDING.md       # Project overview for new team members
+├── QUICK-ACCESS-GUIDE.md       # Terminal access guide
 ├── questions/                   # Team questions and answers
 │   ├── README.md
-│   └── YYYY-MM-DD-question-title.md
+│   ├── TEMPLATE.md
+│   └── YYYY-MM-DD_phase_topic_status.md
 ├── planning/                    # Sprint planning and task breakdown
 │   ├── README.md
-│   ├── sprint-01-poc.md
-│   └── sprint-02-foundation.md
+│   ├── TEMPLATE.md
+│   └── YYYY-MM-DD_planning_sprint-XX_status.md
 ├── decisions/                   # Architecture Decision Records (ADRs)
 │   ├── README.md
-│   └── 001-two-agent-architecture.md
+│   ├── TEMPLATE.md
+│   └── YYYY-MM-DD_solutioning_decision-title_status.md
 ├── research/                    # Research notes and experiments
 │   ├── README.md
-│   └── experiment-tldr-analysis.md
+│   └── YYYY-MM-DD_analysis_topic_status.md
 ├── meeting-notes/              # Team meeting notes
 │   ├── README.md
-│   └── YYYY-MM-DD-standup.md
+│   ├── TEMPLATE.md
+│   └── YYYY-MM-DD_meet_meeting-type_done.md
 └── implementation/             # Implementation guides and checklists
     ├── README.md
-    └── phase-1-poc-checklist.md
+    └── YYYY-MM-DD_implementation_feature-name_status.md
 ```
 
 ---
@@ -37,91 +45,112 @@ rnd/
 ### Access from Any Terminal
 
 ```bash
-# Clone the repository
+# Clone the repository (one-time)
 git clone https://github.com/hdiesel323/ralph-agi-001.git
 cd ralph-agi-001/rnd
 
 # View this README
 cat README.md
 
-# List all questions
-ls questions/
-
-# Add a new question
-cp questions/TEMPLATE.md questions/2026-01-10-my-question.md
-# Edit the file and commit
+# View BMAD workflow guide
+cat BMAD-WORKFLOW-GUIDE.md
 ```
 
-### Workflow
+### Set Up Aliases (Recommended)
 
-1. **Ask a Question:** Create a file in `questions/` using the template
-2. **Plan a Sprint:** Create a file in `planning/` for each sprint
-3. **Document a Decision:** Create an ADR in `decisions/`
-4. **Share Research:** Add notes to `research/`
-5. **Record Meetings:** Add notes to `meeting-notes/`
-6. **Track Implementation:** Use checklists in `implementation/`
+Add to `~/.bashrc` or `~/.zshrc`:
+
+```bash
+alias rnd='cd ~/ralph-agi-001/rnd'
+alias rnd-questions='cd ~/ralph-agi-001/rnd/questions'
+alias rnd-planning='cd ~/ralph-agi-001/rnd/planning'
+alias rnd-decisions='cd ~/ralph-agi-001/rnd/decisions'
+```
+
+Then reload: `source ~/.bashrc`
 
 ---
 
-## 📋 Templates
+## 📋 Naming Conventions (BMAD-Aligned)
 
-Each folder has a `TEMPLATE.md` file. Copy it to create new documents:
+**Format:** `YYYY-MM-DD_phase_topic_status.md`
+
+- **YYYY-MM-DD:** Date of creation
+- **phase:** `analysis`, `planning`, `solutioning`, `implementation`
+- **topic:** Short, descriptive title (e.g., `context-window-limits`)
+- **status:** `open`, `in-progress`, `answered`, `approved`, `done`
+
+**Examples:**
+- `2026-01-10_solutioning_context-window-limits_open.md`
+- `2026-01-10_planning_sprint-01-poc_in-progress.md`
+- `2026-01-10_solutioning_two-agent-architecture_approved.md`
+
+**See:** `BMAD-WORKFLOW-GUIDE.md` for complete details
+
+---
+
+## 💬 Q&A Workflow
+
+### Ask a Question
 
 ```bash
-# Example: Create a new question
-cp rnd/questions/TEMPLATE.md rnd/questions/2026-01-10-how-to-handle-git-conflicts.md
+cd ~/ralph-agi-001/rnd/questions
+cp TEMPLATE.md 2026-01-11_solutioning_hooks-system_open.md
+# Edit the file
+git add .
+git commit -m "q: Ask about hooks system design"
+git push
+```
 
-# Example: Create a new sprint plan
-cp rnd/planning/TEMPLATE.md rnd/planning/sprint-03-memory-layer.md
+### Answer a Question
+
+```bash
+# Edit the existing question file
+# Add your answer under ## Answer section
+# Change status to Answered
+git add .
+git commit -m "a: Provide hooks system design"
+git push
+```
+
+### Finalize and Approve
+
+```bash
+# Document final decision under ## Decision
+# Change status to Approved
+mv 2026-01-11_solutioning_hooks-system_open.md 2026-01-11_solutioning_hooks-system_approved.md
+git add .
+git commit -m "q: Approve hooks system design"
+git push
 ```
 
 ---
 
-## 🤝 Collaboration Guidelines
+## 🏷️ Commit Message Prefixes
 
-### Naming Conventions
-
-- **Questions:** `YYYY-MM-DD-question-title.md`
-- **Planning:** `sprint-XX-phase-name.md`
-- **Decisions:** `XXX-decision-title.md` (numbered)
-- **Research:** `experiment-name.md` or `research-topic.md`
-- **Meeting Notes:** `YYYY-MM-DD-meeting-type.md`
-- **Implementation:** `phase-X-checklist.md`
-
-### Commit Messages
-
-```bash
-# Good commit messages
-git commit -m "rnd: Add question about memory system scalability"
-git commit -m "rnd: Document decision to use SQLite for medium-term memory"
-git commit -m "rnd: Add sprint 1 planning document"
-
-# Bad commit messages
-git commit -m "update"
-git commit -m "stuff"
-```
-
-### Review Process
-
-1. Create your document in the appropriate folder
-2. Commit and push to a feature branch
-3. Create a pull request
-4. Tag relevant team members for review
-5. Merge after approval
+| Prefix | Meaning | Example |
+| :--- | :--- | :--- |
+| `q:` | Question | `q: Ask about memory system` |
+| `a:` | Answer | `a: Propose SQLite + ChromaDB` |
+| `plan:` | Planning | `plan: Create sprint 2 plan` |
+| `sol:` | Solutioning | `sol: Document ADR for two-agent arch` |
+| `impl:` | Implementation | `impl: Add checklist for PoC` |
+| `res:` | Research | `res: Add notes on TLDR analysis` |
+| `meet:` | Meeting | `meet: Add notes for 2026-01-11 standup` |
+| `docs:` | Documentation | `docs: Update main README` |
 
 ---
 
 ## 📊 Current Status
 
-| Phase | Status | Sprint | Folder |
-| :--- | :--- | :--- | :--- |
-| Phase 0: Pre-Launch | ✅ Complete | - | - |
-| Phase 1: PoC | 🔄 In Progress | Sprint 1 | `planning/sprint-01-poc.md` |
-| Phase 2: Foundation | ⏳ Planned | Sprint 2-3 | `planning/sprint-02-foundation.md` |
-| Phase 3: Memory Layer | ⏳ Planned | Sprint 4-5 | - |
-| Phase 4: Specialization | ⏳ Planned | Sprint 6-7 | - |
-| Phase 5: Safety | ⏳ Planned | Sprint 8 | - |
-| Phase 6: Scale | ⏳ Planned | Sprint 9-12 | - |
+**BMAD Phase:** Phase 3: Solutioning → Phase 4: Implementation
+
+| Phase | Status | Current Work |
+| :--- | :--- | :--- |
+| Phase 1: Analysis | ✅ Complete | Research complete (9 implementations) |
+| Phase 2: Planning | ✅ Complete | PRD, Architecture, Roadmap done |
+| Phase 3: Solutioning | 🔄 In Progress | Creating ADRs, answering technical questions |
+| Phase 4: Implementation | ⏳ Next | Sprint 01: PoC ready to start |
 
 ---
 
@@ -132,6 +161,8 @@ git commit -m "stuff"
 - **Architecture:** `../RALPH-AGI-TECHNICAL-ARCHITECTURE.md`
 - **Roadmap:** `../RALPH-AGI-IMPLEMENTATION-ROADMAP.md`
 - **Developer Guide:** `../RALPH-AGI-DEVELOPER-GUIDE.md`
+- **BMAD Workflow:** `BMAD-WORKFLOW-GUIDE.md`
+- **Project Onboarding:** `PROJECT-ONBOARDING.md`
 
 ---
 
@@ -139,51 +170,37 @@ git commit -m "stuff"
 
 ### For New Team Members
 
-1. Read the main `DOCUMENTATION-INDEX.md`
-2. Review the `PRD` and `Technical Architecture`
-3. Check `questions/` for common questions
-4. Review recent `meeting-notes/`
-5. Look at current sprint in `planning/`
+1. Read `PROJECT-ONBOARDING.md`
+2. Read `BMAD-WORKFLOW-GUIDE.md`
+3. Check current questions in `questions/`
+4. Review current sprint in `planning/`
+5. Read approved decisions in `decisions/`
 
 ### For Daily Work
 
 ```bash
 # Start of day: Pull latest changes
-git pull origin main
+cd ~/ralph-agi-001 && git pull origin main
 
 # Check current sprint
-cat rnd/planning/sprint-01-poc.md
+cat rnd/planning/2026-01-10_planning_sprint-01-poc_in-progress.md
 
 # Check open questions
-ls rnd/questions/ | grep -v ANSWERED
+ls rnd/questions/ | grep _open
 
 # End of day: Commit your work
 git add rnd/
-git commit -m "rnd: Add research notes on hooks system"
-git push origin feature/my-work
-```
-
-### For Terminal Access in Other Sessions
-
-```bash
-# From anywhere, access the R&D workspace
-cd ~/ralph-agi-001/rnd
-
-# Or set an alias in your ~/.bashrc or ~/.zshrc
-alias rnd='cd ~/ralph-agi-001/rnd'
-
-# Then just type:
-rnd
+git commit -m "q: Add question about memory system"
+git push origin main
 ```
 
 ---
 
 ## 📞 Support
 
-- **GitHub Issues:** For bugs and feature requests
-- **Questions Folder:** For technical questions
-- **Meeting Notes:** For team discussions
-- **Slack/Discord:** For real-time communication (if applicable)
+- **GitHub Issues:** https://github.com/hdiesel323/ralph-agi-001/issues
+- **Questions Folder:** `rnd/questions/`
+- **BMAD Docs:** https://docs.bmad-method.org/
 
 ---
 
