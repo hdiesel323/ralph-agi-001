@@ -6,6 +6,7 @@ import {
   BookOpen,
   Cpu,
   Rocket,
+  BarChart3,
   Menu,
   X,
   Github,
@@ -51,6 +52,12 @@ const navItems: NavItem[] = [
     href: "/getting-started",
     icon: <Rocket className="w-5 h-5" />,
     description: "Quick Start Guide",
+  },
+  {
+    title: "Analysis",
+    href: "/analysis",
+    icon: <BarChart3 className="w-5 h-5" />,
+    description: "Comprehensive Analysis",
   },
 ];
 
@@ -170,7 +177,7 @@ export default function Layout({ children }: LayoutProps) {
           {/* Footer */}
           <div className="p-4 border-t border-sidebar-border">
             <a
-              href="https://github.com"
+              href="https://github.com/hdiesel323/ralph-agi-001"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 px-4 py-3 rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/50 transition-all"
