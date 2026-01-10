@@ -2,6 +2,30 @@
 **/node_modules
 .pnpm-store/
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+.eggs/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+
+# AI Tool Configs (local only)
+.agent/
+.beads/
+.claude/
+.gemini/
+_bmad/
+
 # Build outputs
 dist/
 build/
