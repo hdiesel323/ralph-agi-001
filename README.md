@@ -252,25 +252,35 @@ ralph run --afk "Complete all tasks in TODO.md"
 
 ```
 ralph-agi-001/
-├── src/
+│
+├── 🔧 ralph_agi/                # The RALPH-AGI Python package
 │   ├── __init__.py
 │   └── core/
-│       ├── __init__.py
 │       └── loop.py              # 🔥 The heart of RALPH
-├── tests/
+│
+├── 🧪 tests/                    # Test suite (33 tests, 99% coverage)
 │   └── core/
-│       └── test_loop.py         # 33 tests, 99% coverage
-├── _bmad-output/
-│   ├── implementation-artifacts/
-│   │   ├── epics/               # 5 epics planned
-│   │   ├── stories/             # User stories
-│   │   └── sprint-status.yaml   # Live progress
-│   └── planning-artifacts/
-│       └── project-context.md   # Architecture decisions
-├── DOCUMENTATION/               # Research & analysis
-├── client/                      # Documentation website
-├── pyproject.toml              # Python project config
-└── README.md                   # You are here
+│       └── test_loop.py
+│
+├── 🌐 website/                  # Project website (Netlify)
+│   ├── src/                     # React components
+│   └── public/                  # Static assets
+│
+├── 📚 docs/                     # Official documentation
+│   ├── RALPH-AGI-PRD.md
+│   ├── RALPH-AGI-ARCHITECTURE.md
+│   └── ...
+│
+├── 📋 _bmad-output/             # Sprint planning & stories
+│   ├── epics/
+│   ├── stories/
+│   └── sprint-status.yaml
+│
+├── 📁 DOCUMENTATION/            # Research & analysis
+│
+├── pyproject.toml               # Python package config
+├── LICENSE                      # MPL 2.0
+└── README.md                    # You are here
 ```
 
 ---

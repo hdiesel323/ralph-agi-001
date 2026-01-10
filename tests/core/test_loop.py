@@ -15,7 +15,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.core.loop import IterationResult, MaxRetriesExceeded, RalphLoop
+from ralph_agi.core.loop import IterationResult, MaxRetriesExceeded, RalphLoop
 
 
 class TestRalphLoopInitialization:
