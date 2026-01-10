@@ -21,10 +21,15 @@ htmlcov/
 
 # AI Tool Configs (local only)
 .agent/
-.beads/
-.claude/
 .gemini/
 _bmad/
+
+# Beads - keep issues/epics, ignore local config
+.beads/config.json
+
+# Claude Code - keep commands, ignore local settings
+.claude/settings.local.json
+.claude/todos.json
 
 # Build outputs
 dist/
