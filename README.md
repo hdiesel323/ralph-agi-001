@@ -1,12 +1,13 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12,14,25,27&height=200&section=header&text=RALPH-AGI&fontSize=80&fontAlignY=35&desc=An%20AI%20that%20codes%20while%20you%20sleep&descSize=20&descAlignY=55&animation=fadeIn">
-    <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12,14,25,27&height=200&section=header&text=RALPH-AGI&fontSize=80&fontAlignY=35&desc=An%20AI%20that%20codes%20while%20you%20sleep&descSize=20&descAlignY=55&animation=fadeIn" alt="RALPH-AGI Banner">
-  </picture>
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12,14,25,27&height=200&section=header&text=RALPH-AGI&fontSize=70&fontAlignY=35&desc=An%20AI%20that%20codes%20while%20you%20sleep&descSize=25&descAlignY=55&fontColor=ffffff&animation=fadeIn" alt="RALPH-AGI Banner">
 </p>
 
+<h3 align="center">
+  <b>RALPH-AGI</b> — Recursive Autonomous Long-horizon Processing with Hierarchical intelligence
+</h3>
+
 <p align="center">
-  <b>Recursive Autonomous Long-horizon Processing with Hierarchical intelligence</b>
+  <i>An autonomous AI agent that works on complex coding tasks for hours, remembers everything, and knows when it's done.</i>
 </p>
 
 <p align="center">
