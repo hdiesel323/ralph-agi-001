@@ -11,6 +11,8 @@ import {
   Sparkles,
   Infinity,
   Layers,
+  Github,
+  Twitter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -134,17 +136,27 @@ export default function Home() {
 
             {/* CTA Buttons */}
             <div className="flex flex-wrap gap-4">
-              <Link href="/getting-started">
+              <a
+                href="https://github.com/hdiesel323/ralph-agi-001"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Button size="lg" className="glow-purple group">
-                  Get Started
+                  <Github className="w-5 h-5 mr-2" />
+                  View on GitHub
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </Button>
-              </Link>
-              <Link href="/prd">
+              </a>
+              <a
+                href="https://twitter.com/hdiesel_"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <Button size="lg" variant="outline">
-                  Read the PRD
+                  <Twitter className="w-5 h-5 mr-2" />
+                  Follow the Build
                 </Button>
-              </Link>
+              </a>
             </div>
           </motion.div>
         </div>
@@ -302,11 +314,34 @@ export default function Home() {
                 <Brain className="w-5 h-5 text-primary" />
               </div>
               <span className="font-display font-semibold">RALPH-AGI</span>
+              <span className="text-xs text-muted-foreground bg-primary/10 px-2 py-1 rounded-full">
+                Week 1/12
+              </span>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Built with insights from Anthropic, Claude-Mem, Beads, and MCP CLI
-            </p>
+            <div className="flex items-center gap-6">
+              <a
+                href="https://github.com/hdiesel323/ralph-agi-001"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Github className="w-4 h-4" />
+                GitHub
+              </a>
+              <a
+                href="https://twitter.com/hdiesel_"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <Twitter className="w-4 h-4" />
+                @hdiesel_
+              </a>
+            </div>
           </div>
+          <p className="text-xs text-muted-foreground text-center mt-4">
+            Built with insights from Anthropic, Claude-Mem, Beads, and MCP CLI
+          </p>
         </div>
       </footer>
     </Layout>
