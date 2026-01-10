@@ -5,7 +5,7 @@
 ```
 🚀 Building RALPH-AGI: An autonomous AI agent that codes while you sleep
 
-Combining Ralph Wiggum loops + Anthropic harnesses + Beads + Claude-Mem + Continuous-Claude patterns
+Built on Anthropic's official guidance + 8 battle-tested open-source patterns
 
 Following along? I'll share:
 • Architecture decisions
@@ -68,13 +68,14 @@ Follow along! 🚀
 ```
 Standing on the shoulders of giants:
 
+✅ Anthropic Official Guidance (Nov 2025)
 ✅ Ralph Wiggum ($50k for $297)
 ✅ AI-Long-Task (AlphaEvolve-inspired)
 ✅ Continuous-Claude-v3 (2k⭐)
 ✅ Ralph Wiggum Marketer (276⭐)
-✅ Anthropic's agent harnesses
 ✅ Beads (9.4k⭐)
 ✅ Claude-Mem (12.9k⭐)
+✅ MCP-CLI
 
 Synthesis > reinvention
 ```
