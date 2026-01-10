@@ -28,28 +28,28 @@ const marketingUseCases = [
     title: "Content Marketing Automation",
     description: "Generate blog posts, social media content, and email campaigns based on trend analysis and audience insights.",
     example: "Ralph Wiggum Marketer: Automated content production from trend scouting to final drafts",
-    roi: "10x content output with consistent quality",
+    roi: "Increased content output with consistent quality",
   },
   {
     icon: <Target className="w-6 h-6" />,
     title: "Campaign Analysis & Optimization",
     description: "Continuously analyze campaign performance, identify winning patterns, and generate optimization recommendations.",
     example: "Multi-agent system: TrendScout → Research → ProductAgent → MarketingAgent → Ralph (content producer)",
-    roi: "40% improvement in campaign ROI",
+    roi: "Improved campaign performance insights",
   },
   {
     icon: <FileText className="w-6 h-6" />,
     title: "Ad Copy Generation",
     description: "Create hundreds of ad variations for A/B testing across platforms, optimized for different audience segments.",
     example: "Automated ad copy testing across Meta, Google, LinkedIn with performance tracking",
-    roi: "5x faster ad creation, 2x CTR improvement",
+    roi: "Faster ad creation and iteration cycles",
   },
   {
     icon: <MessageSquare className="w-6 h-6" />,
     title: "Customer Communication",
     description: "Generate personalized email sequences, SMS campaigns, and chatbot responses based on customer behavior.",
     example: "Behavior-triggered campaigns with dynamic content personalization",
-    roi: "60% increase in engagement rates",
+    roi: "Enhanced engagement through personalization",
   },
 ];
 
@@ -59,21 +59,21 @@ const financeUseCases = [
     title: "Lead Pricing Automation",
     description: "Automatically price leads based on quality scores, market conditions, and historical performance data.",
     example: "Real-time lead valuation for broker models with dynamic pricing based on conversion probability",
-    roi: "25% margin improvement through optimized pricing",
+    roi: "Optimized pricing through data-driven insights",
   },
   {
     icon: <FileText className="w-6 h-6" />,
     title: "Financial Report Generation",
     description: "Automated quarterly reports, investment summaries, and compliance documentation with data validation.",
     example: "Multi-source data aggregation with automated fact-checking and regulatory compliance",
-    roi: "90% time reduction in report preparation",
+    roi: "Reduced time spent on report preparation",
   },
   {
     icon: <Shield className="w-6 h-6" />,
     title: "Risk Assessment",
     description: "Continuous monitoring and analysis of portfolio risk with automated alerts and recommendations.",
     example: "Real-time risk scoring with historical pattern analysis and predictive modeling",
-    roi: "Early detection of 85% of risk events",
+    roi: "Improved early detection of risk events",
   },
 ];
 
@@ -83,21 +83,21 @@ const insuranceUseCases = [
     title: "Claims Processing",
     description: "Automated claims analysis, fraud detection, and documentation generation with human oversight.",
     example: "Multi-stage verification: document analysis → fraud detection → payout calculation → approval workflow",
-    roi: "70% faster claims processing",
+    roi: "Streamlined claims processing workflow",
   },
   {
     icon: <Target className="w-6 h-6" />,
     title: "Policy Personalization",
     description: "Generate customized policy recommendations based on customer profiles, risk factors, and market conditions.",
     example: "Dynamic policy generation with real-time pricing and coverage optimization",
-    roi: "35% increase in policy acceptance",
+    roi: "Better-matched policies for customers",
   },
   {
     icon: <MessageSquare className="w-6 h-6" />,
     title: "Customer Qualification",
     description: "Automated lead qualification and hot transfer system for ACA, Medicare, and specialty insurance products.",
     example: "Compliant data processing with multi-factor qualification before hot transfers",
-    roi: "50% improvement in qualified lead conversion",
+    roi: "More efficient lead qualification",
   },
 ];
 
@@ -107,21 +107,21 @@ const softwareUseCases = [
     title: "Autonomous Development",
     description: "Build features, fix bugs, and refactor code with minimal human intervention over extended periods.",
     example: "Multi-day development sessions with persistent memory and self-verification",
-    roi: "3x development velocity for routine tasks",
+    roi: "Increased development velocity for routine tasks",
   },
   {
     icon: <FileText className="w-6 h-6" />,
     title: "Documentation Generation",
     description: "Automatically generate and maintain technical documentation, API references, and user guides.",
     example: "Code-to-docs pipeline with automatic updates on every commit",
-    roi: "95% reduction in documentation lag",
+    roi: "Documentation stays in sync with code",
   },
   {
     icon: <Shield className="w-6 h-6" />,
     title: "Code Review & Testing",
     description: "Automated code review, test generation, and quality assurance with cascaded evaluation.",
     example: "5-stage verification: syntax → linting → unit tests → integration tests → LLM judge",
-    roi: "80% bug detection before production",
+    roi: "Earlier bug detection in development cycle",
   },
 ];
 
@@ -204,15 +204,10 @@ export default function UseCases() {
               </div>
 
               <div className="flex gap-3 pt-2">
-                <Link href="/analysis">
-                  <Button variant="default">
-                    View Full Analysis
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
-                </Link>
                 <a href="https://github.com/muratcankoylan/ralph-wiggum-marketer" target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline">
+                  <Button variant="default">
                     GitHub Repository
+                    <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </a>
               </div>

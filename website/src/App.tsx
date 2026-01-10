@@ -8,7 +8,6 @@ import Home from "./pages/Home";
 import PRD from "./pages/PRD";
 import Architecture from "./pages/Architecture";
 import GettingStarted from "./pages/GettingStarted";
-import Analysis from "./pages/Analysis";
 import UseCases from "./pages/UseCases";
 
 function Router() {
@@ -18,7 +17,6 @@ function Router() {
       <Route path="/prd" component={PRD} />
       <Route path="/architecture" component={Architecture} />
       <Route path="/getting-started" component={GettingStarted} />
-      <Route path="/analysis" component={Analysis} />
       <Route path="/use-cases" component={UseCases} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

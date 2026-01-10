@@ -28,8 +28,8 @@ import { toast } from "sonner";
 const installSteps = [
   {
     title: "Clone the Repository",
-    code: `git clone https://github.com/your-org/ralph-agi.git
-cd ralph-agi`,
+    code: `git clone https://github.com/hdiesel323/ralph-agi-001.git
+cd ralph-agi-001`,
   },
   {
     title: "Install Dependencies",

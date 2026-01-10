@@ -2,9 +2,9 @@
 
 **Project Name:** RALPH-AGI (Recursive Autonomous Long-horizon Processing with Hierarchical AGI-like Intelligence)
 
-**Version:** 1.0  
-**Date:** January 10, 2026  
-**Author:** Manus AI
+**Version:** 1.0
+**Date:** January 10, 2026
+**Author:** RALPH-AGI Team
 
 ---
 

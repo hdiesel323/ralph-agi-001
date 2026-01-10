@@ -6,7 +6,6 @@ import {
   BookOpen,
   Cpu,
   Rocket,
-  BarChart3,
   Briefcase,
   Menu,
   X,
@@ -53,12 +52,6 @@ const navItems: NavItem[] = [
     href: "/getting-started",
     icon: <Rocket className="w-5 h-5" />,
     description: "Quick Start Guide",
-  },
-  {
-    title: "Analysis",
-    href: "/analysis",
-    icon: <BarChart3 className="w-5 h-5" />,
-    description: "Comprehensive Analysis",
   },
   {
     title: "Use Cases",
