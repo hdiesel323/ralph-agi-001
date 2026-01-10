@@ -276,8 +276,6 @@ ralph-agi-001/
 │   ├── stories/
 │   └── sprint-status.yaml
 │
-├── 📁 DOCUMENTATION/            # Research & analysis
-│
 ├── pyproject.toml               # Python package config
 ├── LICENSE                      # MPL 2.0
 └── README.md                    # You are here
