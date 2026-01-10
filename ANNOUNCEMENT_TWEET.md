@@ -69,6 +69,7 @@ Follow along! 🚀
 Standing on the shoulders of giants:
 
 ✅ Ralph Wiggum ($50k for $297)
+✅ AI-Long-Task (AlphaEvolve-inspired)
 ✅ Continuous-Claude-v3 (2k⭐)
 ✅ Ralph Wiggum Marketer (276⭐)
 ✅ Anthropic's agent harnesses
@@ -133,8 +134,9 @@ Who's following along? 🚀
 ## Alternative: Story-Driven
 
 ```
-Last week I analyzed 7 autonomous agent systems:
+Last week I analyzed 8 autonomous agent systems:
 • Ralph Wiggum ($50k for $297)
+• AI-Long-Task (AlphaEvolve-inspired)
 • Continuous-Claude-v3 (2k⭐)
 • Anthropic harnesses
 • Beads, Claude-Mem, MCP-CLI
@@ -208,7 +210,7 @@ Week 9-12: Production ⬜
 ### Option 4: Stats Visual
 ```
 📊 RALPH-AGI by the numbers:
-• 7 reference implementations analyzed
+• 8 reference implementations analyzed
 • 109 skills (from Continuous-Claude)
 • 32 specialized agents
 • 30+ lifecycle hooks
@@ -283,8 +285,9 @@ RALPH-AGI Week [X] Update 🧵
 
 **Main Tweet:**
 ```
-Last week I analyzed 7 autonomous agent systems:
+Last week I analyzed 8 autonomous agent systems:
 • Ralph Wiggum ($50k for $297)
+• AI-Long-Task (AlphaEvolve-inspired)
 • Continuous-Claude-v3 (2k⭐)
 • Anthropic harnesses
 • Beads, Claude-Mem, MCP-CLI
