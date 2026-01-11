@@ -10,11 +10,16 @@ Key Design Principles (from PRD FR-001):
 - Retry logic with exponential backoff
 """
 
+from __future__ import annotations
+
 import logging
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import Callable, Optional
+from typing import TYPE_CHECKING, Callable, Optional
+
+if TYPE_CHECKING:
+    from ralph_agi.core.config import RalphConfig
 
 
 @dataclass
@@ -66,6 +71,7 @@ class RalphLoop:
         max_retries: int = DEFAULT_MAX_RETRIES,
         retry_delays: Optional[list[int]] = None,
         log_file: Optional[str] = None,
+        completion_promise: str = "<promise>COMPLETE</promise>",
     ):
         """Initialize the Ralph Loop Engine.
 
@@ -76,6 +82,8 @@ class RalphLoop:
                          Default: [1, 2, 4]
             log_file: Optional path to log file. If provided, logs to both
                      console and file.
+            completion_promise: String to detect for task completion.
+                         Default: "<promise>COMPLETE</promise>"
         """
         if max_iterations < 0:
             raise ValueError("max_iterations must be non-negative")
@@ -86,10 +94,28 @@ class RalphLoop:
 
         self.iteration = 0
         self.complete = False
-        self._completion_signal = "<promise>COMPLETE</promise>"
+        self._completion_signal = completion_promise
 
         # Set up logging
         self._setup_logging(log_file)
+
+    @classmethod
+    def from_config(cls, config: RalphConfig) -> RalphLoop:
+        """Create a RalphLoop instance from a RalphConfig.
+
+        Args:
+            config: RalphConfig instance with configuration values.
+
+        Returns:
+            Configured RalphLoop instance.
+        """
+        return cls(
+            max_iterations=config.max_iterations,
+            max_retries=config.max_retries,
+            retry_delays=config.retry_delays,
+            log_file=config.log_file,
+            completion_promise=config.completion_promise,
+        )
 
     def _setup_logging(self, log_file: Optional[str] = None) -> None:
         """Configure logging with ISO timestamp format.

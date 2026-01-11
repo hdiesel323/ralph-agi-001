@@ -1,0 +1,22 @@
+# RALPH-AGI Configuration
+# This file configures the Ralph Loop Engine behavior.
+# All values have sensible defaults - only override what you need.
+
+# Maximum iterations before forced exit
+# Set to 0 to disable (not recommended)
+max_iterations: 100
+
+# String that signals task completion
+# When detected in LLM output, the loop exits successfully
+completion_promise: "<promise>COMPLETE</promise>"
+
+# Iterations between state checkpoints
+# Lower = more frequent saves, higher = better performance
+checkpoint_interval: 1
+
+# Retry configuration for failed iterations
+max_retries: 3
+retry_delays: [1, 2, 4]  # Exponential backoff in seconds
+
+# Optional: Log file path (logs to console only if not set)
+# log_file: "ralph-agi.log"
