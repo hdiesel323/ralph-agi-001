@@ -22,7 +22,7 @@
   <a href="https://twitter.com/hdiesel_">Follow the Build</a> •
   <a href="#standing-on-the-shoulders-of-giants">Credits & Inspiration</a> •
   <a href="#the-12-week-roadmap">Roadmap</a> •
-  <a href="https://ralph-agi.netlify.app">Documentation</a>
+  <a href="https://glittery-pasca-96b28f.netlify.app">Documentation</a>
 </p>
 
 ---
@@ -205,7 +205,7 @@ For teams that want managed infrastructure and enterprise features:
 💰 Subscription pricing
 ```
 
-*Interested in Enterprise?* [Join the waitlist](https://ralph-agi.netlify.app/enterprise) to get early access and special pricing.
+*Interested in Enterprise?* [Join the waitlist](https://glittery-pasca-96b28f.netlify.app/enterprise) to get early access and special pricing.
 
 ---
 
@@ -217,8 +217,8 @@ This is a 12-week build-in-public journey. Follow along for daily updates, techn
 |----------|------|---------|
 | **Twitter/X** | [@hdiesel_](https://twitter.com/hdiesel_) | Daily updates, hot takes |
 | **Main Thread** | [The Journey](https://x.com/hdiesel_/status/2009969887356256679) | Full build story |
-| **Documentation** | [ralph-agi.netlify.app](https://ralph-agi.netlify.app) | Technical docs |
-| **Enterprise** | [Join Waitlist](https://ralph-agi.netlify.app/enterprise) | Early access signup |
+| **Documentation** | [glittery-pasca-96b28f.netlify.app](https://glittery-pasca-96b28f.netlify.app) | Technical docs |
+| **Enterprise** | [Join Waitlist](https://glittery-pasca-96b28f.netlify.app/enterprise) | Early access signup |
 | **This Repo** | Star ⭐ for updates | Code, issues, discussions |
 
 ---
