@@ -256,7 +256,6 @@ ralph-agi-001/
 ├── RALPH-AGI-IMPLEMENTATION-ROADMAP.md
 ├── RALPH-AGI-DEVELOPER-GUIDE.md
 ├── COMPREHENSIVE_ANALYSIS_V2.md
-├── RALPH-AGI-Twitter-SOP.md
 ├── rnd/                            # R&D workspace
 │   ├── PROJECT-ONBOARDING.md       # This file
 │   ├── questions/                  # Team Q&A

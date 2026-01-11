@@ -11,7 +11,6 @@ Official documentation for the RALPH-AGI project.
 | [Implementation Roadmap](RALPH-AGI-IMPLEMENTATION-ROADMAP.md) | 12-week build plan |
 | [API Specification](RALPH-AGI-API-SPECIFICATION.md) | API design and endpoints |
 | [Developer Guide](RALPH-AGI-DEVELOPER-GUIDE.md) | Getting started for contributors |
-| [Twitter SOP](RALPH-AGI-Twitter-SOP.md) | Build-in-public content strategy |
 
 ## Quick Links
 
