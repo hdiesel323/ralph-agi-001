@@ -217,7 +217,7 @@ This is a 12-week build-in-public journey. Follow along for daily updates, techn
 |----------|------|---------|
 | **Twitter/X** | [@hdiesel_](https://twitter.com/hdiesel_) | Daily updates, hot takes |
 | **Main Thread** | [The Journey](https://x.com/hdiesel_/status/2009969887356256679) | Full build story |
-| **Documentation** | [glittery-pasca-96b28f.netlify.app](https://glittery-pasca-96b28f.netlify.app) | Technical docs |
+| **Documentation** | [View Docs](https://glittery-pasca-96b28f.netlify.app) | Technical docs |
 | **Enterprise** | [Join Waitlist](https://glittery-pasca-96b28f.netlify.app/enterprise) | Early access signup |
 | **This Repo** | Star ⭐ for updates | Code, issues, discussions |
 
