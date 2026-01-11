@@ -9,6 +9,7 @@ import PRD from "./pages/PRD";
 import Architecture from "./pages/Architecture";
 import GettingStarted from "./pages/GettingStarted";
 import UseCases from "./pages/UseCases";
+import Enterprise from "./pages/Enterprise";
 
 function Router() {
   return (
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/architecture" component={Architecture} />
       <Route path="/getting-started" component={GettingStarted} />
       <Route path="/use-cases" component={UseCases} />
+      <Route path="/enterprise" component={Enterprise} />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

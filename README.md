@@ -205,7 +205,7 @@ For teams that want managed infrastructure and enterprise features:
 💰 Subscription pricing
 ```
 
-*Interested in Enterprise?* [Join the waitlist](https://twitter.com/hdiesel_) (DM or follow for updates)
+*Interested in Enterprise?* [Join the waitlist](https://ralph-agi.netlify.app/enterprise) to get early access and special pricing.
 
 ---
 
