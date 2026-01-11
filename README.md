@@ -218,6 +218,7 @@ This is a 12-week build-in-public journey. Follow along for daily updates, techn
 | **Twitter/X** | [@hdiesel_](https://twitter.com/hdiesel_) | Daily updates, hot takes |
 | **Main Thread** | [The Journey](https://x.com/hdiesel_/status/2009969887356256679) | Full build story |
 | **Documentation** | [ralph-agi.netlify.app](https://ralph-agi.netlify.app) | Technical docs |
+| **Enterprise** | [Join Waitlist](https://ralph-agi.netlify.app/enterprise) | Early access signup |
 | **This Repo** | Star ⭐ for updates | Code, issues, discussions |
 
 ---
