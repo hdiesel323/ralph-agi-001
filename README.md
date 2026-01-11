@@ -13,8 +13,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/status-building%20in%20public-brightgreen" alt="Status">
   <img src="https://img.shields.io/badge/week-1%20of%2012-blue" alt="Week 1">
-  <img src="https://img.shields.io/badge/tests-33%20passing-success" alt="Tests">
-  <img src="https://img.shields.io/badge/coverage-99%25-brightgreen" alt="Coverage">
+  <img src="https://img.shields.io/badge/tests-83%20passing-success" alt="Tests">
+  <img src="https://img.shields.io/badge/coverage-97%25-brightgreen" alt="Coverage">
   <img src="https://img.shields.io/badge/license-MPL%202.0-orange" alt="License">
 </p>
 
@@ -90,14 +90,14 @@ while not complete and under_budget:
 
 **Building this 100% in public.** Every win. Every failure. Every 3am debugging session.
 
-### Sprint 1 Progress: 33% Complete
+### Sprint 1 Progress: 100% Complete ✅
 
 | Story | Points | Status | Description |
 |-------|--------|--------|-------------|
 | 1.1 Basic Loop | 3 | ✅ Done | Core RalphLoop execution engine |
-| 1.2 Completion Detection | 2 | 🔜 Next | Promise-based completion signals |
-| 1.3 Configuration | 2 | 📋 Planned | YAML-driven behavior |
-| 1.4 AFK Mode | 2 | 📋 Planned | Autonomous operation mode |
+| 1.2 Completion Detection | 2 | ✅ Done | Promise-based completion signals |
+| 1.3 Configuration | 2 | ✅ Done | YAML-driven behavior |
+| 1.4 AFK Mode | 2 | ✅ Done | Autonomous operation mode |
 
 ### What's Working Now
 
@@ -109,8 +109,13 @@ while not complete and under_budget:
 ✅ MaxRetriesExceeded with full error context
 ✅ ISO timestamp logging [YYYY-MM-DDTHH:MM:SS]
 ✅ Resource cleanup via close() method
-✅ 33 unit tests passing
-✅ 99% code coverage
+✅ YAML configuration management (RalphConfig)
+✅ Signal handling (SIGINT/SIGTERM)
+✅ Checkpoint save/load for state persistence
+✅ Resume from checkpoint (AFK mode)
+✅ Graceful shutdown with state preservation
+✅ 83 unit tests passing
+✅ 97% code coverage
 ```
 
 ---
@@ -141,12 +146,16 @@ while not complete and under_budget:
 
 This project synthesizes ideas and patterns from the following (all credit to the original authors):
 
+### 🎉 Special Thanks
+
+**Massive shoutout to [Geoffrey Huntley (@GeoffreyHuntley)](https://twitter.com/GeoffreyHuntley)** for creating the "Ralph Wiggum Pattern" that inspired this entire project. His original post at [ghuntley.com/ralph](https://ghuntley.com/ralph/) laid the foundation for everything you see here. If RALPH-AGI works, it's because Geoffrey figured out the simple truth: a while loop beats a fancy framework.
+
 ### Core Inspiration
 
 | Project | Author | Stars | What We Learned |
 |---------|--------|-------|-----------------|
+| [**The Ralph Wiggum Pattern**](https://ghuntley.com/ralph/) | [@GeoffreyHuntley](https://twitter.com/GeoffreyHuntley) | - | The original! Simple loop > complex orchestration |
 | [**Anthropic Agent Guidance**](https://www.anthropic.com/engineering/building-effective-agents) | Anthropic | - | Official best practices for long-running agents |
-| [**Ralph Wiggum Pattern**](https://awesomeclaude.ai/) | awesomeclaude.ai | - | The simple loop approach ($50k from $297) |
 | [**Beads**](https://github.com/steveyegge/beads) | @steveyegge | 9.4k⭐ | Dependency-aware task management |
 | [**Claude-Mem**](https://github.com/thedotmack/claude-mem) | @thedotmack | 12.9k⭐ | Persistent memory architecture |
 
@@ -256,11 +265,14 @@ ralph-agi-001/
 ├── 🔧 ralph_agi/                # The RALPH-AGI Python package
 │   ├── __init__.py
 │   └── core/
-│       └── loop.py              # 🔥 The heart of RALPH
+│       ├── loop.py              # 🔥 The heart of RALPH
+│       └── config.py            # YAML configuration management
 │
-├── 🧪 tests/                    # Test suite (33 tests, 99% coverage)
+├── 🧪 tests/                    # Test suite (83 tests, 97% coverage)
 │   └── core/
-│       └── test_loop.py
+│       ├── test_loop.py
+│       ├── test_config.py
+│       └── test_afk_mode.py
 │
 ├── 🌐 website/                  # Project website (Netlify)
 │   ├── src/                     # React components
