@@ -12,11 +12,14 @@ Key Design Principles (from PRD FR-001):
 
 from __future__ import annotations
 
+import json
 import logging
+import signal
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
-from typing import TYPE_CHECKING, Callable, Optional
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Callable, Optional
 
 if TYPE_CHECKING:
     from ralph_agi.core.config import RalphConfig
@@ -42,6 +45,15 @@ class MaxRetriesExceeded(Exception):
         super().__init__(message)
         self.attempts = attempts
         self.last_error = last_error
+
+
+class LoopInterrupted(Exception):
+    """Raised when the loop is interrupted by a signal (SIGINT/SIGTERM)."""
+
+    def __init__(self, message: str, iteration: int, checkpoint_path: Optional[str] = None):
+        super().__init__(message)
+        self.iteration = iteration
+        self.checkpoint_path = checkpoint_path
 
 
 class RalphLoop:
@@ -72,6 +84,7 @@ class RalphLoop:
         retry_delays: Optional[list[int]] = None,
         log_file: Optional[str] = None,
         completion_promise: str = "<promise>COMPLETE</promise>",
+        checkpoint_path: Optional[str] = None,
     ):
         """Initialize the Ralph Loop Engine.
 
@@ -84,6 +97,8 @@ class RalphLoop:
                      console and file.
             completion_promise: String to detect for task completion.
                          Default: "<promise>COMPLETE</promise>"
+            checkpoint_path: Optional path for saving checkpoints on interrupt.
+                         Default: None (no checkpointing)
         """
         if max_iterations < 0:
             raise ValueError("max_iterations must be non-negative")
@@ -95,6 +110,10 @@ class RalphLoop:
         self.iteration = 0
         self.complete = False
         self._completion_signal = completion_promise
+        self._checkpoint_path = checkpoint_path
+        self._interrupted = False
+        self._original_sigint_handler = None
+        self._original_sigterm_handler = None
 
         # Set up logging
         self._setup_logging(log_file)
@@ -115,6 +134,7 @@ class RalphLoop:
             retry_delays=config.retry_delays,
             log_file=config.log_file,
             completion_promise=config.completion_promise,
+            checkpoint_path=config.checkpoint_path,
         )
 
     def _setup_logging(self, log_file: Optional[str] = None) -> None:
@@ -157,6 +177,99 @@ class RalphLoop:
             file_handler.setFormatter(formatter)
             self.logger.addHandler(file_handler)
             self._handlers.append(file_handler)
+
+    def _setup_signal_handlers(self) -> None:
+        """Set up signal handlers for graceful interrupt handling."""
+        self._original_sigint_handler = signal.signal(signal.SIGINT, self._handle_interrupt)
+        self._original_sigterm_handler = signal.signal(signal.SIGTERM, self._handle_interrupt)
+
+    def _restore_signal_handlers(self) -> None:
+        """Restore original signal handlers."""
+        if self._original_sigint_handler is not None:
+            signal.signal(signal.SIGINT, self._original_sigint_handler)
+        if self._original_sigterm_handler is not None:
+            signal.signal(signal.SIGTERM, self._original_sigterm_handler)
+
+    def _handle_interrupt(self, signum: int, frame: Any) -> None:
+        """Handle interrupt signals (SIGINT/SIGTERM).
+
+        Sets the interrupted flag to allow graceful shutdown.
+        """
+        signal_name = "SIGINT" if signum == signal.SIGINT else "SIGTERM"
+        self.logger.warning(f"Received {signal_name}, initiating graceful shutdown...")
+        self._interrupted = True
+
+    def get_state(self) -> dict[str, Any]:
+        """Get current loop state for checkpointing.
+
+        Returns:
+            Dictionary containing current loop state.
+        """
+        return {
+            "iteration": self.iteration,
+            "complete": self.complete,
+            "max_iterations": self.max_iterations,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        }
+
+    def save_checkpoint(self, path: Optional[str] = None) -> str:
+        """Save current state to a checkpoint file.
+
+        Args:
+            path: Path to save checkpoint. Uses _checkpoint_path if not provided.
+
+        Returns:
+            Path where checkpoint was saved.
+
+        Raises:
+            ValueError: If no checkpoint path is available.
+        """
+        checkpoint_path = path or self._checkpoint_path
+        if not checkpoint_path:
+            raise ValueError("No checkpoint path specified")
+
+        state = self.get_state()
+        checkpoint_file = Path(checkpoint_path)
+        checkpoint_file.write_text(json.dumps(state, indent=2))
+
+        self.logger.info(f"Checkpoint saved to {checkpoint_path}")
+        return str(checkpoint_path)
+
+    def load_checkpoint(self, path: Optional[str] = None) -> dict[str, Any]:
+        """Load state from a checkpoint file.
+
+        Args:
+            path: Path to load checkpoint from. Uses _checkpoint_path if not provided.
+
+        Returns:
+            Dictionary containing loaded state.
+
+        Raises:
+            ValueError: If no checkpoint path is available.
+            FileNotFoundError: If checkpoint file doesn't exist.
+        """
+        checkpoint_path = path or self._checkpoint_path
+        if not checkpoint_path:
+            raise ValueError("No checkpoint path specified")
+
+        checkpoint_file = Path(checkpoint_path)
+        if not checkpoint_file.exists():
+            raise FileNotFoundError(f"Checkpoint file not found: {checkpoint_path}")
+
+        state = json.loads(checkpoint_file.read_text())
+        self.logger.info(f"Checkpoint loaded from {checkpoint_path}")
+        return state
+
+    def resume_from_checkpoint(self, path: Optional[str] = None) -> None:
+        """Resume loop state from a checkpoint file.
+
+        Args:
+            path: Path to load checkpoint from. Uses _checkpoint_path if not provided.
+        """
+        state = self.load_checkpoint(path)
+        self.iteration = state.get("iteration", 0)
+        self.complete = state.get("complete", False)
+        self.logger.info(f"Resumed from iteration {self.iteration}")
 
     def _log_iteration_start(self) -> None:
         """Log the start of an iteration with timestamp and iteration number."""
@@ -253,12 +366,17 @@ class RalphLoop:
             last_error=last_error,
         )
 
-    def run(self) -> bool:
+    def run(self, handle_signals: bool = True) -> bool:
         """Run the Ralph Loop until completion or max iterations.
 
         The loop continues while:
         - iteration < max_iterations AND
-        - complete flag is False
+        - complete flag is False AND
+        - not interrupted
+
+        Args:
+            handle_signals: Whether to set up signal handlers for graceful
+                          interrupt handling. Default: True
 
         Returns:
             True if completed successfully (via completion signal),
@@ -266,50 +384,88 @@ class RalphLoop:
 
         Raises:
             MaxRetriesExceeded: If an iteration fails after all retries.
+            LoopInterrupted: If interrupted by SIGINT/SIGTERM (with checkpoint saved).
         """
         self.logger.info(
             f"Ralph Loop starting with max_iterations={self.max_iterations}"
         )
 
-        # Handle edge case of 0 max iterations
-        if self.max_iterations == 0:
-            self.logger.info("Max iterations is 0, exiting immediately")
-            return False
+        # Set up signal handlers for AFK mode
+        if handle_signals:
+            self._setup_signal_handlers()
 
-        # Main loop - use WHILE (not FOR) for cleaner exit conditions
-        while self.iteration < self.max_iterations and not self.complete:
-            self._log_iteration_start()
+        try:
+            # Handle edge case of 0 max iterations
+            if self.max_iterations == 0:
+                self.logger.info("Max iterations is 0, exiting immediately")
+                return False
 
-            try:
-                # Execute with retry logic
-                result = self._execute_with_retry(self._execute_iteration)
-                self._log_iteration_end(result.success)
+            # Main loop - use WHILE (not FOR) for cleaner exit conditions
+            while self.iteration < self.max_iterations and not self.complete:
+                # Check for interrupt before starting iteration
+                if self._interrupted:
+                    self._handle_graceful_shutdown()
 
-                # Check for completion signal in the iteration output
-                if self._check_completion(result.output):
-                    self.complete = True
-                    self.logger.info(
-                        f"Completion signal detected after {self.iteration + 1} iterations"
-                    )
-                    break
+                self._log_iteration_start()
 
-                self.iteration += 1
+                try:
+                    # Execute with retry logic
+                    result = self._execute_with_retry(self._execute_iteration)
+                    self._log_iteration_end(result.success)
 
-            except MaxRetriesExceeded as e:
-                self._log_iteration_end(False, str(e))
-                raise
+                    # Check for completion signal in the iteration output
+                    if self._check_completion(result.output):
+                        self.complete = True
+                        self.logger.info(
+                            f"Completion signal detected after {self.iteration + 1} iterations"
+                        )
+                        break
 
-        # Log final status
-        if self.complete:
-            self.logger.info(
-                f"Ralph Loop completed successfully after {self.iteration + 1} iterations"
-            )
-            return True
-        else:
-            self.logger.info(
-                f"Ralph Loop reached max iterations ({self.max_iterations})"
-            )
-            return False
+                    self.iteration += 1
+
+                    # Check for interrupt after completing iteration
+                    if self._interrupted:
+                        self._handle_graceful_shutdown()
+
+                except MaxRetriesExceeded as e:
+                    self._log_iteration_end(False, str(e))
+                    raise
+
+            # Log final status
+            if self.complete:
+                self.logger.info(
+                    f"Ralph Loop completed successfully after {self.iteration + 1} iterations"
+                )
+                return True
+            else:
+                self.logger.info(
+                    f"Ralph Loop reached max iterations ({self.max_iterations})"
+                )
+                return False
+
+        finally:
+            # Always restore signal handlers
+            if handle_signals:
+                self._restore_signal_handlers()
+
+    def _handle_graceful_shutdown(self) -> None:
+        """Handle graceful shutdown on interrupt.
+
+        Saves checkpoint if path is configured, then raises LoopInterrupted.
+        """
+        checkpoint_path = None
+        if self._checkpoint_path:
+            checkpoint_path = self.save_checkpoint()
+
+        self.logger.info(
+            f"Graceful shutdown complete at iteration {self.iteration + 1}"
+        )
+
+        raise LoopInterrupted(
+            f"Loop interrupted at iteration {self.iteration + 1}",
+            iteration=self.iteration,
+            checkpoint_path=checkpoint_path,
+        )
 
     def set_complete(self) -> None:
         """Manually set the completion flag.

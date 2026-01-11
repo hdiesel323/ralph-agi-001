@@ -35,6 +35,7 @@ class RalphConfig:
         retry_delays: List of delays (seconds) for exponential backoff.
             Default: [1, 2, 4]
         log_file: Optional path to log file. Default: None
+        checkpoint_path: Optional path for saving checkpoints. Default: None
     """
 
     max_iterations: int = 100
@@ -43,6 +44,7 @@ class RalphConfig:
     max_retries: int = 3
     retry_delays: list[int] = field(default_factory=lambda: [1, 2, 4])
     log_file: Optional[str] = None
+    checkpoint_path: Optional[str] = None
 
     def __post_init__(self):
         """Validate configuration after initialization."""
@@ -111,6 +113,7 @@ def load_config(config_path: Optional[str | Path] = None) -> RalphConfig:
         max_retries=data.get("max_retries", 3),
         retry_delays=data.get("retry_delays", [1, 2, 4]),
         log_file=data.get("log_file"),
+        checkpoint_path=data.get("checkpoint_path"),
     )
 
 
@@ -131,9 +134,11 @@ def save_config(config: RalphConfig, config_path: str | Path = "config.yaml") ->
         "retry_delays": config.retry_delays,
     }
 
-    # Only include log_file if set
+    # Only include optional paths if set
     if config.log_file:
         data["log_file"] = config.log_file
+    if config.checkpoint_path:
+        data["checkpoint_path"] = config.checkpoint_path
 
     with open(config_path, "w") as f:
         yaml.dump(data, f, default_flow_style=False, sort_keys=False)

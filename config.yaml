@@ -20,3 +20,6 @@ retry_delays: [1, 2, 4]  # Exponential backoff in seconds
 
 # Optional: Log file path (logs to console only if not set)
 # log_file: "ralph-agi.log"
+
+# Optional: Checkpoint file for AFK mode (saves state on interrupt)
+# checkpoint_path: "checkpoint.json"

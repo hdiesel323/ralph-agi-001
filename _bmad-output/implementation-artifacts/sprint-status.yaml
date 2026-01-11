@@ -44,7 +44,7 @@ sprints:
 
         - id: story-1.4
           name: AFK Mode (Basic)
-          status: not_started
+          status: completed
           priority: P0
           points: 2
 
@@ -54,7 +54,7 @@ sprints:
         reason: Not required for PoC validation
 
     total_points: 9
-    completed_points: 7
+    completed_points: 9
 
     blockers: []
 
@@ -67,13 +67,13 @@ sprints:
 velocity:
   sprint-01:
     planned: 9
-    completed: 7
+    completed: 9
 
 # Epic progress
 epic_progress:
   epic-01-core-loop:
     total_stories: 5
-    completed: 3
+    completed: 4
     in_progress: 0
     status: in_sprint
 
