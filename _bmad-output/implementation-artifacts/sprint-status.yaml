@@ -1,14 +1,14 @@
 # RALPH-AGI Sprint Status
-# Generated: 2026-01-10
+# Updated: 2026-01-10
 
-current_sprint: sprint-01
+current_sprint: sprint-02
 
 sprints:
   sprint-01:
     name: "Week 1: Proof of Concept"
     start_date: 2026-01-10
     end_date: 2026-01-17
-    status: ready
+    status: completed
 
     goal: |
       Build a working Proof of Concept demonstrating the Ralph Wiggum loop
@@ -59,15 +59,85 @@ sprints:
     blockers: []
 
     notes: |
-      Focus on validating the core loop concept before adding complexity.
-      Use mock LLM responses for initial testing.
-      Real LLM integration can be added once loop is stable.
+      Sprint 1 COMPLETE! All stories delivered.
+      83 tests passing, 97% coverage.
+      Core loop validated and ready for memory integration.
+
+  sprint-02:
+    name: "Week 2: Memory System (Memvid)"
+    start_date: 2026-01-11
+    end_date: 2026-01-18
+    status: ready
+
+    goal: |
+      Implement persistent memory system using Memvid, enabling context
+      preservation across sessions and semantic search over past work.
+
+    success_criteria:
+      - Memvid integrated and operational
+      - Session context stored and retrieved
+      - Semantic search returning relevant results
+      - Memory integrated into RalphLoop
+      - 90%+ test coverage on memory module
+
+    scope:
+      epic: epic-03-memory-system
+      stories:
+        - id: story-3.1
+          name: Memvid Core Integration
+          status: not_started
+          priority: P0
+          points: 3
+
+        - id: story-3.2
+          name: Short-Term Memory (Session Context)
+          status: not_started
+          priority: P0
+          points: 2
+
+        - id: story-3.5
+          name: Vector Search Integration
+          status: not_started
+          priority: P1
+          points: 3
+
+        - id: story-3.6
+          name: Memory Query API
+          status: not_started
+          priority: P1
+          points: 3
+
+    deferred:
+      - id: story-3.3
+        name: Medium-Term Memory (Git Integration)
+        reason: Scheduled for Sprint 3
+
+      - id: story-3.4
+        name: Long-Term Memory (Persistent Knowledge)
+        reason: Scheduled for Sprint 3
+
+      - id: story-3.7
+        name: Lifecycle Hooks
+        reason: Scheduled for Sprint 3
+
+    total_points: 11
+    completed_points: 0
+
+    blockers: []
+
+    notes: |
+      Using Memvid (github.com/memvid/memvid) as primary memory backend.
+      Single .mv2 file replaces SQLite + ChromaDB stack.
+      See docs/research/memvid-evaluation.md for technical details.
 
 # Velocity tracking
 velocity:
   sprint-01:
     planned: 9
     completed: 9
+  sprint-02:
+    planned: 11
+    completed: 0
 
 # Epic progress
 epic_progress:
@@ -75,7 +145,7 @@ epic_progress:
     total_stories: 5
     completed: 4
     in_progress: 0
-    status: in_sprint
+    status: completed
 
   epic-02-task-management:
     total_stories: 5
@@ -84,10 +154,10 @@ epic_progress:
     status: backlog
 
   epic-03-memory-system:
-    total_stories: 6
+    total_stories: 7
     completed: 0
     in_progress: 0
-    status: backlog
+    status: in_sprint
 
   epic-04-tool-integration:
     total_stories: 7

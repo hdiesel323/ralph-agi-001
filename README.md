@@ -156,6 +156,7 @@ This project synthesizes ideas and patterns from the following (all credit to th
 |---------|--------|-------|-----------------|
 | [**The Ralph Wiggum Pattern**](https://ghuntley.com/ralph/) | [@GeoffreyHuntley](https://twitter.com/GeoffreyHuntley) | - | The original! Simple loop > complex orchestration |
 | [**Anthropic Agent Guidance**](https://www.anthropic.com/engineering/building-effective-agents) | Anthropic | - | Official best practices for long-running agents |
+| [**Memvid**](https://github.com/memvid/memvid) | memvid | - | Portable AI memory in a single file (Sprint 2) |
 | [**Beads**](https://github.com/steveyegge/beads) | @steveyegge | 9.4k⭐ | Dependency-aware task management |
 | [**Claude-Mem**](https://github.com/thedotmack/claude-mem) | @thedotmack | 12.9k⭐ | Persistent memory architecture |
 
