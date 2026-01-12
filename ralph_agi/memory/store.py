@@ -1,11 +1,14 @@
-"""Memory store implementation using Memvid.
+"""Memory store implementation using Memvid with JSONL fallback.
 
 This module provides the MemoryStore class that wraps Memvid's API
-for RALPH-AGI's persistent memory needs.
+for RALPH-AGI's persistent memory needs, with a JSONL backup for
+crash resilience.
 
 Design Principles:
 - Lazy initialization (create on first use)
-- Crash-safe (Memvid's append-only design)
+- Crash-safe (Memvid's append-only design + JSONL backup)
+- Dual-write (Memvid + JSONL) for reliability
+- Automatic fallback to JSONL if Memvid fails
 - Simple API for common operations
 """
 
@@ -18,6 +21,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Literal, Optional
 from uuid import uuid4
+
+from .jsonl_backup import JSONLBackupStore, dict_to_frame
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +71,7 @@ class MemoryQueryResult:
         truncated: Whether results were truncated for token budget.
         query_time_ms: Query execution time in milliseconds.
         token_count: Estimated total tokens in returned frames.
+        backend: Which backend served the result ("memvid", "jsonl_fallback").
     """
 
     frames: list[MemoryFrame]
@@ -75,6 +81,7 @@ class MemoryQueryResult:
     truncated: bool = False
     query_time_ms: float = 0.0
     token_count: int = 0
+    backend: str = "memvid"
 
 
 class MemoryStoreError(Exception):
@@ -114,6 +121,10 @@ class MemoryStore:
         self.store_path = Path(store_path)
         self._mv = None
         self._initialized = False
+
+        # Initialize JSONL backup store (same name with .jsonl extension)
+        jsonl_path = self.store_path.with_suffix(".jsonl")
+        self._jsonl_backup = JSONLBackupStore(jsonl_path)
 
     @property
     def initialized(self) -> bool:
@@ -216,10 +227,27 @@ class MemoryStore:
                 tags=all_tags,
             )
             logger.debug(f"Appended frame {frame_id[:8]} of type {frame_type}")
-            return frame_id
 
         except Exception as e:
             raise MemoryStoreError(f"Failed to append frame: {e}") from e
+
+        # Dual-write to JSONL backup (non-blocking, errors logged but don't fail)
+        try:
+            backup_data = {
+                "id": frame_id,
+                "content": content,
+                "frame_type": frame_type,
+                "metadata": full_metadata,
+                "timestamp": timestamp,
+                "session_id": session_id,
+                "tags": all_tags,
+            }
+            self._jsonl_backup.append(backup_data)
+            logger.debug(f"Backed up frame {frame_id[:8]} to JSONL")
+        except Exception as e:
+            logger.warning(f"Failed to backup frame to JSONL: {e}")
+
+        return frame_id
 
     def get_recent(self, n: int = 10) -> list[MemoryFrame]:
         """Get the most recent N frames.
@@ -230,16 +258,23 @@ class MemoryStore:
         Returns:
             List of MemoryFrame objects, most recent first.
         """
-        if not self._ensure_initialized(create=False):
-            return []
+        # Try Memvid first
+        if self._ensure_initialized(create=False):
+            try:
+                # Search for all, sorted by recency
+                # Using empty query to match all, then limiting
+                results = self._mv.find("*", k=n)
+                return self._convert_results(results)
+            except Exception as e:
+                logger.warning(f"Memvid get_recent failed, falling back to JSONL: {e}")
 
+        # Fall back to JSONL backup
         try:
-            # Search for all, sorted by recency
-            # Using empty query to match all, then limiting
-            results = self._mv.find("*", k=n)
-            return self._convert_results(results)
+            jsonl_results = self._jsonl_backup.get_recent(n)
+            logger.info(f"Using JSONL fallback for get_recent: {len(jsonl_results)} results")
+            return [dict_to_frame(r) for r in jsonl_results]
         except Exception as e:
-            logger.error(f"Failed to get recent frames: {e}")
+            logger.error(f"JSONL fallback also failed: {e}")
             return []
 
     def search(
@@ -260,23 +295,33 @@ class MemoryStore:
         Returns:
             List of matching MemoryFrame objects, ranked by relevance.
         """
-        if not self._ensure_initialized(create=False):
-            return []
+        # Try Memvid first
+        if self._ensure_initialized(create=False):
+            try:
+                search_mode = "sem" if mode == "semantic" else None
+                results = self._mv.find(query, k=limit, mode=search_mode)
+
+                frames = self._convert_results(results)
+
+                # Filter by type if specified
+                if frame_type:
+                    frames = [f for f in frames if f.frame_type == frame_type]
+
+                return frames
+
+            except Exception as e:
+                logger.warning(f"Memvid search failed, falling back to JSONL: {e}")
+
+        # Fall back to JSONL backup (only supports keyword search)
+        if mode == "semantic":
+            logger.warning("JSONL fallback doesn't support semantic search, using keyword")
 
         try:
-            search_mode = "sem" if mode == "semantic" else None
-            results = self._mv.find(query, k=limit, mode=search_mode)
-
-            frames = self._convert_results(results)
-
-            # Filter by type if specified
-            if frame_type:
-                frames = [f for f in frames if f.frame_type == frame_type]
-
-            return frames
-
+            jsonl_results = self._jsonl_backup.search(query, frame_type=frame_type, limit=limit)
+            logger.info(f"Using JSONL fallback for search: {len(jsonl_results)} results")
+            return [dict_to_frame(r) for r in jsonl_results]
         except Exception as e:
-            logger.error(f"Failed to search memory: {e}")
+            logger.error(f"JSONL fallback also failed: {e}")
             return []
 
     def get_by_type(self, frame_type: str, limit: int = 50) -> list[MemoryFrame]:
@@ -469,31 +514,39 @@ class MemoryStore:
             ...     print(frame.content)
         """
         start_time = time.time()
+        backend = "memvid"
+        use_jsonl_fallback = False
 
         if not self._ensure_initialized(create=False):
-            return MemoryQueryResult(
-                frames=[],
-                query=query,
-                mode=mode,
-                total_count=0,
-            )
+            # Memvid not available, try JSONL fallback
+            use_jsonl_fallback = True
+            backend = "jsonl_fallback"
 
         try:
-            # Execute search based on mode
-            # Request extra results to account for filtering
-            fetch_limit = min(limit * 3, 200)
-
-            if mode == "hybrid":
-                frames = self.search_hybrid(
-                    query,
-                    limit=fetch_limit,
-                    semantic_weight=semantic_weight,
-                    keyword_weight=keyword_weight,
+            if use_jsonl_fallback:
+                # Direct JSONL search (no semantic/hybrid support)
+                if mode in ("semantic", "hybrid"):
+                    logger.warning(f"JSONL fallback doesn't support {mode} mode, using keyword")
+                jsonl_results = self._jsonl_backup.search(
+                    query, frame_type=frame_type, limit=limit * 3
                 )
-            elif mode == "semantic":
-                frames = self.search(query, limit=fetch_limit, mode="semantic")
+                frames = [dict_to_frame(r) for r in jsonl_results]
             else:
-                frames = self.search(query, limit=fetch_limit, mode="keyword")
+                # Execute search based on mode
+                # Request extra results to account for filtering
+                fetch_limit = min(limit * 3, 200)
+
+                if mode == "hybrid":
+                    frames = self.search_hybrid(
+                        query,
+                        limit=fetch_limit,
+                        semantic_weight=semantic_weight,
+                        keyword_weight=keyword_weight,
+                    )
+                elif mode == "semantic":
+                    frames = self.search(query, limit=fetch_limit, mode="semantic")
+                else:
+                    frames = self.search(query, limit=fetch_limit, mode="keyword")
 
             # Apply filters
             frames = self._apply_filters(
@@ -529,6 +582,7 @@ class MemoryStore:
                 truncated=truncated,
                 query_time_ms=query_time_ms,
                 token_count=token_count,
+                backend=backend,
             )
 
         except Exception as e:
@@ -538,6 +592,7 @@ class MemoryStore:
                 query=query,
                 mode=mode,
                 total_count=0,
+                backend="error",
             )
 
     def _apply_filters(
