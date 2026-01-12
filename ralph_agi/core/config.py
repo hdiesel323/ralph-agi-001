@@ -9,9 +9,11 @@ Key Design Principles (from PRD):
 - Validation of required fields
 """
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import yaml
 
@@ -36,6 +38,16 @@ class RalphConfig:
             Default: [1, 2, 4]
         log_file: Optional path to log file. Default: None
         checkpoint_path: Optional path for saving checkpoints. Default: None
+        memory_enabled: Whether to enable persistent memory. Default: True
+        memory_store_path: Path to the Memvid .mv2 file. Default: "ralph_memory.mv2"
+        memory_embedding_model: Embedding model for semantic search.
+            Default: "all-MiniLM-L6-v2"
+        hooks_enabled: Whether to enable lifecycle hooks. Default: True
+        hooks_on_iteration_start: Hook: load context at iteration start. Default: True
+        hooks_on_iteration_end: Hook: store results at iteration end. Default: True
+        hooks_on_error: Hook: capture errors with context. Default: True
+        hooks_on_completion: Hook: store completion summary. Default: True
+        hooks_context_frames: Number of context frames to load. Default: 10
     """
 
     max_iterations: int = 100
@@ -45,6 +57,15 @@ class RalphConfig:
     retry_delays: list[int] = field(default_factory=lambda: [1, 2, 4])
     log_file: Optional[str] = None
     checkpoint_path: Optional[str] = None
+    memory_enabled: bool = True
+    memory_store_path: str = "ralph_memory.mv2"
+    memory_embedding_model: str = "all-MiniLM-L6-v2"
+    hooks_enabled: bool = True
+    hooks_on_iteration_start: bool = True
+    hooks_on_iteration_end: bool = True
+    hooks_on_error: bool = True
+    hooks_on_completion: bool = True
+    hooks_context_frames: int = 10
 
     def __post_init__(self):
         """Validate configuration after initialization."""
@@ -106,6 +127,10 @@ def load_config(config_path: Optional[str | Path] = None) -> RalphConfig:
         return RalphConfig()
 
     # Extract config values with defaults
+    # Handle nested memory config
+    memory_config = data.get("memory", {})
+    hooks_config = data.get("hooks", {})
+
     return RalphConfig(
         max_iterations=data.get("max_iterations", 100),
         completion_promise=data.get("completion_promise", "<promise>COMPLETE</promise>"),
@@ -114,6 +139,15 @@ def load_config(config_path: Optional[str | Path] = None) -> RalphConfig:
         retry_delays=data.get("retry_delays", [1, 2, 4]),
         log_file=data.get("log_file"),
         checkpoint_path=data.get("checkpoint_path"),
+        memory_enabled=memory_config.get("enabled", True),
+        memory_store_path=memory_config.get("store_path", "ralph_memory.mv2"),
+        memory_embedding_model=memory_config.get("embedding_model", "all-MiniLM-L6-v2"),
+        hooks_enabled=hooks_config.get("enabled", True),
+        hooks_on_iteration_start=hooks_config.get("on_iteration_start", True),
+        hooks_on_iteration_end=hooks_config.get("on_iteration_end", True),
+        hooks_on_error=hooks_config.get("on_error", True),
+        hooks_on_completion=hooks_config.get("on_completion", True),
+        hooks_context_frames=hooks_config.get("context_frames", 10),
     )
 
 
@@ -132,6 +166,19 @@ def save_config(config: RalphConfig, config_path: str | Path = "config.yaml") ->
         "checkpoint_interval": config.checkpoint_interval,
         "max_retries": config.max_retries,
         "retry_delays": config.retry_delays,
+        "memory": {
+            "enabled": config.memory_enabled,
+            "store_path": config.memory_store_path,
+            "embedding_model": config.memory_embedding_model,
+        },
+        "hooks": {
+            "enabled": config.hooks_enabled,
+            "on_iteration_start": config.hooks_on_iteration_start,
+            "on_iteration_end": config.hooks_on_iteration_end,
+            "on_error": config.hooks_on_error,
+            "on_completion": config.hooks_on_completion,
+            "context_frames": config.hooks_context_frames,
+        },
     }
 
     # Only include optional paths if set
