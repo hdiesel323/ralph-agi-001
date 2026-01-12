@@ -6,27 +6,63 @@ as a fallback for searching historical data.
 
 Design Principles:
 - Append-only (crash-safe)
-- File locking for concurrent access safety
+- File locking for concurrent access safety (cross-platform)
 - Simple grep-based search fallback
 - Zero dependencies beyond stdlib
+
+Platform Support:
+- Unix/Linux/macOS: Uses fcntl for file locking
+- Windows: Uses msvcrt for file locking
 """
 
 from __future__ import annotations
 
-import fcntl
 import json
 import logging
 import os
 import re
+import sys
+from collections import deque
 from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 
+# Cross-platform file locking
+if sys.platform == "win32":
+    import msvcrt
+
+    HAS_FCNTL = False
+else:
+    import fcntl
+
+    HAS_FCNTL = True
+
 if TYPE_CHECKING:
     from .store import MemoryFrame
 
 logger = logging.getLogger(__name__)
+
+
+def _lock_file_exclusive(f) -> None:
+    """Acquire exclusive lock on file (cross-platform)."""
+    if HAS_FCNTL:
+        fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+    else:
+        # Windows: lock the first byte
+        msvcrt.locking(f.fileno(), msvcrt.LK_LOCK, 1)
+
+
+def _unlock_file(f) -> None:
+    """Release lock on file (cross-platform)."""
+    if HAS_FCNTL:
+        fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+    else:
+        # Windows: unlock the first byte
+        try:
+            msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
+        except OSError:
+            pass  # Already unlocked
 
 
 class JSONLBackupStore:
@@ -46,6 +82,10 @@ class JSONLBackupStore:
         ...     "frame_type": "result",
         ...     "timestamp": "2026-01-11T12:00:00Z"
         ... })
+
+    Platform Support:
+        Works on Unix, Linux, macOS, and Windows. File locking is
+        implemented using fcntl on Unix and msvcrt on Windows.
     """
 
     def __init__(self, backup_path: str | Path = "ralph_memory.jsonl"):
@@ -83,15 +123,13 @@ class JSONLBackupStore:
 
             # Append with file locking
             with open(self.backup_path, "a", encoding="utf-8") as f:
-                # Acquire exclusive lock
-                fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+                _lock_file_exclusive(f)
                 try:
                     f.write(line)
                     f.flush()
                     os.fsync(f.fileno())  # Ensure data hits disk
                 finally:
-                    # Release lock
-                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+                    _unlock_file(f)
 
             return True
 
@@ -112,7 +150,7 @@ class JSONLBackupStore:
         It's slower than Memvid but guaranteed to work.
 
         Args:
-            query: Text to search for in content field.
+            query: Text to search for in content field. Use "*" for all.
             frame_type: Optional filter by frame type.
             limit: Maximum number of results.
             case_insensitive: Whether to ignore case in search.
@@ -124,7 +162,8 @@ class JSONLBackupStore:
             return []
 
         try:
-            matches = []
+            # Collect all matches first (need to reverse for recency)
+            all_matches = []
             pattern = re.compile(
                 re.escape(query), re.IGNORECASE if case_insensitive else 0
             )
@@ -145,16 +184,14 @@ class JSONLBackupStore:
                         # Search in content
                         content = frame.get("content", "")
                         if query == "*" or pattern.search(content):
-                            matches.append(frame)
+                            all_matches.append(frame)
 
                     except json.JSONDecodeError:
                         continue  # Skip malformed lines
 
-            # Return most recent first
-            matches.reverse()
-
-            # Apply limit
-            return matches[:limit]
+            # Return most recent first, limited
+            all_matches.reverse()
+            return all_matches[:limit]
 
         except Exception as e:
             logger.error(f"Failed to search JSONL backup: {e}")
@@ -162,6 +199,9 @@ class JSONLBackupStore:
 
     def get_recent(self, n: int = 10) -> list[dict[str, Any]]:
         """Get the most recent N frames from the backup.
+
+        Uses a memory-efficient approach that only keeps the last N
+        lines in memory, avoiding loading the entire file.
 
         Args:
             n: Maximum number of frames to return.
@@ -173,16 +213,18 @@ class JSONLBackupStore:
             return []
 
         try:
-            # Read all lines (could be optimized with tail-like behavior for large files)
-            with open(self.backup_path, "r", encoding="utf-8") as f:
-                lines = f.readlines()
+            # Use deque to efficiently keep only last N valid lines
+            recent_lines: deque[str] = deque(maxlen=n * 2)  # Buffer for invalid lines
 
-            # Parse from end
+            with open(self.backup_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        recent_lines.append(line)
+
+            # Parse from most recent, collecting up to n valid frames
             frames = []
-            for line in reversed(lines):
-                line = line.strip()
-                if not line:
-                    continue
+            for line in reversed(recent_lines):
                 try:
                     frames.append(json.loads(line))
                     if len(frames) >= n:
