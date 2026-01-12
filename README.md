@@ -148,7 +148,7 @@ This project synthesizes ideas and patterns from the following (all credit to th
 
 ### 🎉 Special Thanks
 
-**Massive shoutout to [Geoffrey Huntley (@GeoffreyHuntley)](https://twitter.com/GeoffreyHuntley)** for creating the "Ralph Wiggum Pattern" that inspired this entire project. His original post at [ghuntley.com/ralph](https://ghuntley.com/ralph/) laid the foundation for everything you see here. If RALPH-AGI works, it's because Geoffrey figured out the simple truth: a while loop beats a fancy framework.
+**Big shoutout to [Geoffrey Huntley (@GeoffreyHuntley)](https://twitter.com/GeoffreyHuntley)** for creating the "Ralph Wiggum Pattern" that inspired this entire project. His original post at [ghuntley.com/ralph](https://ghuntley.com/ralph/) laid the foundation. If RALPH-AGI works, it's because Geoffrey figured out the simple truth, a while loop beats a fancy framework.
 
 ### Core Inspiration
 
