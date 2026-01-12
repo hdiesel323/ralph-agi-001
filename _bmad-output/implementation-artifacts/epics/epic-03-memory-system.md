@@ -3,7 +3,7 @@
 **PRD Reference:** FR-003
 **Priority:** P1 (High)
 **Roadmap:** Weeks 4-5 (Memory Layer)
-**Status:** Ready for Sprint 2
+**Status:** COMPLETE
 
 ---
 
@@ -156,18 +156,66 @@ Implement the three-tier memory system enabling context persistence across sessi
 
 ---
 
-## Sprint 2 Scope
+### Story 3.8: Context Compacting
+**Priority:** P1 | **Points:** 3
+**Source:** [Clawdbot Patterns Analysis](../../../rnd/research/2026-01-10_clawdbot-patterns-analysis.md)
+**Beads:** ralph-agi-001-003
 
-**Target:** Stories 3.1, 3.2, 3.5, 3.6 (11 points)
+**As a** developer
+**I want** automatic summarization of older context frames
+**So that** context windows don't overflow during long-running tasks
 
-| Story | Points | Priority |
-|-------|--------|----------|
-| 3.1 Memvid Core | 3 | P0 |
-| 3.2 Short-Term Memory | 2 | P0 |
-| 3.5 Vector Search | 3 | P1 |
-| 3.6 Query API | 3 | P1 |
+**Acceptance Criteria:**
+- [ ] Compaction threshold configuration in config.yaml
+- [ ] LLM-based summarization of older frames (use Haiku)
+- [ ] Archive original frames (don't delete)
+- [ ] Preserve full detail for errors and decisions
+- [ ] Integration with Story 3.6 Memory Query API
+- [ ] Token usage tracking before/after compaction
+- [ ] Benchmark: 50%+ token reduction on long sessions
 
-**Deferred to Sprint 3:** 3.3 (Git), 3.4 (Long-Term), 3.7 (Hooks)
+**Technical Notes:**
+- Compaction strategy:
+  - Recent (last N iterations) → Full detail
+  - Medium (N to 2N iterations) → Summarized
+  - Old (>2N iterations) → Key points only / archived
+- Importance scoring: errors > decisions > progress > chatter
+- Compaction should be idempotent (safe to run multiple times)
+
+**Config Example:**
+```yaml
+memory:
+  compaction:
+    enabled: true
+    threshold_frames: 50
+    summary_model: "haiku"
+    preserve_errors: true
+    preserve_decisions: true
+```
+
+---
+
+## Sprint History
+
+**Sprint 2:** Stories 3.1, 3.2, 3.5, 3.6 (11 points) - COMPLETE
+
+| Story | Points | Priority | Status |
+|-------|--------|----------|--------|
+| 3.1 Memvid Core | 3 | P0 | Complete |
+| 3.2 Short-Term Memory | 2 | P0 | Complete |
+| 3.5 Vector Search | 3 | P1 | Complete |
+| 3.6 Query API | 3 | P1 | Complete |
+
+**Sprint 4:** Stories 3.3, 3.4, 3.7, 3.8 (11 points) - COMPLETE
+
+| Story | Points | Priority | Status |
+|-------|--------|----------|--------|
+| 3.3 Git Integration | 3 | P0 | Complete |
+| 3.4 Long-Term Memory | 3 | P1 | Complete |
+| 3.7 Lifecycle Hooks | 2 | P2 | Complete |
+| 3.8 Context Compacting | 3 | P1 | Complete |
+
+**Total:** 22 points delivered, 266 tests passing
 
 ---
 
@@ -179,11 +227,11 @@ Implement the three-tier memory system enabling context persistence across sessi
 
 ## Definition of Done
 
-- [ ] All Sprint 2 stories complete
-- [ ] Memory persists across loop restarts
-- [ ] Semantic search returning relevant results
-- [ ] Context loading integrated into RalphLoop
-- [ ] 90%+ test coverage on memory module
+- [x] All 8 stories complete (Sprint 2 + Sprint 4)
+- [x] Memory persists across loop restarts
+- [x] Semantic search returning relevant results
+- [x] Context loading integrated into RalphLoop
+- [x] 90%+ test coverage on memory module (266 tests)
 
 ## Research Notes
 

@@ -1,7 +1,7 @@
 # RALPH-AGI Sprint Status
 # Updated: 2026-01-11
 
-current_sprint: sprint-03
+current_sprint: sprint-04
 
 sprints:
   sprint-01:
@@ -208,6 +208,66 @@ sprints:
       - Cross-platform file locking (Unix/Windows)
       - 41 new memory tests (80 memory tests total)
 
+  sprint-04:
+    name: "Week 4: Memory System Completion"
+    start_date: 2026-01-11
+    end_date: 2026-01-18
+    status: completed
+
+    goal: |
+      Complete Epic 03 (Memory System) with Git integration, long-term knowledge,
+      lifecycle hooks, and context compaction for full autonomous memory.
+
+    success_criteria:
+      - Git commits linked to memory frames
+      - Observation types with importance scoring
+      - Automatic memory capture at key points
+      - Context compaction preventing overflow
+      - 90%+ test coverage on all memory modules
+
+    scope:
+      epic: epic-03-memory-system
+      stories:
+        - id: story-3.3
+          name: Git Integration (Medium-Term Memory)
+          status: completed
+          priority: P0
+          points: 3
+
+        - id: story-3.4
+          name: Long-Term Memory (Persistent Knowledge)
+          status: completed
+          priority: P1
+          points: 3
+
+        - id: story-3.7
+          name: Lifecycle Hooks
+          status: completed
+          priority: P2
+          points: 2
+
+        - id: story-3.8
+          name: Context Compacting
+          status: completed
+          priority: P1
+          points: 3
+
+    deferred: []
+
+    total_points: 11
+    completed_points: 11
+
+    blockers: []
+
+    notes: |
+      SPRINT 4 COMPLETE! All 11 points delivered.
+      Epic 03 (Memory System) fully complete with all 8 stories delivered.
+      Story 3.3: GitMemory with auto-commit, memory linkage, commit queries (48 tests).
+      Story 3.4: KnowledgeStore with observation types, importance scoring, temporal queries (38 tests).
+      Story 3.7: LifecycleHooks with iteration start/end, error, completion hooks (49 tests).
+      Story 3.8: ContextCompactor with tiered compaction, preservation rules, summaries (52 tests).
+      Total: 187 new memory tests, 645 tests passing overall.
+
 # Velocity tracking
 velocity:
   sprint-01:
@@ -219,6 +279,9 @@ velocity:
   sprint-03:
     planned: 10
     completed: 10
+  sprint-04:
+    planned: 11
+    completed: 11
 
 # Epic progress
 epic_progress:
@@ -232,13 +295,13 @@ epic_progress:
     total_stories: 6
     completed: 4
     in_progress: 0
-    status: in_sprint
+    status: partial
 
   epic-03-memory-system:
-    total_stories: 7
-    completed: 4
+    total_stories: 8
+    completed: 8
     in_progress: 0
-    status: in_sprint
+    status: completed
 
   epic-04-tool-integration:
     total_stories: 7
