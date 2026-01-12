@@ -53,6 +53,51 @@ class TestRalphConfigDefaults:
         config = RalphConfig()
         assert config.log_file is None
 
+    def test_default_memory_enabled(self):
+        """Test default memory_enabled is True."""
+        config = RalphConfig()
+        assert config.memory_enabled is True
+
+    def test_default_memory_store_path(self):
+        """Test default memory_store_path."""
+        config = RalphConfig()
+        assert config.memory_store_path == "ralph_memory.mv2"
+
+    def test_default_memory_embedding_model(self):
+        """Test default memory_embedding_model."""
+        config = RalphConfig()
+        assert config.memory_embedding_model == "all-MiniLM-L6-v2"
+
+    def test_default_hooks_enabled(self):
+        """Test default hooks_enabled is True."""
+        config = RalphConfig()
+        assert config.hooks_enabled is True
+
+    def test_default_hooks_on_iteration_start(self):
+        """Test default hooks_on_iteration_start is True."""
+        config = RalphConfig()
+        assert config.hooks_on_iteration_start is True
+
+    def test_default_hooks_on_iteration_end(self):
+        """Test default hooks_on_iteration_end is True."""
+        config = RalphConfig()
+        assert config.hooks_on_iteration_end is True
+
+    def test_default_hooks_on_error(self):
+        """Test default hooks_on_error is True."""
+        config = RalphConfig()
+        assert config.hooks_on_error is True
+
+    def test_default_hooks_on_completion(self):
+        """Test default hooks_on_completion is True."""
+        config = RalphConfig()
+        assert config.hooks_on_completion is True
+
+    def test_default_hooks_context_frames(self):
+        """Test default hooks_context_frames is 10."""
+        config = RalphConfig()
+        assert config.hooks_context_frames == 10
+
 
 class TestRalphConfigCustomValues:
     """Tests for RalphConfig with custom values."""
@@ -82,6 +127,38 @@ class TestRalphConfigCustomValues:
         """Test custom log_file."""
         config = RalphConfig(log_file="test.log")
         assert config.log_file == "test.log"
+
+    def test_custom_memory_config(self):
+        """Test custom memory configuration."""
+        config = RalphConfig(
+            memory_enabled=False,
+            memory_store_path="/custom/path.mv2",
+        )
+        assert config.memory_enabled is False
+        assert config.memory_store_path == "/custom/path.mv2"
+
+    def test_custom_embedding_model(self):
+        """Test custom embedding model configuration."""
+        config = RalphConfig(
+            memory_embedding_model="all-mpnet-base-v2",
+        )
+        assert config.memory_embedding_model == "all-mpnet-base-v2"
+
+    def test_custom_hooks_enabled(self):
+        """Test custom hooks_enabled."""
+        config = RalphConfig(hooks_enabled=False)
+        assert config.hooks_enabled is False
+
+    def test_custom_hooks_config(self):
+        """Test custom hooks configuration."""
+        config = RalphConfig(
+            hooks_on_iteration_start=False,
+            hooks_on_error=False,
+            hooks_context_frames=20,
+        )
+        assert config.hooks_on_iteration_start is False
+        assert config.hooks_on_error is False
+        assert config.hooks_context_frames == 20
 
 
 class TestRalphConfigValidation:
@@ -173,6 +250,66 @@ log_file: "output.log"
         config = load_config()
         assert config.max_iterations == 42
 
+    def test_load_memory_config(self, tmp_path):
+        """Test loading memory config from YAML."""
+        config_file = tmp_path / "memory.yaml"
+        config_file.write_text("""
+memory:
+  enabled: false
+  store_path: "/custom/memory.mv2"
+""")
+
+        config = load_config(config_file)
+        assert config.memory_enabled is False
+        assert config.memory_store_path == "/custom/memory.mv2"
+
+    def test_load_embedding_model_config(self, tmp_path):
+        """Test loading embedding_model from YAML."""
+        config_file = tmp_path / "embedding.yaml"
+        config_file.write_text("""
+memory:
+  embedding_model: "all-mpnet-base-v2"
+""")
+
+        config = load_config(config_file)
+        assert config.memory_embedding_model == "all-mpnet-base-v2"
+
+    def test_load_memory_defaults_when_missing(self, tmp_path):
+        """Test that memory defaults are used when not in config."""
+        config_file = tmp_path / "no_memory.yaml"
+        config_file.write_text("max_iterations: 10\n")
+
+        config = load_config(config_file)
+        assert config.memory_enabled is True
+        assert config.memory_store_path == "ralph_memory.mv2"
+
+    def test_load_hooks_config(self, tmp_path):
+        """Test loading hooks config from YAML."""
+        config_file = tmp_path / "hooks.yaml"
+        config_file.write_text("""
+hooks:
+  enabled: false
+  on_iteration_start: false
+  on_error: false
+  context_frames: 25
+""")
+
+        config = load_config(config_file)
+        assert config.hooks_enabled is False
+        assert config.hooks_on_iteration_start is False
+        assert config.hooks_on_error is False
+        assert config.hooks_context_frames == 25
+
+    def test_load_hooks_defaults_when_missing(self, tmp_path):
+        """Test that hooks defaults are used when not in config."""
+        config_file = tmp_path / "no_hooks.yaml"
+        config_file.write_text("max_iterations: 10\n")
+
+        config = load_config(config_file)
+        assert config.hooks_enabled is True
+        assert config.hooks_on_iteration_start is True
+        assert config.hooks_context_frames == 10
+
 
 class TestSaveConfig:
     """Tests for save_config function."""
@@ -192,6 +329,50 @@ class TestSaveConfig:
         assert loaded.max_iterations == original.max_iterations
         assert loaded.completion_promise == original.completion_promise
         assert loaded.checkpoint_interval == original.checkpoint_interval
+
+    def test_save_and_load_memory_config_roundtrip(self, tmp_path):
+        """Test that memory config roundtrips correctly."""
+        config_file = tmp_path / "memory_test.yaml"
+        original = RalphConfig(
+            memory_enabled=False,
+            memory_store_path="/custom/path.mv2",
+        )
+
+        save_config(original, config_file)
+        loaded = load_config(config_file)
+
+        assert loaded.memory_enabled == original.memory_enabled
+        assert loaded.memory_store_path == original.memory_store_path
+
+    def test_save_and_load_embedding_model_roundtrip(self, tmp_path):
+        """Test that embedding_model config roundtrips correctly."""
+        config_file = tmp_path / "embedding_test.yaml"
+        original = RalphConfig(
+            memory_embedding_model="all-mpnet-base-v2",
+        )
+
+        save_config(original, config_file)
+        loaded = load_config(config_file)
+
+        assert loaded.memory_embedding_model == original.memory_embedding_model
+
+    def test_save_and_load_hooks_config_roundtrip(self, tmp_path):
+        """Test that hooks config roundtrips correctly."""
+        config_file = tmp_path / "hooks_test.yaml"
+        original = RalphConfig(
+            hooks_enabled=False,
+            hooks_on_iteration_start=False,
+            hooks_on_error=False,
+            hooks_context_frames=25,
+        )
+
+        save_config(original, config_file)
+        loaded = load_config(config_file)
+
+        assert loaded.hooks_enabled == original.hooks_enabled
+        assert loaded.hooks_on_iteration_start == original.hooks_on_iteration_start
+        assert loaded.hooks_on_error == original.hooks_on_error
+        assert loaded.hooks_context_frames == original.hooks_context_frames
 
     def test_save_creates_file(self, tmp_path):
         """Test that save_config creates the file."""
