@@ -844,3 +844,147 @@ class TestMemoryStoreIntegration:
             # Search
             results = store.search("context", limit=5)
             assert any("context" in r.content.lower() for r in results)
+
+
+class TestDualWriteAndFallback:
+    """Tests for JSONL dual-write and fallback functionality."""
+
+    def test_append_creates_jsonl_backup(self, tmp_path):
+        """Append should write to both Memvid and JSONL."""
+        store_path = tmp_path / "test.mv2"
+        jsonl_path = tmp_path / "test.jsonl"
+
+        store = MemoryStore(store_path)
+
+        # Mock Memvid to avoid dependency
+        mock_mv = MagicMock()
+        store._mv = mock_mv
+        store._initialized = True
+
+        store.append(
+            content="Test content",
+            frame_type="test",
+            metadata={"key": "value"},
+        )
+
+        # Verify JSONL backup was created
+        assert jsonl_path.exists()
+
+        # Verify content in JSONL
+        import json
+        with open(jsonl_path) as f:
+            data = json.loads(f.readline())
+        assert data["content"] == "Test content"
+        assert data["frame_type"] == "test"
+
+    def test_jsonl_backup_path_matches_store_path(self, tmp_path):
+        """JSONL backup path should be .mv2 path with .jsonl extension."""
+        store_path = tmp_path / "memory.mv2"
+        store = MemoryStore(store_path)
+
+        expected_jsonl_path = tmp_path / "memory.jsonl"
+        assert store._jsonl_backup.backup_path == expected_jsonl_path
+
+    def test_get_recent_falls_back_to_jsonl(self, tmp_path):
+        """get_recent should fall back to JSONL if Memvid unavailable."""
+        store_path = tmp_path / "test.mv2"
+        jsonl_path = tmp_path / "test.jsonl"
+
+        # Pre-populate JSONL with data
+        import json
+        with open(jsonl_path, "w") as f:
+            f.write(json.dumps({"id": "1", "content": "From JSONL", "frame_type": "test"}) + "\n")
+
+        store = MemoryStore(store_path)
+        # Don't initialize Memvid - simulate it being unavailable
+
+        results = store.get_recent(5)
+
+        assert len(results) == 1
+        assert results[0].content == "From JSONL"
+
+    def test_search_falls_back_to_jsonl(self, tmp_path):
+        """search should fall back to JSONL if Memvid unavailable."""
+        store_path = tmp_path / "test.mv2"
+        jsonl_path = tmp_path / "test.jsonl"
+
+        # Pre-populate JSONL with data
+        import json
+        with open(jsonl_path, "w") as f:
+            f.write(json.dumps({"id": "1", "content": "Error in module", "frame_type": "error"}) + "\n")
+            f.write(json.dumps({"id": "2", "content": "Success message", "frame_type": "result"}) + "\n")
+
+        store = MemoryStore(store_path)
+        # Don't initialize Memvid
+
+        results = store.search("Error")
+
+        assert len(results) == 1
+        assert results[0].content == "Error in module"
+
+    def test_query_result_includes_backend_memvid(self, tmp_path):
+        """query should return backend='memvid' when Memvid succeeds."""
+        store_path = tmp_path / "test.mv2"
+        store = MemoryStore(store_path)
+
+        # Mock Memvid
+        mock_mv = MagicMock()
+        mock_mv.find.return_value = {"hits": []}
+        store._mv = mock_mv
+        store._initialized = True
+
+        result = store.query("test")
+
+        assert result.backend == "memvid"
+
+    def test_query_result_includes_backend_jsonl_fallback(self, tmp_path):
+        """query should return backend='jsonl_fallback' when using JSONL."""
+        store_path = tmp_path / "test.mv2"
+        jsonl_path = tmp_path / "test.jsonl"
+
+        # Create empty JSONL
+        jsonl_path.touch()
+
+        store = MemoryStore(store_path)
+        # Don't initialize Memvid - simulate fallback
+
+        result = store.query("test")
+
+        assert result.backend == "jsonl_fallback"
+
+    def test_dual_write_failure_does_not_fail_append(self, tmp_path):
+        """JSONL write failure should not fail the main append."""
+        store_path = tmp_path / "test.mv2"
+        store = MemoryStore(store_path)
+
+        # Mock Memvid
+        mock_mv = MagicMock()
+        store._mv = mock_mv
+        store._initialized = True
+
+        # Mock JSONL backup to fail
+        store._jsonl_backup.append = MagicMock(return_value=False)
+
+        # Should not raise
+        frame_id = store.append(content="Test", frame_type="test")
+
+        assert frame_id is not None
+        mock_mv.put.assert_called_once()
+
+    def test_fallback_with_frame_type_filter(self, tmp_path):
+        """Fallback search should support frame_type filter."""
+        store_path = tmp_path / "test.mv2"
+        jsonl_path = tmp_path / "test.jsonl"
+
+        import json
+        with open(jsonl_path, "w") as f:
+            f.write(json.dumps({"id": "1", "content": "Error A", "frame_type": "error"}) + "\n")
+            f.write(json.dumps({"id": "2", "content": "Result B", "frame_type": "result"}) + "\n")
+            f.write(json.dumps({"id": "3", "content": "Error C", "frame_type": "error"}) + "\n")
+
+        store = MemoryStore(store_path)
+
+        results = store.search("*", frame_type="error")
+
+        assert len(results) == 2
+        assert all(r.frame_type == "error" for r in results)
