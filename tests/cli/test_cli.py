@@ -19,6 +19,14 @@ from ralph_agi.cli import (
 
 
 class TestCreateParser:
+    def test_help_flag_shows_usage(self, capsys):
+        """Test --help flag shows usage information."""
+        parser = create_parser()
+        with pytest.raises(SystemExit) as exc:
+            parser.parse_args(["--help"])
+        assert exc.value.code == 0
+        captured = capsys.readouterr()
+        assert "usage" in captured.out.lower()
     """Tests for argument parser creation."""
 
     def test_parser_created(self):
