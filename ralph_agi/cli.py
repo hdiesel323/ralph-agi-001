@@ -30,6 +30,7 @@ def create_parser() -> argparse.ArgumentParser:
         epilog="""\
 Examples:
   ralph-agi run                        Start the loop with default config
+  ralph-agi run --prd PRD.json         Run with PRD file for LLM execution
   ralph-agi run --max-iterations 10    Run with custom iteration limit
   ralph-agi run --config my-config.yaml Use custom config file
   ralph-agi run -v                     Verbose output
@@ -71,6 +72,14 @@ Exit Codes:
         default="config.yaml",
         metavar="PATH",
         help="Path to config file (default: config.yaml)",
+    )
+
+    run_parser.add_argument(
+        "--prd",
+        "-p",
+        type=str,
+        metavar="PATH",
+        help="Path to PRD.json file for task execution",
     )
 
     run_parser.add_argument(
@@ -135,14 +144,32 @@ def run_loop(args: argparse.Namespace) -> int:
             memory_enabled=config.memory_enabled,
             memory_store_path=config.memory_store_path,
             memory_embedding_model=config.memory_embedding_model,
+            hooks_enabled=config.hooks_enabled,
+            hooks_on_iteration_start=config.hooks_on_iteration_start,
+            hooks_on_iteration_end=config.hooks_on_iteration_end,
+            hooks_on_error=config.hooks_on_error,
+            hooks_on_completion=config.hooks_on_completion,
+            hooks_context_frames=config.hooks_context_frames,
+            llm_builder_model=config.llm_builder_model,
+            llm_builder_provider=config.llm_builder_provider,
+            llm_critic_model=config.llm_critic_model,
+            llm_critic_provider=config.llm_critic_provider,
+            llm_critic_enabled=config.llm_critic_enabled,
+            llm_max_tokens=config.llm_max_tokens,
+            llm_max_tool_iterations=config.llm_max_tool_iterations,
+            llm_temperature=config.llm_temperature,
+            llm_rate_limit_retries=config.llm_rate_limit_retries,
         )
 
     # Create and run the loop
-    loop = RalphLoop.from_config(config)
+    prd_path = getattr(args, "prd", None)
+    loop = RalphLoop.from_config(config, prd_path=prd_path)
 
     formatter.verbose(f"Session: {loop.session_id}")
     formatter.verbose(f"Max iterations: {config.max_iterations}")
     formatter.verbose(f"Config: {args.config}")
+    if prd_path:
+        formatter.verbose(f"PRD: {prd_path}")
     formatter.message("")
 
     try:

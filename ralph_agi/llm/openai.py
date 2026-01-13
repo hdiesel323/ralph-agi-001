@@ -128,7 +128,8 @@ class OpenAIClient:
         """Build message list with system prompt prepended.
 
         OpenAI uses a system message in the messages array rather than
-        a separate parameter like Anthropic.
+        a separate parameter like Anthropic. This method also converts
+        Anthropic-style tool messages to OpenAI format.
 
         Args:
             messages: Conversation history.
@@ -140,8 +141,95 @@ class OpenAIClient:
         result = []
         if system:
             result.append({"role": "system", "content": system})
-        result.extend(messages)
+
+        for msg in messages:
+            converted = self._convert_message(msg)
+            if isinstance(converted, list):
+                result.extend(converted)
+            else:
+                result.append(converted)
+
         return result
+
+    def _convert_message(self, msg: dict[str, Any]) -> dict[str, Any] | list[dict[str, Any]]:
+        """Convert a single message from Anthropic format to OpenAI format.
+
+        Handles:
+        - Assistant messages with tool_use blocks → tool_calls
+        - User messages with tool_result blocks → tool role messages
+
+        Args:
+            msg: Message in potentially Anthropic format.
+
+        Returns:
+            Message(s) in OpenAI format.
+        """
+        import json
+
+        role = msg.get("role")
+        content = msg.get("content")
+
+        # Handle simple string content
+        if isinstance(content, str):
+            return msg
+
+        # Handle list content (Anthropic style)
+        if isinstance(content, list):
+            # Check if this is an assistant message with tool_use
+            if role == "assistant":
+                text_parts = []
+                tool_calls = []
+
+                for block in content:
+                    if isinstance(block, dict):
+                        block_type = block.get("type")
+                        if block_type == "text":
+                            text_parts.append(block.get("text", ""))
+                        elif block_type == "tool_use":
+                            tool_calls.append({
+                                "id": block.get("id"),
+                                "type": "function",
+                                "function": {
+                                    "name": block.get("name"),
+                                    "arguments": json.dumps(block.get("input", {})),
+                                },
+                            })
+
+                result: dict[str, Any] = {"role": "assistant"}
+                if text_parts:
+                    result["content"] = "\n".join(text_parts)
+                else:
+                    result["content"] = None
+                if tool_calls:
+                    result["tool_calls"] = tool_calls
+
+                return result
+
+            # Check if this is a user message with tool_result
+            elif role == "user":
+                tool_messages = []
+                text_parts = []
+
+                for block in content:
+                    if isinstance(block, dict):
+                        block_type = block.get("type")
+                        if block_type == "text":
+                            text_parts.append(block.get("text", ""))
+                        elif block_type == "tool_result":
+                            tool_messages.append({
+                                "role": "tool",
+                                "tool_call_id": block.get("tool_use_id"),
+                                "content": block.get("content", ""),
+                            })
+
+                # If there are both text and tool results, combine appropriately
+                if tool_messages:
+                    return tool_messages
+                elif text_parts:
+                    return {"role": "user", "content": "\n".join(text_parts)}
+
+        # Return unchanged if no conversion needed
+        return msg
 
     async def complete(
         self,
