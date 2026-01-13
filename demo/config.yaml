@@ -1,0 +1,34 @@
+# RALPH-AGI Demo Configuration
+max_iterations: 5
+completion_promise: "<promise>COMPLETE</promise>"
+
+# Memory settings
+memory:
+  enabled: true
+  store_path: "demo_memory.mv2"
+
+# Hooks
+hooks:
+  enabled: true
+  on_iteration_start: true
+  on_iteration_end: true
+  on_error: true
+  on_completion: true
+  context_frames: 5
+
+# LLM Configuration
+llm:
+  # Using GPT-4o for demos (fast + capable)
+  builder_model: gpt-4o
+  builder_provider: openai
+
+  # Critic disabled for faster demos
+  critic_enabled: false
+  critic_model: gpt-4o
+  critic_provider: openai
+
+  # Limits
+  max_tokens: 4096
+  max_tool_iterations: 10
+  temperature: 0.0
+  rate_limit_retries: 3

@@ -1,0 +1,30 @@
+{
+  "project": {
+    "id": "demo-calculator",
+    "name": "Calculator Module Demo",
+    "description": "Medium complexity: Create a calculator module with basic arithmetic operations"
+  },
+  "features": [
+    {
+      "id": "CALC-001",
+      "description": "Create a calculator.py module with add, subtract, multiply, and divide functions",
+      "passes": false,
+      "priority": 1,
+      "steps": [
+        "Create calculator.py with four functions: add(a, b), subtract(a, b), multiply(a, b), divide(a, b)",
+        "Each function should return the result of the operation",
+        "divide() should handle division by zero gracefully by raising ValueError",
+        "Add docstrings to each function"
+      ],
+      "acceptance_criteria": [
+        "File calculator.py exists",
+        "add(2, 3) returns 5",
+        "subtract(10, 4) returns 6",
+        "multiply(3, 4) returns 12",
+        "divide(10, 2) returns 5.0",
+        "divide(1, 0) raises ValueError"
+      ],
+      "dependencies": []
+    }
+  ]
+}

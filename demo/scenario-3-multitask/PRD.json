@@ -1,0 +1,60 @@
+{
+  "project": {
+    "id": "demo-multitask",
+    "name": "Multi-Task Project Demo",
+    "description": "Complex demonstration: Multiple dependent tasks building a complete utility"
+  },
+  "features": [
+    {
+      "id": "UTIL-001",
+      "description": "Create a string_utils.py module with reverse_string and count_vowels functions",
+      "passes": false,
+      "priority": 1,
+      "steps": [
+        "Create string_utils.py",
+        "Implement reverse_string(s) that reverses a string",
+        "Implement count_vowels(s) that counts vowels (a,e,i,o,u) in a string (case-insensitive)"
+      ],
+      "acceptance_criteria": [
+        "File string_utils.py exists",
+        "reverse_string('hello') returns 'olleh'",
+        "count_vowels('Hello World') returns 3"
+      ],
+      "dependencies": []
+    },
+    {
+      "id": "UTIL-002",
+      "description": "Create test_string_utils.py with pytest tests for the string_utils module",
+      "passes": false,
+      "priority": 2,
+      "steps": [
+        "Create test_string_utils.py",
+        "Write test_reverse_string() with multiple test cases",
+        "Write test_count_vowels() with multiple test cases",
+        "Include edge cases like empty strings"
+      ],
+      "acceptance_criteria": [
+        "File test_string_utils.py exists",
+        "Running 'python -m pytest test_string_utils.py' passes all tests"
+      ],
+      "dependencies": ["UTIL-001"]
+    },
+    {
+      "id": "UTIL-003",
+      "description": "Create a main.py CLI that demonstrates the string utilities",
+      "passes": false,
+      "priority": 3,
+      "steps": [
+        "Create main.py that imports from string_utils",
+        "Print a demo showing reverse_string and count_vowels in action",
+        "Use example text 'RALPH-AGI Demo' as input"
+      ],
+      "acceptance_criteria": [
+        "File main.py exists",
+        "Running 'python main.py' shows both functions working",
+        "Output includes the reversed string and vowel count"
+      ],
+      "dependencies": ["UTIL-001"]
+    }
+  ]
+}

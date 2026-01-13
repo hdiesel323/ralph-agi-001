@@ -1,0 +1,24 @@
+{
+  "project": {
+    "name": "Hello World Demo",
+    "description": "Simple demonstration: Create a Python script that prints a greeting"
+  },
+  "features": [
+    {
+      "id": "HELLO-001",
+      "description": "Create a greeting.py script that prints 'Hello from RALPH-AGI!' when executed",
+      "passes": true,
+      "priority": 1,
+      "steps": [
+        "Create a file named greeting.py",
+        "Add a print statement with the greeting message",
+        "Ensure the script is executable with python greeting.py"
+      ],
+      "acceptance_criteria": [
+        "File greeting.py exists in the current directory",
+        "Running 'python greeting.py' outputs exactly 'Hello from RALPH-AGI!'"
+      ],
+      "completed_at": "2026-01-13T08:14:47.705532+00:00"
+    }
+  ]
+}

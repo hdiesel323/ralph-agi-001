@@ -1,0 +1,9 @@
+# Generated during demo runs
+*.py
+*.mv2
+*.jsonl
+*.bak
+config.yaml
+
+# But keep PRD.json
+!PRD.json
