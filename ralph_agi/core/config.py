@@ -48,6 +48,16 @@ class RalphConfig:
         hooks_on_error: Hook: capture errors with context. Default: True
         hooks_on_completion: Hook: store completion summary. Default: True
         hooks_context_frames: Number of context frames to load. Default: 10
+        llm_builder_model: Model for Builder agent. Default: "claude-sonnet-4-20250514"
+        llm_builder_provider: Provider for Builder (anthropic, openai, openrouter).
+            Default: "anthropic"
+        llm_critic_model: Model for Critic agent. Default: "gpt-4o"
+        llm_critic_provider: Provider for Critic. Default: "openai"
+        llm_critic_enabled: Whether to enable Critic reviews. Default: True
+        llm_max_tokens: Maximum tokens per LLM call. Default: 4096
+        llm_max_tool_iterations: Maximum tool loop iterations. Default: 10
+        llm_temperature: Sampling temperature (0.0 = deterministic). Default: 0.0
+        llm_rate_limit_retries: Max retries on rate limit. Default: 3
     """
 
     max_iterations: int = 100
@@ -66,6 +76,16 @@ class RalphConfig:
     hooks_on_error: bool = True
     hooks_on_completion: bool = True
     hooks_context_frames: int = 10
+    # LLM Configuration
+    llm_builder_model: str = "claude-sonnet-4-20250514"
+    llm_builder_provider: str = "anthropic"
+    llm_critic_model: str = "gpt-4o"
+    llm_critic_provider: str = "openai"
+    llm_critic_enabled: bool = True
+    llm_max_tokens: int = 4096
+    llm_max_tool_iterations: int = 10
+    llm_temperature: float = 0.0
+    llm_rate_limit_retries: int = 3
 
     def __post_init__(self):
         """Validate configuration after initialization."""
@@ -127,9 +147,10 @@ def load_config(config_path: Optional[str | Path] = None) -> RalphConfig:
         return RalphConfig()
 
     # Extract config values with defaults
-    # Handle nested memory config
+    # Handle nested configs
     memory_config = data.get("memory", {})
     hooks_config = data.get("hooks", {})
+    llm_config = data.get("llm", {})
 
     return RalphConfig(
         max_iterations=data.get("max_iterations", 100),
@@ -148,6 +169,15 @@ def load_config(config_path: Optional[str | Path] = None) -> RalphConfig:
         hooks_on_error=hooks_config.get("on_error", True),
         hooks_on_completion=hooks_config.get("on_completion", True),
         hooks_context_frames=hooks_config.get("context_frames", 10),
+        llm_builder_model=llm_config.get("builder_model", "claude-sonnet-4-20250514"),
+        llm_builder_provider=llm_config.get("builder_provider", "anthropic"),
+        llm_critic_model=llm_config.get("critic_model", "gpt-4o"),
+        llm_critic_provider=llm_config.get("critic_provider", "openai"),
+        llm_critic_enabled=llm_config.get("critic_enabled", True),
+        llm_max_tokens=llm_config.get("max_tokens", 4096),
+        llm_max_tool_iterations=llm_config.get("max_tool_iterations", 10),
+        llm_temperature=llm_config.get("temperature", 0.0),
+        llm_rate_limit_retries=llm_config.get("rate_limit_retries", 3),
     )
 
 
@@ -178,6 +208,17 @@ def save_config(config: RalphConfig, config_path: str | Path = "config.yaml") ->
             "on_error": config.hooks_on_error,
             "on_completion": config.hooks_on_completion,
             "context_frames": config.hooks_context_frames,
+        },
+        "llm": {
+            "builder_model": config.llm_builder_model,
+            "builder_provider": config.llm_builder_provider,
+            "critic_model": config.llm_critic_model,
+            "critic_provider": config.llm_critic_provider,
+            "critic_enabled": config.llm_critic_enabled,
+            "max_tokens": config.llm_max_tokens,
+            "max_tool_iterations": config.llm_max_tool_iterations,
+            "temperature": config.llm_temperature,
+            "rate_limit_retries": config.llm_rate_limit_retries,
         },
     }
 

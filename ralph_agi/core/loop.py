@@ -8,15 +8,17 @@ Key Design Principles (from PRD FR-001):
 - Single task per iteration to prevent context bloat
 - Comprehensive logging with timestamps
 - Retry logic with exponential backoff
+- Builder → Critic multi-agent architecture (ADR-002)
 """
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import signal
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Optional
@@ -24,7 +26,10 @@ from uuid import uuid4
 
 if TYPE_CHECKING:
     from ralph_agi.core.config import RalphConfig
+    from ralph_agi.llm.agents import BuilderAgent, CriticAgent
+    from ralph_agi.llm.orchestrator import LLMOrchestrator
     from ralph_agi.memory.store import MemoryStore
+    from ralph_agi.tasks.executor import TaskExecutor
 
 
 @dataclass
@@ -34,10 +39,118 @@ class IterationResult:
     Attributes:
         success: Whether the iteration completed successfully.
         output: Optional output string from the iteration (for completion detection).
+        task_id: ID of the task that was executed.
+        task_title: Title of the task that was executed.
+        files_changed: List of files modified during execution.
+        tokens_used: Total tokens used in this iteration.
+        all_tasks_complete: Whether all tasks in PRD are complete.
+        error: Error message if iteration failed.
     """
 
     success: bool
     output: Optional[str] = None
+    task_id: Optional[str] = None
+    task_title: Optional[str] = None
+    files_changed: list[str] = field(default_factory=list)
+    tokens_used: int = 0
+    all_tasks_complete: bool = False
+    error: Optional[str] = None
+
+
+class ToolExecutorAdapter:
+    """Adapter that bridges LLM tool calls to RALPH tool implementations.
+
+    Maps tool names from LLM to our FileSystemTools, ShellTools, and GitTools.
+    """
+
+    def __init__(self, work_dir: Optional[Path] = None):
+        """Initialize the tool executor.
+
+        Args:
+            work_dir: Working directory for file operations.
+        """
+        self._work_dir = work_dir or Path.cwd()
+        self._fs_tools = None
+        self._shell_tools = None
+        self._git_tools = None
+
+    def _ensure_tools(self) -> None:
+        """Lazily initialize tools."""
+        if self._fs_tools is None:
+            from ralph_agi.tools.filesystem import FileSystemTools
+            self._fs_tools = FileSystemTools(allowed_roots=[self._work_dir])
+
+        if self._shell_tools is None:
+            from ralph_agi.tools.shell import ShellTools
+            self._shell_tools = ShellTools(default_cwd=self._work_dir)
+
+        if self._git_tools is None:
+            from ralph_agi.tools.git import GitTools
+            self._git_tools = GitTools(repo_path=self._work_dir)
+
+    async def execute(
+        self,
+        tool_name: str,
+        arguments: Optional[dict[str, Any]] = None,
+    ) -> Any:
+        """Execute a tool by name.
+
+        Args:
+            tool_name: Name of the tool to execute.
+            arguments: Arguments for the tool.
+
+        Returns:
+            Tool execution result.
+        """
+        self._ensure_tools()
+        arguments = arguments or {}
+
+        # File system tools
+        if tool_name == "read_file":
+            path = arguments.get("path", "")
+            return self._fs_tools.read_file(path)
+
+        elif tool_name == "write_file":
+            path = arguments.get("path", "")
+            content = arguments.get("content", "")
+            self._fs_tools.write_file(path, content)
+            return f"File written: {path}"
+
+        elif tool_name == "list_directory":
+            path = arguments.get("path", ".")
+            files = self._fs_tools.list_directory(path)
+            return "\n".join(f.name for f in files)
+
+        # Shell tools
+        elif tool_name == "run_command":
+            command = arguments.get("command", "")
+            cwd = arguments.get("cwd")
+            result = self._shell_tools.execute(command, cwd=cwd)
+            if result.success:
+                return result.stdout
+            else:
+                return f"Error (exit {result.exit_code}): {result.stderr or result.stdout}"
+
+        # Git tools
+        elif tool_name == "git_status":
+            status = self._git_tools.status()
+            parts = [f"Branch: {status.branch}"]
+            if status.staged:
+                parts.append(f"Staged: {', '.join(status.staged)}")
+            if status.modified:
+                parts.append(f"Modified: {', '.join(status.modified)}")
+            if status.untracked:
+                parts.append(f"Untracked: {', '.join(status.untracked)}")
+            return "\n".join(parts)
+
+        elif tool_name == "git_commit":
+            message = arguments.get("message", "")
+            self._git_tools.add(".")
+            commit = self._git_tools.commit(message)
+            return f"Committed: {commit.sha[:8]} - {commit.message}"
+
+        else:
+            return f"Unknown tool: {tool_name}"
 
 
 class MaxRetriesExceeded(Exception):
@@ -89,6 +202,9 @@ class RalphLoop:
         checkpoint_path: Optional[str] = None,
         memory_store: Optional[MemoryStore] = None,
         session_id: Optional[str] = None,
+        prd_path: Optional[str] = None,
+        task_executor: Optional[TaskExecutor] = None,
+        orchestrator: Optional[LLMOrchestrator] = None,
     ):
         """Initialize the Ralph Loop Engine.
 
@@ -107,6 +223,12 @@ class RalphLoop:
                          Default: None (no memory)
             session_id: Optional session identifier. If not provided, a new
                        UUID will be generated. Default: None
+            prd_path: Path to PRD.json file for task management.
+                     Required for LLM execution mode.
+            task_executor: Optional TaskExecutor for task lifecycle.
+                          Created automatically if prd_path provided.
+            orchestrator: Optional LLMOrchestrator for Builder → Critic flow.
+                         Created from config if not provided.
         """
         if max_iterations < 0:
             raise ValueError("max_iterations must be non-negative")
@@ -129,15 +251,26 @@ class RalphLoop:
         # Memory store (optional)
         self._memory_store = memory_store
 
+        # Task management (for LLM execution)
+        self._prd_path = Path(prd_path) if prd_path else None
+        self._task_executor = task_executor
+        self._orchestrator = orchestrator
+        self._tools: list[Any] = []  # LLM Tool schemas
+
         # Set up logging
         self._setup_logging(log_file)
 
     @classmethod
-    def from_config(cls, config: RalphConfig) -> RalphLoop:
+    def from_config(
+        cls,
+        config: RalphConfig,
+        prd_path: Optional[str] = None,
+    ) -> RalphLoop:
         """Create a RalphLoop instance from a RalphConfig.
 
         Args:
             config: RalphConfig instance with configuration values.
+            prd_path: Path to PRD.json file for task management.
 
         Returns:
             Configured RalphLoop instance.
@@ -148,7 +281,18 @@ class RalphLoop:
             from ralph_agi.memory.store import MemoryStore
             memory_store = MemoryStore(config.memory_store_path)
 
-        return cls(
+        # Create LLM components
+        orchestrator = None
+        task_executor = None
+
+        if prd_path:
+            prd_file = Path(prd_path)
+            work_dir = prd_file.parent if prd_file.exists() else Path.cwd()
+            orchestrator = cls._create_orchestrator(config, work_dir=work_dir)
+            from ralph_agi.tasks.executor import TaskExecutor
+            task_executor = TaskExecutor()
+
+        loop = cls(
             max_iterations=config.max_iterations,
             max_retries=config.max_retries,
             retry_delays=config.retry_delays,
@@ -156,7 +300,204 @@ class RalphLoop:
             completion_promise=config.completion_promise,
             checkpoint_path=config.checkpoint_path,
             memory_store=memory_store,
+            prd_path=prd_path,
+            task_executor=task_executor,
+            orchestrator=orchestrator,
         )
+
+        # Build tool schemas for LLM
+        if orchestrator:
+            loop._tools = cls._build_tool_schemas()
+
+        return loop
+
+    @staticmethod
+    def _create_orchestrator(
+        config: RalphConfig,
+        work_dir: Optional[Path] = None,
+    ) -> LLMOrchestrator:
+        """Create LLM orchestrator from config.
+
+        Args:
+            config: RalphConfig with LLM settings.
+            work_dir: Working directory for tool execution.
+
+        Returns:
+            Configured LLMOrchestrator.
+        """
+        from ralph_agi.llm.agents import BuilderAgent, CriticAgent
+        from ralph_agi.llm.orchestrator import LLMOrchestrator
+
+        # Create tool executor
+        tool_executor = ToolExecutorAdapter(work_dir=work_dir)
+
+        # Create Builder client based on provider
+        builder_client = RalphLoop._create_llm_client(
+            provider=config.llm_builder_provider,
+            model=config.llm_builder_model,
+        )
+
+        builder = BuilderAgent(
+            client=builder_client,
+            tool_executor=tool_executor,
+            max_iterations=config.llm_max_tool_iterations,
+            max_tokens=config.llm_max_tokens,
+        )
+
+        # Create Critic if enabled
+        critic = None
+        if config.llm_critic_enabled:
+            critic_client = RalphLoop._create_llm_client(
+                provider=config.llm_critic_provider,
+                model=config.llm_critic_model,
+            )
+            critic = CriticAgent(
+                client=critic_client,
+                max_tokens=config.llm_max_tokens,
+            )
+
+        return LLMOrchestrator(
+            builder=builder,
+            critic=critic,
+            critic_enabled=config.llm_critic_enabled,
+            max_rate_limit_retries=config.llm_rate_limit_retries,
+        )
+
+    @staticmethod
+    def _create_llm_client(provider: str, model: str) -> Any:
+        """Create an LLM client for the given provider.
+
+        Args:
+            provider: Provider name (anthropic, openai, openrouter).
+            model: Model name.
+
+        Returns:
+            LLM client instance.
+
+        Raises:
+            ValueError: If provider is unknown.
+        """
+        if provider == "anthropic":
+            from ralph_agi.llm.anthropic import AnthropicClient
+            return AnthropicClient(model=model)
+        elif provider == "openai":
+            from ralph_agi.llm.openai import OpenAIClient
+            return OpenAIClient(model=model)
+        elif provider == "openrouter":
+            from ralph_agi.llm.openrouter import OpenRouterClient
+            return OpenRouterClient(model=model)
+        else:
+            raise ValueError(f"Unknown LLM provider: {provider}")
+
+    @staticmethod
+    def _build_tool_schemas() -> list[Any]:
+        """Build Tool schemas for LLM from available tools.
+
+        Returns:
+            List of Tool dataclasses for LLM.
+        """
+        from ralph_agi.llm.client import Tool
+
+        # Core file system tools
+        tools = [
+            Tool(
+                name="read_file",
+                description="Read the contents of a file at the specified path.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "description": "Absolute or relative path to the file to read.",
+                        },
+                    },
+                    "required": ["path"],
+                },
+            ),
+            Tool(
+                name="write_file",
+                description="Write content to a file, creating it if it doesn't exist.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "description": "Path to the file to write.",
+                        },
+                        "content": {
+                            "type": "string",
+                            "description": "Content to write to the file.",
+                        },
+                    },
+                    "required": ["path", "content"],
+                },
+            ),
+            Tool(
+                name="list_directory",
+                description="List files and directories at the specified path.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "description": "Path to the directory to list.",
+                        },
+                    },
+                    "required": ["path"],
+                },
+            ),
+            Tool(
+                name="run_command",
+                description="Execute a shell command and return its output.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "command": {
+                            "type": "string",
+                            "description": "The shell command to execute.",
+                        },
+                        "cwd": {
+                            "type": "string",
+                            "description": "Working directory for the command (optional).",
+                        },
+                    },
+                    "required": ["command"],
+                },
+            ),
+            Tool(
+                name="git_status",
+                description="Get the current git status of the repository.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "description": "Path to the git repository (optional, defaults to cwd).",
+                        },
+                    },
+                },
+            ),
+            Tool(
+                name="git_commit",
+                description="Create a git commit with the specified message.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "message": {
+                            "type": "string",
+                            "description": "Commit message.",
+                        },
+                        "path": {
+                            "type": "string",
+                            "description": "Path to the git repository (optional).",
+                        },
+                    },
+                    "required": ["message"],
+                },
+            ),
+        ]
+
+        return tools
 
     def _setup_logging(self, log_file: Optional[str] = None) -> None:
         """Configure logging with ISO timestamp format.
@@ -322,15 +663,195 @@ class RalphLoop:
     def _execute_iteration(self) -> IterationResult:
         """Execute a single iteration of the loop.
 
-        This is a stub implementation for Story 1.1. Future stories will
-        implement actual task execution logic.
+        If LLM execution is configured (PRD path and orchestrator), runs
+        the Builder → Critic flow for the next task. Otherwise, returns
+        a basic success result.
 
         Returns:
-            IterationResult with success status and optional output.
+            IterationResult with execution details.
         """
-        # Stub implementation - to be expanded in future stories
-        # For now, just returns success with no output
-        return IterationResult(success=True, output=None)
+        # Check if LLM execution is configured
+        if not self._prd_path or not self._task_executor or not self._orchestrator:
+            # Fallback to stub mode (for tests or non-LLM usage)
+            return IterationResult(success=True, output=None)
+
+        # Run async execution in sync context
+        return asyncio.get_event_loop().run_until_complete(
+            self._execute_iteration_async()
+        )
+
+    async def _execute_iteration_async(self) -> IterationResult:
+        """Async implementation of iteration execution.
+
+        Implements the full Builder → Critic flow:
+        1. Get next task from TaskExecutor
+        2. Build context (task + memory + tools)
+        3. Run LLMOrchestrator.execute_iteration()
+        4. Complete task if successful
+        5. Return IterationResult
+
+        Returns:
+            IterationResult with execution details.
+        """
+        from ralph_agi.llm.orchestrator import OrchestratorStatus
+
+        # Step 1: Get next task
+        try:
+            ctx = self._task_executor.begin_task(self._prd_path)
+        except Exception as e:
+            self.logger.error(f"Failed to get next task: {e}")
+            return IterationResult(
+                success=False,
+                error=str(e),
+            )
+
+        # Check if all tasks are complete
+        if ctx is None:
+            self.logger.info("All tasks complete - no more work to do")
+            return IterationResult(
+                success=True,
+                output=self._completion_signal,
+                all_tasks_complete=True,
+            )
+
+        task = ctx.feature
+        # Feature uses description as the main content (no title field)
+        task_title = task.description[:50] + "..." if len(task.description) > 50 else task.description
+        task_dict = {
+            "id": task.id,
+            "title": task_title,
+            "description": task.description,
+            "priority": task.priority,
+            "steps": task.steps,
+            "acceptance_criteria": task.acceptance_criteria,
+            "dependencies": task.dependencies,
+        }
+
+        self.logger.info(f"Working on task: {task.id} - {task_title}")
+
+        # Step 2: Build context
+        project_context = self._build_project_context()
+        memory_context = self._build_memory_context()
+
+        # Step 3: Execute via orchestrator
+        try:
+            result = await self._orchestrator.execute_iteration(
+                task=task_dict,
+                tools=self._tools,
+                context=project_context,
+                memory_context=memory_context,
+            )
+        except Exception as e:
+            self.logger.error(f"LLM execution failed: {e}")
+            self._task_executor.abort_task(reason=str(e))
+            return IterationResult(
+                success=False,
+                task_id=task.id,
+                task_title=task.title,
+                error=str(e),
+            )
+
+        # Step 4: Handle result
+        if result.is_success:
+            # Complete the task
+            try:
+                self._task_executor.complete_task(ctx)
+                self.logger.info(f"Task {task.id} completed successfully")
+            except Exception as e:
+                self.logger.error(f"Failed to mark task complete: {e}")
+                return IterationResult(
+                    success=False,
+                    task_id=task.id,
+                    task_title=task.title,
+                    files_changed=result.files_changed,
+                    tokens_used=result.token_usage.total,
+                    error=f"Failed to mark complete: {e}",
+                )
+
+            return IterationResult(
+                success=True,
+                output=f"Task completed: {task_title}",
+                task_id=task.id,
+                task_title=task_title,
+                files_changed=result.files_changed,
+                tokens_used=result.token_usage.total,
+            )
+        else:
+            # Task failed or blocked
+            reason = result.error or f"Status: {result.status.value}"
+            self._task_executor.abort_task(reason=reason)
+
+            # Check if blocked vs needs revision
+            if result.status == OrchestratorStatus.BLOCKED:
+                self.logger.warning(f"Task {task.id} blocked: {reason}")
+            elif result.status == OrchestratorStatus.NEEDS_REVISION:
+                self.logger.info(f"Task {task.id} needs revision")
+            else:
+                self.logger.error(f"Task {task.id} failed: {reason}")
+
+            return IterationResult(
+                success=False,
+                task_id=task.id,
+                task_title=task_title,
+                files_changed=result.files_changed,
+                tokens_used=result.token_usage.total,
+                error=reason,
+            )
+
+    def _build_project_context(self) -> str:
+        """Build project context string for LLM.
+
+        Returns:
+            Context string with project information.
+        """
+        parts = []
+
+        # Add project info if PRD available
+        if self._prd_path and self._prd_path.exists():
+            parts.append(f"## Project\nWorking on PRD: {self._prd_path.name}")
+
+            # Try to load PRD for project name
+            try:
+                from ralph_agi.tasks.prd import load_prd
+                prd = load_prd(self._prd_path)
+                # PRD has project.name field for project name
+                parts.append(f"Project: {prd.project.name}")
+                if prd.project.description:
+                    parts.append(f"\n{prd.project.description[:500]}")
+            except Exception:
+                pass
+
+        # Add working directory
+        import os
+        parts.append(f"\n## Working Directory\n{os.getcwd()}")
+
+        return "\n".join(parts) if parts else ""
+
+    def _build_memory_context(self) -> str:
+        """Build memory context string from recent frames.
+
+        Returns:
+            Context string with relevant memories.
+        """
+        if not self._memory_store:
+            return ""
+
+        try:
+            frames = self.get_context(n=5)
+            if not frames:
+                return ""
+
+            parts = ["## Recent Context"]
+            for frame in frames:
+                content = frame.content
+                if len(content) > 200:
+                    content = content[:200] + "..."
+                parts.append(f"- {content}")
+
+            return "\n".join(parts)
+        except Exception as e:
+            self.logger.debug(f"Failed to build memory context: {e}")
+            return ""
 
     def _check_completion(self, output: Optional[str] = None) -> bool:
         """Check if the completion signal has been received.
