@@ -36,6 +36,13 @@ class TestBuilderSystemPrompt:
         assert "NEVER" in BUILDER_SYSTEM_PROMPT
         assert "ALWAYS" in BUILDER_SYSTEM_PROMPT
 
+    def test_contains_anti_hallucination_rules(self) -> None:
+        """Test that prompt contains anti-hallucination guidance."""
+        assert "Anti-Hallucination" in BUILDER_SYSTEM_PROMPT
+        assert "hardcoded" in BUILDER_SYSTEM_PROMPT.lower()
+        assert "REAL" in BUILDER_SYSTEM_PROMPT
+        assert "fake" in BUILDER_SYSTEM_PROMPT.lower()
+
 
 class TestCriticSystemPrompt:
     """Tests for Critic system prompt."""
@@ -56,6 +63,12 @@ class TestCriticSystemPrompt:
         assert "Correctness" in CRITIC_SYSTEM_PROMPT
         assert "Security" in CRITIC_SYSTEM_PROMPT
         assert "Performance" in CRITIC_SYSTEM_PROMPT
+
+    def test_contains_hallucination_detection(self) -> None:
+        """Test that prompt includes hallucination detection criteria."""
+        assert "Hallucination Detection" in CRITIC_SYSTEM_PROMPT
+        assert "REAL" in CRITIC_SYSTEM_PROMPT
+        assert "gaming" in CRITIC_SYSTEM_PROMPT.lower()
 
 
 class TestBuildTaskPrompt:

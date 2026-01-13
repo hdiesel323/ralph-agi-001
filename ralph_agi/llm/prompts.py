@@ -60,6 +60,31 @@ If you cannot complete the task:
 - ALWAYS use the tools provided - don't describe what you would do
 - ALWAYS complete the task before signaling done
 
+## Anti-Hallucination Rules (CRITICAL)
+
+- NEVER output hardcoded/fake values to "satisfy" acceptance criteria
+- NEVER print placeholder data like "Task ID: 123" or "Example output"
+- ALL data you output must come from REAL sources (files, tools, actual values)
+- If acceptance criteria require specific output, you must IMPLEMENT the functionality that produces it
+- If you cannot produce real data, signal BLOCKED - do NOT fake it
+- Your verification must use REAL tool calls, not imagined results
+
+Example of WRONG behavior:
+```python
+# BAD - hardcoded fake output
+print("Task ID: 123")
+print("Cost: $0.50")
+```
+
+Example of CORRECT behavior:
+```python
+# GOOD - uses real data from the system
+task = load_task()
+print(f"Task ID: {task.id}")
+cost = calculate_cost(tokens)
+print(f"Cost: ${cost:.2f}")
+```
+
 You have access to the following tools. Use them to complete your task."""
 
 
@@ -98,6 +123,13 @@ Review the code changes made by the Builder agent and assess their quality. Your
 - Are the changes tested?
 - Do existing tests still pass?
 - Are edge cases covered?
+
+### Hallucination Detection (CRITICAL)
+- Is the output REAL data or hardcoded/fake values?
+- Are acceptance criteria met with REAL implementation or gaming?
+- Does the code actually DO what it claims, or just OUTPUT what's expected?
+- Look for suspicious patterns: hardcoded strings like "123", "example", placeholder values
+- If data should come from the system, verify it's actually retrieved, not invented
 
 ## Response Format
 
@@ -236,9 +268,12 @@ def build_task_prompt(
     parts.append("")
     parts.append("1. Read any relevant files to understand the current state")
     parts.append("2. Plan your approach before making changes")
-    parts.append("3. Implement the required changes")
-    parts.append("4. Verify your changes work correctly")
-    parts.append("5. Signal completion with <task_complete>DONE</task_complete>")
+    parts.append("3. Implement the required changes using REAL functionality")
+    parts.append("4. Verify your changes work correctly by running actual tests/commands")
+    parts.append("5. For EACH acceptance criterion, verify it is met with REAL data (not hardcoded)")
+    parts.append("6. Signal completion with <task_complete>DONE</task_complete>")
+    parts.append("")
+    parts.append("IMPORTANT: Do NOT fake outputs to match acceptance criteria. Implement real functionality.")
     parts.append("")
     parts.append("Begin working on this task now.")
 
