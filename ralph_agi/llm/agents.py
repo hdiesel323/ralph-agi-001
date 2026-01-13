@@ -21,6 +21,7 @@ from ralph_agi.llm.prompts import (
     extract_critic_verdict,
 )
 from ralph_agi.llm.verification import verify_files
+from ralph_agi.llm.evaluator import evaluate_acceptance_criteria
 
 logger = logging.getLogger(__name__)
 
@@ -267,6 +268,29 @@ class BuilderAgent:
                                 "content": error_msg,
                             })
                             continue  # Continue the loop to let Builder fix errors
+
+                    # Evaluate acceptance criteria externally
+                    acceptance = task.get("acceptance_criteria", [])
+                    if acceptance:
+                        eval_result = evaluate_acceptance_criteria(acceptance)
+
+                        if not eval_result.passed:
+                            # Acceptance criteria failed
+                            error_msg = "ACCEPTANCE CRITERIA FAILED - Do NOT mark complete yet:\n"
+                            for r in eval_result.results:
+                                if not r.passed and r.method != "manual":
+                                    error_msg += f"- FAILED: {r.criterion}\n"
+                                    error_msg += f"  Output: {r.output}\n"
+                            error_msg += "\nFix these issues before signaling completion."
+
+                            logger.warning(f"Acceptance criteria failed: {eval_result.evaluated_count} checks, {sum(1 for r in eval_result.results if not r.passed)} failed")
+                            messages.append({
+                                "role": "user",
+                                "content": error_msg,
+                            })
+                            continue  # Continue the loop to let Builder fix errors
+
+                        logger.info(f"Acceptance criteria passed: {eval_result.evaluated_count} automated, {eval_result.manual_count} manual")
 
                     logger.info(f"Builder task verified and completed")
                     return BuilderResult(
