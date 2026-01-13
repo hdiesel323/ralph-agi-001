@@ -224,11 +224,13 @@ def run_loop(args: argparse.Namespace) -> int:
             # Available tools (static list matching what Builder sees)
             tools = [
                 ("read_file", "Read contents of a file"),
-                ("write_file", "Write content to a file"),
+                ("write_file", "Write content to a file (creates new files)"),
+                ("edit_file", "Edit existing file by replacing content (PREFERRED)"),
+                ("insert_in_file", "Insert content at specific location"),
+                ("append_to_file", "Append content to end of file"),
                 ("list_directory", "List files in a directory"),
                 ("run_command", "Execute a shell command"),
                 ("git_status", "Get git repository status"),
-                ("git_diff", "Show git diff of changes"),
                 ("git_commit", "Create a git commit"),
             ]
             formatter.message(f"AVAILABLE TOOLS ({len(tools)}):")

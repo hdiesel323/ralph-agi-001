@@ -737,3 +737,129 @@ class TestWalk:
 
         assert len(result) == 1
         assert result[0].name == "code.py"
+
+
+class TestEditFile:
+    """Tests for edit_file method."""
+
+    def test_edit_file_simple_replace(self, tmp_path: Path) -> None:
+        """Test simple content replacement."""
+        fs = FileSystemTools(allowed_roots=[tmp_path])
+        test_file = tmp_path / "test.py"
+        test_file.write_text("def hello():\n    return 'hello'\n")
+
+        path, count = fs.edit_file(test_file, "return 'hello'", "return 'world'")
+
+        assert count == 1
+        assert test_file.read_text() == "def hello():\n    return 'world'\n"
+
+    def test_edit_file_content_not_found(self, tmp_path: Path) -> None:
+        """Test error when old_content not found."""
+        fs = FileSystemTools(allowed_roots=[tmp_path])
+        test_file = tmp_path / "test.py"
+        test_file.write_text("def hello():\n    pass\n")
+
+        with pytest.raises(ValueError, match="Content to replace not found"):
+            fs.edit_file(test_file, "nonexistent", "new")
+
+    def test_edit_file_blocks_destructive(self, tmp_path: Path) -> None:
+        """Test that massive shrinkage is blocked."""
+        fs = FileSystemTools(allowed_roots=[tmp_path])
+        test_file = tmp_path / "test.py"
+        # Create a file with 50 lines
+        content = "\n".join([f"line {i}" for i in range(50)])
+        test_file.write_text(content)
+
+        # Try to replace everything with just 2 lines
+        with pytest.raises(ValueError, match="looks destructive"):
+            fs.edit_file(test_file, content, "just\ntwo")
+
+    def test_edit_file_preserves_surrounding(self, tmp_path: Path) -> None:
+        """Test that surrounding content is preserved."""
+        fs = FileSystemTools(allowed_roots=[tmp_path])
+        test_file = tmp_path / "test.py"
+        original = "# Header\ndef old():\n    pass\n# Footer\n"
+        test_file.write_text(original)
+
+        fs.edit_file(test_file, "def old():\n    pass", "def new():\n    return 42")
+
+        result = test_file.read_text()
+        assert "# Header" in result
+        assert "# Footer" in result
+        assert "def new():" in result
+        assert "def old():" not in result
+
+
+class TestInsertInFile:
+    """Tests for insert_in_file method."""
+
+    def test_insert_after(self, tmp_path: Path) -> None:
+        """Test inserting after a line."""
+        fs = FileSystemTools(allowed_roots=[tmp_path])
+        test_file = tmp_path / "test.py"
+        test_file.write_text("import os\n\ndef main():\n    pass\n")
+
+        fs.insert_in_file(test_file, "import sys", after="import os")
+
+        result = test_file.read_text()
+        lines = result.split('\n')
+        assert lines[0] == "import os"
+        assert lines[1] == "import sys"
+
+    def test_insert_before(self, tmp_path: Path) -> None:
+        """Test inserting before a line."""
+        fs = FileSystemTools(allowed_roots=[tmp_path])
+        test_file = tmp_path / "test.py"
+        test_file.write_text("def main():\n    pass\n")
+
+        fs.insert_in_file(test_file, "# Main function", before="def main():")
+
+        result = test_file.read_text()
+        assert result.startswith("# Main function\ndef main():")
+
+    def test_insert_at_line(self, tmp_path: Path) -> None:
+        """Test inserting at specific line number."""
+        fs = FileSystemTools(allowed_roots=[tmp_path])
+        test_file = tmp_path / "test.py"
+        test_file.write_text("line1\nline2\nline3\n")
+
+        fs.insert_in_file(test_file, "inserted", at_line=2)
+
+        lines = test_file.read_text().split('\n')
+        assert lines[1] == "inserted"
+        assert lines[2] == "line2"
+
+
+class TestAppendToFile:
+    """Tests for append_to_file method."""
+
+    def test_append_to_existing(self, tmp_path: Path) -> None:
+        """Test appending to existing file."""
+        fs = FileSystemTools(allowed_roots=[tmp_path])
+        test_file = tmp_path / "test.py"
+        test_file.write_text("# Original\n")
+
+        fs.append_to_file(test_file, "# Appended\n")
+
+        assert test_file.read_text() == "# Original\n# Appended\n"
+
+    def test_append_creates_file(self, tmp_path: Path) -> None:
+        """Test append creates file if doesn't exist."""
+        fs = FileSystemTools(allowed_roots=[tmp_path])
+        test_file = tmp_path / "new.py"
+
+        fs.append_to_file(test_file, "# New file\n")
+
+        assert test_file.exists()
+        assert test_file.read_text() == "# New file\n"
+
+    def test_append_adds_newline(self, tmp_path: Path) -> None:
+        """Test append adds newline if missing."""
+        fs = FileSystemTools(allowed_roots=[tmp_path])
+        test_file = tmp_path / "test.py"
+        test_file.write_text("no newline at end")
+
+        fs.append_to_file(test_file, "appended")
+
+        result = test_file.read_text()
+        assert result == "no newline at end\nappended"

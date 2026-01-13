@@ -381,6 +381,175 @@ class FileSystemTools:
                 pass
             raise
 
+    def edit_file(
+        self,
+        path: str | Path,
+        old_content: str,
+        new_content: str,
+        encoding: str = "utf-8",
+    ) -> tuple[Path, int]:
+        """Edit file by replacing specific content.
+
+        This is a safer alternative to write_file for modifying existing files.
+        It finds and replaces specific content rather than overwriting the whole file.
+
+        Args:
+            path: Target file path
+            old_content: Content to find and replace (must exist in file)
+            new_content: Content to replace with
+            encoding: Text encoding (default: utf-8)
+
+        Returns:
+            Tuple of (path, number_of_replacements)
+
+        Raises:
+            PathSecurityError: Path outside allowed roots
+            FileNotFoundError: File doesn't exist
+            ValueError: old_content not found in file
+        """
+        resolved = self._validate_path(path)
+
+        if not resolved.exists():
+            raise FileNotFoundError(f"File not found: {resolved}")
+
+        # Read current content
+        current_content = resolved.read_text(encoding=encoding)
+
+        # Check if old_content exists
+        if old_content not in current_content:
+            raise ValueError(
+                f"Content to replace not found in {resolved}. "
+                f"Looking for:\n{old_content[:200]}..."
+            )
+
+        # Perform replacement
+        new_file_content = current_content.replace(old_content, new_content)
+        replacement_count = current_content.count(old_content)
+
+        # Safety check: don't allow massive shrinkage (likely destructive)
+        if len(new_file_content) < len(current_content) * 0.3:
+            original_lines = current_content.count('\n')
+            new_lines = new_file_content.count('\n')
+            if original_lines > 10 and new_lines < original_lines * 0.3:
+                raise ValueError(
+                    f"Edit would shrink file from {original_lines} to {new_lines} lines. "
+                    f"This looks destructive. Use write_file if intentional."
+                )
+
+        # Write atomically
+        self.write_file(path, new_file_content, encoding=encoding)
+
+        logger.debug(
+            f"Edited file: {resolved} ({replacement_count} replacements)"
+        )
+        return resolved, replacement_count
+
+    def insert_in_file(
+        self,
+        path: str | Path,
+        content: str,
+        after: str | None = None,
+        before: str | None = None,
+        at_line: int | None = None,
+        encoding: str = "utf-8",
+    ) -> Path:
+        """Insert content into a file at a specific location.
+
+        Exactly one of after, before, or at_line must be specified.
+
+        Args:
+            path: Target file path
+            content: Content to insert
+            after: Insert after this string (on new line)
+            before: Insert before this string (on new line)
+            at_line: Insert at this line number (1-indexed)
+            encoding: Text encoding
+
+        Returns:
+            Path to modified file
+
+        Raises:
+            ValueError: Invalid arguments or anchor not found
+        """
+        resolved = self._validate_path(path)
+
+        # Validate arguments
+        specified = sum(x is not None for x in [after, before, at_line])
+        if specified != 1:
+            raise ValueError("Exactly one of after, before, or at_line must be specified")
+
+        current_content = resolved.read_text(encoding=encoding)
+        lines = current_content.splitlines(keepends=True)
+
+        if at_line is not None:
+            # Insert at specific line
+            if at_line < 1 or at_line > len(lines) + 1:
+                raise ValueError(f"Line {at_line} out of range (1-{len(lines)+1})")
+            # Ensure content ends with newline
+            insert_content = content if content.endswith('\n') else content + '\n'
+            lines.insert(at_line - 1, insert_content)
+
+        elif after is not None:
+            # Find the line containing 'after' and insert on next line
+            found = False
+            for i, line in enumerate(lines):
+                if after in line:
+                    insert_content = content if content.endswith('\n') else content + '\n'
+                    lines.insert(i + 1, insert_content)
+                    found = True
+                    break
+            if not found:
+                raise ValueError(f"Anchor string not found: {after[:100]}")
+
+        elif before is not None:
+            # Find the line containing 'before' and insert before it
+            found = False
+            for i, line in enumerate(lines):
+                if before in line:
+                    insert_content = content if content.endswith('\n') else content + '\n'
+                    lines.insert(i, insert_content)
+                    found = True
+                    break
+            if not found:
+                raise ValueError(f"Anchor string not found: {before[:100]}")
+
+        new_content = ''.join(lines)
+        self.write_file(path, new_content, encoding=encoding)
+
+        logger.debug(f"Inserted content into: {resolved}")
+        return resolved
+
+    def append_to_file(
+        self,
+        path: str | Path,
+        content: str,
+        encoding: str = "utf-8",
+    ) -> Path:
+        """Append content to end of file.
+
+        Args:
+            path: Target file path
+            content: Content to append
+            encoding: Text encoding
+
+        Returns:
+            Path to modified file
+        """
+        resolved = self._validate_path(path)
+
+        if resolved.exists():
+            current = resolved.read_text(encoding=encoding)
+            # Ensure we start on a new line
+            if current and not current.endswith('\n'):
+                content = '\n' + content
+            new_content = current + content
+        else:
+            new_content = content
+
+        self.write_file(path, new_content, encoding=encoding)
+        logger.debug(f"Appended to file: {resolved}")
+        return resolved
+
     def write_file_bytes(
         self,
         path: str | Path,

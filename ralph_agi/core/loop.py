@@ -116,6 +116,30 @@ class ToolExecutorAdapter:
             self._fs_tools.write_file(path, content)
             return f"File written: {path}"
 
+        elif tool_name == "edit_file":
+            path = arguments.get("path", "")
+            old_content = arguments.get("old_content", "")
+            new_content = arguments.get("new_content", "")
+            resolved, count = self._fs_tools.edit_file(path, old_content, new_content)
+            return f"Edited {resolved}: {count} replacement(s) made"
+
+        elif tool_name == "insert_in_file":
+            path = arguments.get("path", "")
+            content = arguments.get("content", "")
+            after = arguments.get("after")
+            before = arguments.get("before")
+            at_line = arguments.get("at_line")
+            self._fs_tools.insert_in_file(
+                path, content, after=after, before=before, at_line=at_line
+            )
+            return f"Content inserted into {path}"
+
+        elif tool_name == "append_to_file":
+            path = arguments.get("path", "")
+            content = arguments.get("content", "")
+            self._fs_tools.append_to_file(path, content)
+            return f"Content appended to {path}"
+
         elif tool_name == "list_directory":
             path = arguments.get("path", ".")
             files = self._fs_tools.list_directory(path)
@@ -416,7 +440,7 @@ class RalphLoop:
             ),
             Tool(
                 name="write_file",
-                description="Write content to a file, creating it if it doesn't exist.",
+                description="Write content to a file, creating it if it doesn't exist. WARNING: This overwrites the entire file. For existing files, prefer edit_file or insert_in_file.",
                 input_schema={
                     "type": "object",
                     "properties": {
@@ -427,6 +451,76 @@ class RalphLoop:
                         "content": {
                             "type": "string",
                             "description": "Content to write to the file.",
+                        },
+                    },
+                    "required": ["path", "content"],
+                },
+            ),
+            Tool(
+                name="edit_file",
+                description="Edit an existing file by finding and replacing specific content. PREFERRED for modifying existing files - preserves content you don't change.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "description": "Path to the file to edit.",
+                        },
+                        "old_content": {
+                            "type": "string",
+                            "description": "The exact content to find and replace. Must exist in the file.",
+                        },
+                        "new_content": {
+                            "type": "string",
+                            "description": "The content to replace it with.",
+                        },
+                    },
+                    "required": ["path", "old_content", "new_content"],
+                },
+            ),
+            Tool(
+                name="insert_in_file",
+                description="Insert content into a file at a specific location. Use for adding new code without modifying existing content.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "description": "Path to the file to modify.",
+                        },
+                        "content": {
+                            "type": "string",
+                            "description": "Content to insert.",
+                        },
+                        "after": {
+                            "type": "string",
+                            "description": "Insert after the line containing this string.",
+                        },
+                        "before": {
+                            "type": "string",
+                            "description": "Insert before the line containing this string.",
+                        },
+                        "at_line": {
+                            "type": "integer",
+                            "description": "Insert at this line number (1-indexed).",
+                        },
+                    },
+                    "required": ["path", "content"],
+                },
+            ),
+            Tool(
+                name="append_to_file",
+                description="Append content to the end of a file. Use for adding new functions, classes, or tests to existing files.",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "path": {
+                            "type": "string",
+                            "description": "Path to the file.",
+                        },
+                        "content": {
+                            "type": "string",
+                            "description": "Content to append at the end.",
                         },
                     },
                     "required": ["path", "content"],
