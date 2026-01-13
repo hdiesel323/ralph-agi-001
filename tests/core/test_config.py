@@ -451,3 +451,149 @@ completion_promise: "FINISHED"
 
         assert result is False  # Reached max iterations
         assert loop.iteration == 3
+
+
+class TestLLMConfig:
+    """Tests for LLM configuration options."""
+
+    def test_default_builder_model(self):
+        """Test default builder model."""
+        config = RalphConfig()
+        assert config.llm_builder_model == "claude-sonnet-4-20250514"
+
+    def test_default_builder_provider(self):
+        """Test default builder provider."""
+        config = RalphConfig()
+        assert config.llm_builder_provider == "anthropic"
+
+    def test_default_critic_model(self):
+        """Test default critic model."""
+        config = RalphConfig()
+        assert config.llm_critic_model == "gpt-4o"
+
+    def test_default_critic_provider(self):
+        """Test default critic provider."""
+        config = RalphConfig()
+        assert config.llm_critic_provider == "openai"
+
+    def test_default_critic_enabled(self):
+        """Test default critic_enabled."""
+        config = RalphConfig()
+        assert config.llm_critic_enabled is True
+
+    def test_default_max_tokens(self):
+        """Test default max_tokens."""
+        config = RalphConfig()
+        assert config.llm_max_tokens == 4096
+
+    def test_default_max_tool_iterations(self):
+        """Test default max_tool_iterations."""
+        config = RalphConfig()
+        assert config.llm_max_tool_iterations == 10
+
+    def test_default_temperature(self):
+        """Test default temperature."""
+        config = RalphConfig()
+        assert config.llm_temperature == 0.0
+
+    def test_default_rate_limit_retries(self):
+        """Test default rate_limit_retries."""
+        config = RalphConfig()
+        assert config.llm_rate_limit_retries == 3
+
+    def test_custom_llm_values(self):
+        """Test custom LLM configuration values."""
+        config = RalphConfig(
+            llm_builder_model="claude-opus-4-20250514",
+            llm_builder_provider="openrouter",
+            llm_critic_model="o1",
+            llm_critic_provider="openrouter",
+            llm_critic_enabled=False,
+            llm_max_tokens=8192,
+            llm_max_tool_iterations=20,
+            llm_temperature=0.5,
+            llm_rate_limit_retries=5,
+        )
+
+        assert config.llm_builder_model == "claude-opus-4-20250514"
+        assert config.llm_builder_provider == "openrouter"
+        assert config.llm_critic_model == "o1"
+        assert config.llm_critic_provider == "openrouter"
+        assert config.llm_critic_enabled is False
+        assert config.llm_max_tokens == 8192
+        assert config.llm_max_tool_iterations == 20
+        assert config.llm_temperature == 0.5
+        assert config.llm_rate_limit_retries == 5
+
+    def test_load_llm_config_from_yaml(self, tmp_path):
+        """Test loading LLM config from YAML."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("""
+llm:
+  builder_model: claude-opus-4-20250514
+  builder_provider: openrouter
+  critic_model: o1
+  critic_provider: openrouter
+  critic_enabled: false
+  max_tokens: 8192
+  max_tool_iterations: 20
+  temperature: 0.7
+  rate_limit_retries: 5
+""")
+
+        config = load_config(config_file)
+
+        assert config.llm_builder_model == "claude-opus-4-20250514"
+        assert config.llm_builder_provider == "openrouter"
+        assert config.llm_critic_model == "o1"
+        assert config.llm_critic_provider == "openrouter"
+        assert config.llm_critic_enabled is False
+        assert config.llm_max_tokens == 8192
+        assert config.llm_max_tool_iterations == 20
+        assert config.llm_temperature == 0.7
+        assert config.llm_rate_limit_retries == 5
+
+    def test_load_partial_llm_config(self, tmp_path):
+        """Test loading partial LLM config with defaults."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("""
+llm:
+  builder_model: claude-opus-4-20250514
+  critic_enabled: false
+""")
+
+        config = load_config(config_file)
+
+        assert config.llm_builder_model == "claude-opus-4-20250514"
+        assert config.llm_builder_provider == "anthropic"  # default
+        assert config.llm_critic_enabled is False
+        assert config.llm_max_tokens == 4096  # default
+
+    def test_save_and_load_llm_config_roundtrip(self, tmp_path):
+        """Test save and load roundtrip for LLM config."""
+        config_file = tmp_path / "config.yaml"
+
+        original = RalphConfig(
+            llm_builder_model="claude-opus-4-20250514",
+            llm_builder_provider="openrouter",
+            llm_critic_model="o1",
+            llm_critic_provider="openai",
+            llm_critic_enabled=False,
+            llm_max_tokens=8192,
+            llm_max_tool_iterations=15,
+            llm_temperature=0.3,
+            llm_rate_limit_retries=7,
+        )
+
+        save_config(original, config_file)
+        loaded = load_config(config_file)
+
+        assert loaded.llm_builder_model == original.llm_builder_model
+        assert loaded.llm_builder_provider == original.llm_builder_provider
+        assert loaded.llm_critic_model == original.llm_critic_model
+        assert loaded.llm_critic_provider == original.llm_critic_provider
+        assert loaded.llm_critic_enabled == original.llm_critic_enabled
+        assert loaded.llm_max_tokens == original.llm_max_tokens
+        assert loaded.llm_max_tool_iterations == original.llm_max_tool_iterations
+        assert loaded.llm_temperature == original.llm_temperature
+        assert loaded.llm_rate_limit_retries == original.llm_rate_limit_retries
