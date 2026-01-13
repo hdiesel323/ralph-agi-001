@@ -102,9 +102,54 @@ All tasks defined in `PRD.json` - JSON format chosen because "the model is less 
 
 ---
 
+### Story 2.6: Docker Session Isolation (Research Spike)
+**Priority:** P2 | **Points:** 3
+**Type:** Spike
+**Source:** [Clawdbot Patterns Analysis](../../../rnd/research/2026-01-10_clawdbot-patterns-analysis.md)
+**Beads:** ralph-agi-001-004
+
+**As a** developer
+**I want** to evaluate Docker-based session isolation for multi-agent execution
+**So that** parallel agents can run safely without interference
+
+**Research Questions:**
+- [ ] Docker Compose vs Kubernetes vs lightweight alternatives (nsjail)?
+- [ ] Shared SQLite volume vs message queues for coordination?
+- [ ] Resource limits and network policies per agent?
+- [ ] Developer experience: debugging, logging, local dev?
+
+**Spike Outputs:**
+- [ ] Architecture decision document
+- [ ] Docker Compose proof-of-concept
+- [ ] Performance benchmarks (containerized vs native)
+- [ ] Security threat model
+- [ ] Recommendation: adopt / defer / alternative
+
+**Technical Notes:**
+- Clawdbot uses Docker sandboxes for non-primary sessions
+- Primary agent: full access, workers: sandboxed with read-only DB
+- Need to balance isolation with coordination overhead
+
+---
+
 ## Dependencies
 
 - Epic 01: Core Execution Loop (for integration)
+
+## Sprint 2 Scope
+
+**Target:** Stories 2.1, 2.2, 2.4, 2.5 (10 points)
+
+| Story | Points | Priority |
+|-------|--------|----------|
+| 2.1 PRD.json Parser | 3 | P0 |
+| 2.2 Task Selection | 3 | P0 |
+| 2.4 Task Completion | 2 | P0 |
+| 2.5 Single Feature | 2 | P0 |
+
+**Deferred to Sprint 3:** 2.3 (Dependency Graph), 2.6 (Docker Isolation - Clawdbot Spike)
+
+---
 
 ## Definition of Done
 

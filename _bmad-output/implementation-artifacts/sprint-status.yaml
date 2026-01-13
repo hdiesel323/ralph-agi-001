@@ -1,7 +1,7 @@
 # RALPH-AGI Sprint Status
 # Updated: 2026-01-11
 
-current_sprint: sprint-04
+current_sprint: sprint-05
 
 sprints:
   sprint-01:
@@ -268,6 +268,72 @@ sprints:
       Story 3.8: ContextCompactor with tiered compaction, preservation rules, summaries (52 tests).
       Total: 187 new memory tests, 645 tests passing overall.
 
+  sprint-05:
+    name: "Week 5: Tool Integration Foundation"
+    start_date: 2026-01-11
+    end_date: 2026-01-18
+    status: in_progress
+
+    goal: |
+      Build the MCP tool integration infrastructure enabling dynamic tool discovery
+      and execution with 99% token reduction compared to static loading.
+
+    success_criteria:
+      - MCP CLI callable from Python
+      - Tool discovery listing all available tools
+      - Schema inspection on demand
+      - Tool execution with structured results
+      - 90%+ test coverage on tools module
+
+    scope:
+      epic: epic-04-tool-integration
+      stories:
+        - id: story-4.1
+          name: MCP CLI Integration
+          status: in_progress
+          priority: P0
+          points: 3
+
+        - id: story-4.2
+          name: Tool Discovery
+          status: not_started
+          priority: P0
+          points: 3
+
+        - id: story-4.3
+          name: Schema Inspection
+          status: not_started
+          priority: P0
+          points: 2
+
+        - id: story-4.4
+          name: Tool Execution
+          status: not_started
+          priority: P0
+          points: 3
+
+    deferred:
+      - id: story-4.5
+        name: Core Tools (File System)
+        reason: Sprint 6 - requires MCP foundation first
+
+      - id: story-4.6
+        name: Core Tools (Shell)
+        reason: Sprint 6 - requires MCP foundation first
+
+      - id: story-4.7
+        name: Core Tools (Git)
+        reason: Sprint 6 - requires MCP foundation first
+
+    total_points: 11
+    completed_points: 0
+
+    blockers: []
+
+    notes: |
+      Sprint 5 IN PROGRESS - Tool Integration Foundation
+      Building MCP infrastructure for dynamic tool discovery and execution.
+
 # Velocity tracking
 velocity:
   sprint-01:
@@ -282,6 +348,9 @@ velocity:
   sprint-04:
     planned: 11
     completed: 11
+  sprint-05:
+    planned: 11
+    completed: 0
 
 # Epic progress
 epic_progress:
@@ -306,8 +375,8 @@ epic_progress:
   epic-04-tool-integration:
     total_stories: 7
     completed: 0
-    in_progress: 0
-    status: backlog
+    in_progress: 4
+    status: in_progress
 
   epic-05-evaluation-pipeline:
     total_stories: 7

@@ -48,10 +48,13 @@ while (iteration < max && !complete):
 - [ ] Loop exits on max iterations or completion signal
 - [ ] Each iteration is logged with timestamp and iteration number
 - [ ] Clean error handling with retry logic (max 3 attempts)
+- [ ] Visual iteration separators (see Story 1.7)
+- [ ] Remaining work visibility after each iteration
 
 **Technical Notes:**
 - Use `while` loop, not `for` loop (cleaner exit conditions)
 - Log format: `[2026-01-10T14:30:00] Iteration 1/100: Starting...`
+- Reference: Ryan Carson's implementation (@ryancarson)
 
 ---
 
@@ -133,6 +136,135 @@ while (iteration < max && !complete):
 
 ---
 
+### Story 1.6: Scheduled Triggers (AFK Mode Enhanced)
+**Priority:** P1 | **Points:** 5
+**Source:** [Clawdbot Patterns Analysis](../../../rnd/research/2026-01-10_clawdbot-patterns-analysis.md)
+**Beads:** ralph-agi-001-002
+
+**As a** developer
+**I want** scheduled wake-ups and external triggers
+**So that** RALPH-AGI can resume work automatically after being idle
+
+**Acceptance Criteria:**
+- [ ] Cron expression support in config.yaml
+- [ ] System daemon templates (launchd/systemd)
+- [ ] Wake hook execution: `on_scheduled_wake`
+- [ ] External webhook trigger endpoint (optional)
+- [ ] Checkpoint resume on scheduled wake
+- [ ] Wake/sleep event logging
+
+**Technical Notes:**
+- Use `croniter` for cron parsing
+- `APScheduler` as cross-platform fallback
+- Wake loads last checkpoint from progress.txt + Memvid
+
+**Config Example:**
+```yaml
+scheduler:
+  enabled: true
+  cron: "0 */4 * * *"  # Every 4 hours
+  wake_hooks:
+    - check_progress
+    - run_tests
+    - commit_if_ready
+```
+
+---
+
+### Story 1.7: Loop Output Formatting
+**Priority:** P1 | **Points:** 2
+**Source:** [Ryan Carson Implementation](../../../rnd/research/2026-01-11_ryan-carson-ralph-implementation.md)
+
+**As a** developer
+**I want** clear, scannable terminal output during loop execution
+**So that** I can monitor progress at a glance and debug issues easily
+
+**Acceptance Criteria:**
+- [ ] Visual separator bars between iterations (`═══════════════════════`)
+- [ ] Iteration header: "Ralph Iteration 7 of 10"
+- [ ] Remaining work list after each iteration
+- [ ] Per-iteration summary (bullet points of changes)
+- [ ] Quality gate status line ("All quality checks pass")
+- [ ] Final completion banner with stats
+- [ ] Configurable verbosity levels (quiet/normal/verbose)
+
+**Output Format Example:**
+```
+════════════════════════════════════════════════════════════════
+    Ralph Iteration 7 of 10
+════════════════════════════════════════════════════════════════
+
+**US-007 completed.**
+
+Checking remaining stories - US-008, US-009, US-010 still have
+`passes: false`. There are more stories to complete.
+
+**Summary:**
+- Modified `submitConversationEvaluation` to set `lastEvaluatedAt`
+- Added backfill SQL to migration 0088
+- All quality checks pass
+
+Iteration 7 complete. Continuing...
+```
+
+**Technical Notes:**
+- Use `rich` library for terminal formatting (optional)
+- Support both TTY and non-TTY output (CI logs)
+- Color coding: green=success, yellow=warning, red=error
+
+---
+
+### Story 1.8: First-Run Setup Wizard (ralph init)
+**Priority:** P1 | **Points:** 5
+**Beads:** ralph-agi-001-005
+
+**As a** new RALPH-AGI user
+**I want** a guided setup wizard
+**So that** I can start using Ralph quickly without reading documentation
+
+**Acceptance Criteria:**
+
+*Global Setup (~/.ralph/):*
+- [ ] Auto-detect missing global config on first run
+- [ ] Prompt for Anthropic API key (or detect from env)
+- [ ] Validate API key format (sk-ant-* prefix)
+- [ ] Offer model selection (Sonnet 4 default, Opus option)
+- [ ] Set max iterations with safety default (10)
+- [ ] Create `~/.ralph/config.yaml`, `~/.ralph/.env`, `~/.ralph/memory/`
+
+*Per-Project Setup (.ralph/):*
+- [ ] `ralph init` creates `.ralph/` directory in project
+- [ ] Optional project-specific config overrides
+- [ ] Auto-add `.ralph/checkpoint.json` to .gitignore
+
+*CLI Flags:*
+- [ ] `ralph init --global` - only global setup
+- [ ] `ralph init --project` - only per-project
+- [ ] `ralph init --reset` - wipe existing config
+- [ ] `ralph init --yes` - accept all defaults (non-interactive)
+
+**Technical Notes:**
+- **Libraries:** Typer + Rich + Questionary (Python)
+- **Config precedence:** env vars > CLI flags > project > global > defaults
+- **Hybrid config:** Global defaults (~/.ralph/) + per-project overrides (.ralph/)
+- Depends on Story 1.5 (CLI Entry Point)
+- See beads issue for full implementation code
+
+**Directory Structure:**
+```
+~/.ralph/                    # Global
+├── config.yaml              # Defaults
+├── .env                     # API keys
+└── memory/                  # Long-term memory
+
+project/.ralph/              # Per-project
+├── config.yaml              # Overrides (optional)
+├── checkpoint.json          # Loop state (gitignored)
+└── logs/                    # Project logs
+```
+
+---
+
 ## Dependencies
 
 - None (this is the foundation)
@@ -155,7 +287,7 @@ while (iteration < max && !complete):
 
 ## Sprint 1 Scope (Week 1 PoC)
 
-For the PoC, implement Stories 1.1, 1.2, 1.3, and 1.4. Story 1.5 (CLI) can be deferred.
+For the PoC, implement Stories 1.1, 1.2, 1.3, and 1.4. Deferred to Sprint 3: 1.5 (CLI), 1.6 (Scheduled Triggers - Clawdbot), 1.7 (Output Formatting - Ryan Carson), 1.8 (Setup Wizard).
 
 **PoC Success Criteria:**
 - Loop runs with mock task list

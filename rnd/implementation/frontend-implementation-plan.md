@@ -1,139 +1,210 @@
 # RALPH-AGI Frontend Implementation Plan
 
-**Date:** 2026-01-11
+**Date:** 2026-01-12
 **Status:** Ready for Implementation
+**Updated:** Based on [ADR-004](../decisions/2026-01-12_solutioning_frontend-architecture-v2_approved.md)
 
 ---
 
 ## Overview
 
-This document outlines the implementation plan for the RALPH-AGI frontend, based on the phased hybrid architecture defined in [ADR-003](./../decisions/2026-01-11_solutioning_frontend-architecture_approved.md).
+This document outlines the implementation plan for the RALPH-AGI frontend, based on the **TUI-first hybrid architecture** defined in ADR-004.
 
+**Strategy:** TUI-First, then Hybrid Web UI
 **Total Estimated Duration:** 16 weeks
 **Total Estimated Hours:** 400-560 hours
 
 ---
 
-## Phase 1: Basic Dashboard (Weeks 13-16)
+## Phase 1: Terminal User Interface (TUI) (Weeks 13-16)
 
-**Goal:** Provide visibility and control for technical users.
+**Goal:** Provide a rich, real-time, developer-native experience.
 
-### **Week 13: Project Setup & Backend API**
+**Architecture:**
+- **Framework:** Textual (Python)
+- **Real-Time:** Built-in async support
+- **Language:** Python (same as core application)
 
-- [ ] **Task 1.1:** Set up new React project with Vite, TypeScript, and TailwindCSS.
-- [ ] **Task 1.2:** Create basic project structure (components, pages, services).
-- [ ] **Task 1.3:** Set up FastAPI backend with WebSocket endpoint.
-- [ ] **Task 1.4:** Implement basic auth (JWT) for the API.
-- [ ] **Task 1.5:** Connect frontend to backend WebSocket.
+**Key Benefits:**
+- Developer-native experience for our core audience
+- Faster to build than web UI
+- Same language as core application (no context switching)
+- Reusable via xterm.js in Phase 2
+
+### **Week 13: Project Setup & Core Infrastructure**
+
+- [ ] **Task 1.1:** Set up Textual project structure within `ralph_agi/tui/`
+- [ ] **Task 1.2:** Create base `App` class with layout grid (logs, status, metrics)
+- [ ] **Task 1.3:** Implement WebSocket client for RalphLoop event streaming
+- [ ] **Task 1.4:** Create `RalphLoop` adapter to emit events for TUI consumption
+- [ ] **Task 1.5:** Set up pytest-textual for snapshot testing
 
 ### **Week 14: Core UI Components**
 
-- [ ] **Task 2.1:** Build `TaskList` component to display current, completed, and failed tasks.
-- [ ] **Task 2.2:** Build `LogViewer` component for real-time log streaming.
-- [ ] **Task 2.3:** Build `ConfigEditor` component for viewing/editing `config.yaml`.
-- [ ] **Task 2.4:** Build `MetricsDashboard` component with placeholders for cost, time, etc.
+- [ ] **Task 2.1:** Build `LogPanel` widget for real-time log streaming with auto-scroll
+- [ ] **Task 2.2:** Build `StoryGrid` widget displaying task status (inspired by Relentless)
+- [ ] **Task 2.3:** Build `AgentViewer` widget for agent output and thoughts
+- [ ] **Task 2.4:** Build `MetricsBar` widget showing cost, time, iterations
+- [ ] **Task 2.5:** Implement color-coded status indicators (pending/running/success/failed)
 
-### **Week 15: Integration & State Management**
+### **Week 15: Interactive Features**
 
-- [ ] **Task 3.1:** Integrate `RalphLoop` events with the backend API to push updates to the frontend.
-- [ ] **Task 3.2:** Implement state management (Zustand) to handle real-time data.
-- [ ] **Task 3.3:** Connect UI components to the state management store.
-- [ ] **Task 3.4:** Implement Stop/Start/Pause controls that send commands to the backend.
+- [ ] **Task 3.1:** Implement command palette with fuzzy search (Ctrl+P)
+- [ ] **Task 3.2:** Add stop/start/pause keyboard shortcuts
+- [ ] **Task 3.3:** Create configuration viewer/editor panel
+- [ ] **Task 3.4:** Implement progress bars for long-running operations
+- [ ] **Task 3.5:** Add notification system for important events
 
-### **Week 16: Testing & Deployment**
+### **Week 16: Polish & Testing**
 
-- [ ] **Task 4.1:** Write unit tests for all components.
-- [ ] **Task 4.2:** Write E2E tests for the core workflow (start task, view logs, stop task).
-- [ ] **Task 4.3:** Set up CI/CD pipeline for the frontend.
-- [ ] **Task 4.4:** Deploy the basic dashboard to Vercel/Netlify.
+- [ ] **Task 4.1:** Write snapshot tests for all components
+- [ ] **Task 4.2:** Write integration tests for event flow
+- [ ] **Task 4.3:** Implement keyboard navigation and accessibility
+- [ ] **Task 4.4:** Create `ralph tui` CLI command entry point
+- [ ] **Task 4.5:** Documentation and usage guide
 
----
-
-## Phase 2: Chat Interface (Weeks 17-20)
-
-**Goal:** Enable natural language interaction.
-
-### **Week 17: AG-UI Integration**
-
-- [ ] **Task 5.1:** Integrate AG-UI protocol into the FastAPI backend.
-- [ ] **Task 5.2:** Set up CopilotKit or a custom AG-UI client in the React frontend.
-- [ ] **Task 5.3:** Create a basic chat interface component.
-
-### **Week 18: Natural Language Commands**
-
-- [ ] **Task 6.1:** Implement natural language command parsing in the backend.
-- [ ] **Task 6.2:** Map commands ("stop", "show logs") to `RalphLoop` actions.
-- [ ] **Task 6.3:** Display real-time status updates from Ralph in the chat interface.
-
-### **Week 19: Human-in-the-Loop**
-
-- [ ] **Task 7.1:** Implement human-in-the-loop approval prompts in the chat.
-- [ ] **Task 7.2:** Allow users to provide feedback to Ralph via chat.
-- [ ] **Task 7.3:** Integrate with the multi-agent `Critic` for review workflows.
-
-### **Week 20: Refinement & Testing**
-
-- [ ] **Task 8.1:** Refine the chat UX and conversation flow.
-- [ ] **Task 8.2:** Write E2E tests for chat commands and human-in-the-loop.
-- [ ] **Task 8.3:** User testing with non-technical users.
+**Deliverable:** Fully functional TUI accessible via `ralph tui` command
 
 ---
 
-## Phase 3: Generative UI (Weeks 21-24)
+## Phase 2: Hybrid Web UI (Weeks 17-28)
 
-**Goal:** AI-generated UI components on-demand.
+**Goal:** Combine the power of the TUI with the accessibility of a web UI.
 
-### **Week 21: Generative UI Setup**
+**Architecture:**
+- **Frontend:** React + TypeScript + TailwindCSS
+- **Backend API:** FastAPI (Python)
+- **TUI in Web:** xterm.js to embed the Textual TUI directly in the web UI
+- **Real-Time:** WebSocket (Socket.io)
 
-- [ ] **Task 9.1:** Integrate Vercel streamUI or a similar library.
-- [ ] **Task 9.2:** Set up React Server Components.
-- [ ] **Task 9.3:** Create Zod schemas for basic UI components (cards, buttons, etc.).
+### Sub-Phase 2A: Backend API & TUI Embedding (Weeks 17-20)
 
-### **Week 22: Core Generative Components**
+#### **Week 17: Backend API Foundation**
 
-- [ ] **Task 10.1:** Implement a `generate` function for Ralph to create UI components.
-- [ ] **Task 10.2:** Create a `TestResultsCard` component that Ralph can generate.
-- [ ] **Task 10.3:** Create a `DeploymentCard` component.
+- [ ] **Task 5.1:** Set up FastAPI backend in `ralph_agi/api/`
+- [ ] **Task 5.2:** Implement WebSocket endpoint for TUI stream
+- [ ] **Task 5.3:** Create REST endpoints for configuration and status
+- [ ] **Task 5.4:** Implement JWT authentication
+- [ ] **Task 5.5:** Set up CORS and security middleware
 
-### **Week 23: Advanced Generative UI**
+#### **Week 18: Web Shell & TUI Embedding**
 
-- [ ] **Task 11.1:** Implement dynamic dashboards generated by Ralph.
-- [ ] **Task 11.2:** Implement bespoke visualizations (e.g., cost breakdown chart).
-- [ ] **Task 11.3:** Explore adaptive interfaces that change based on context.
+- [ ] **Task 6.1:** Set up React project with Vite, TypeScript, TailwindCSS
+- [ ] **Task 6.2:** Integrate xterm.js for terminal rendering
+- [ ] **Task 6.3:** Connect xterm.js to backend TUI WebSocket
+- [ ] **Task 6.4:** Style terminal to match web UI theme
+- [ ] **Task 6.5:** Implement terminal resize handling
 
-### **Week 24: Testing & Optimization**
+#### **Week 19: Chat Interface (AG-UI)**
 
-- [ ] **Task 12.1:** Test the performance and accuracy of generative UI.
-- [ ] **Task 12.2:** Optimize the LLM prompts for UI generation.
-- [ ] **Task 12.3:** User testing to evaluate the usability of generative UI.
+- [ ] **Task 7.1:** Integrate AG-UI protocol into FastAPI backend
+- [ ] **Task 7.2:** Create chat sidebar component
+- [ ] **Task 7.3:** Implement natural language command parsing
+- [ ] **Task 7.4:** Map chat commands to RalphLoop actions
+- [ ] **Task 7.5:** Display real-time status updates in chat
+
+#### **Week 20: Human-in-the-Loop**
+
+- [ ] **Task 8.1:** Implement approval prompts in chat interface
+- [ ] **Task 8.2:** Add feedback mechanisms for Ralph outputs
+- [ ] **Task 8.3:** Integrate with multi-agent Critic for reviews
+- [ ] **Task 8.4:** Create notification system for pending approvals
+- [ ] **Task 8.5:** Testing and refinement
+
+### Sub-Phase 2B: Advanced Features (Weeks 21-24)
+
+#### **Week 21: Generative UI Setup**
+
+- [ ] **Task 9.1:** Integrate Vercel streamUI or similar
+- [ ] **Task 9.2:** Set up React Server Components
+- [ ] **Task 9.3:** Create Zod schemas for UI components
+- [ ] **Task 9.4:** Define component library (cards, buttons, charts)
+
+#### **Week 22: Core Generative Components**
+
+- [ ] **Task 10.1:** Implement `generate` function for Ralph
+- [ ] **Task 10.2:** Create `TestResultsCard` component
+- [ ] **Task 10.3:** Create `DeploymentCard` component
+- [ ] **Task 10.4:** Create `MetricsChart` component
+- [ ] **Task 10.5:** Create `CodeDiffViewer` component
+
+#### **Week 23: Advanced Generative UI**
+
+- [ ] **Task 11.1:** Implement dynamic dashboards generated by Ralph
+- [ ] **Task 11.2:** Create bespoke visualizations (cost breakdown, timeline)
+- [ ] **Task 11.3:** Implement adaptive interfaces based on context
+- [ ] **Task 11.4:** Create multi-project overview dashboard
+
+#### **Week 24: Testing & Optimization**
+
+- [ ] **Task 12.1:** Test generative UI performance and accuracy
+- [ ] **Task 12.2:** Optimize LLM prompts for UI generation
+- [ ] **Task 12.3:** User testing for usability
+- [ ] **Task 12.4:** Performance profiling and optimization
+
+### Sub-Phase 2C: Hybrid Dashboard (Weeks 25-28)
+
+#### **Week 25: UI/UX Redesign**
+
+- [ ] **Task 13.1:** Design hybrid dashboard layout (sidebar, main view, TUI pane)
+- [ ] **Task 13.2:** Create Figma mockups
+- [ ] **Task 13.3:** Implement new layout components
+- [ ] **Task 13.4:** Add responsive design for different screen sizes
+
+#### **Week 26: Integration**
+
+- [ ] **Task 14.1:** Embed chat interface into dashboard sidebar
+- [ ] **Task 14.2:** Integrate generative UI components into main view
+- [ ] **Task 14.3:** Create TUI pane toggle (expand/collapse)
+- [ ] **Task 14.4:** Implement seamless mode switching
+- [ ] **Task 14.5:** Add visual configuration editor
+
+#### **Week 27: Final Touches**
+
+- [ ] **Task 15.1:** Add user preferences and settings panel
+- [ ] **Task 15.2:** Implement onboarding tour
+- [ ] **Task 15.3:** Polish UI animations and transitions
+- [ ] **Task 15.4:** Add keyboard shortcuts overlay
+- [ ] **Task 15.5:** Implement multi-project management
+
+#### **Week 28: Final Testing & Launch**
+
+- [ ] **Task 16.1:** Final E2E testing of entire application
+- [ ] **Task 16.2:** Performance and security audit
+- [ ] **Task 16.3:** Accessibility audit (WCAG 2.1)
+- [ ] **Task 16.4:** Documentation and deployment guide
+- [ ] **Task 16.5:** Public beta launch and feedback collection
 
 ---
 
-## Phase 4: Hybrid Dashboard (Weeks 25-28)
+## Implementation Summary
 
-**Goal:** Combine all patterns into a cohesive experience.
+| Phase | Duration | Complexity | Estimated Hours |
+| :--- | :--- | :--- | :--- |
+| Phase 1: TUI | 4 weeks | Medium | 80-120 hours |
+| Phase 2A: Backend & TUI Embed | 4 weeks | High | 80-100 hours |
+| Phase 2B: Advanced Features | 4 weeks | Very High | 120-160 hours |
+| Phase 2C: Hybrid Dashboard | 4 weeks | High | 120-180 hours |
 
-### **Week 25: UI/UX Redesign**
+**Total:** 16 weeks, 400-560 hours
 
-- [ ] **Task 13.1:** Design the hybrid dashboard layout (sidebar, main view, etc.).
-- [ ] **Task 13.2:** Create mockups in Figma.
-- [ ] **Task 13.3:** Implement the new layout components.
+---
 
-### **Week 26: Integration**
+## Why TUI-First?
 
-- [ ] **Task 14.1:** Embed the chat interface into the dashboard.
-- [ ] **Task 14.2:** Integrate generative UI components into the main view.
-- [ ] **Task 14.3:** Ensure seamless switching between modes.
+1. **Developer-Native:** Our initial users are developers. A TUI is a natural fit for their workflow.
+2. **Faster to Market:** A TUI is faster to build than a full web UI, providing immediate value.
+3. **Lower Complexity:** Textual is a Python framework, so we can build in the same language as the core application.
+4. **Reusable:** The TUI can be embedded in the web UI with xterm.js, so no work is wasted.
+5. **Differentiation:** A beautiful TUI is a major differentiator, as demonstrated by Relentless.
 
-### **Week 27: Final Touches**
+---
 
-- [ ] **Task 15.1:** Add user preferences and settings.
-- [ ] **Task 15.2:** Implement a comprehensive onboarding tour.
-- [ ] **Task 15.3:** Polish the UI and animations.
+## References
 
-### **Week 28: Final Testing & Launch**
-
-- [ ] **Task 16.1:** Final E2E testing of the entire application.
-- [ ] **Task 16.2:** Performance and security audit.
-- [ ] **Task 16.3:** Public beta launch.
-- [ ] **Task 16.4:** Gather user feedback and plan for v2.
+- [ADR-004: Frontend Architecture v2](../decisions/2026-01-12_solutioning_frontend-architecture-v2_approved.md)
+- [ADR-003: Language Choice - Python](../decisions/2026-01-12_solutioning_language-choice-python_approved.md)
+- [Relentless TUI](https://github.com/ArvorCo/Relentless)
+- [Textual Framework](https://textual.textualize.io/)
+- [xterm.js](https://xtermjs.org/)
+- [AG-UI Protocol](https://github.com/ag-ui-protocol/ag-ui)

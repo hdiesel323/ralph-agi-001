@@ -20,9 +20,11 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Callable, Optional
+from uuid import uuid4
 
 if TYPE_CHECKING:
     from ralph_agi.core.config import RalphConfig
+    from ralph_agi.memory.store import MemoryStore
 
 
 @dataclass
@@ -85,6 +87,8 @@ class RalphLoop:
         log_file: Optional[str] = None,
         completion_promise: str = "<promise>COMPLETE</promise>",
         checkpoint_path: Optional[str] = None,
+        memory_store: Optional[MemoryStore] = None,
+        session_id: Optional[str] = None,
     ):
         """Initialize the Ralph Loop Engine.
 
@@ -99,6 +103,10 @@ class RalphLoop:
                          Default: "<promise>COMPLETE</promise>"
             checkpoint_path: Optional path for saving checkpoints on interrupt.
                          Default: None (no checkpointing)
+            memory_store: Optional MemoryStore for persistent memory.
+                         Default: None (no memory)
+            session_id: Optional session identifier. If not provided, a new
+                       UUID will be generated. Default: None
         """
         if max_iterations < 0:
             raise ValueError("max_iterations must be non-negative")
@@ -115,6 +123,12 @@ class RalphLoop:
         self._original_sigint_handler = None
         self._original_sigterm_handler = None
 
+        # Session management
+        self.session_id = session_id or str(uuid4())
+
+        # Memory store (optional)
+        self._memory_store = memory_store
+
         # Set up logging
         self._setup_logging(log_file)
 
@@ -128,6 +142,12 @@ class RalphLoop:
         Returns:
             Configured RalphLoop instance.
         """
+        # Create memory store if enabled
+        memory_store = None
+        if config.memory_enabled:
+            from ralph_agi.memory.store import MemoryStore
+            memory_store = MemoryStore(config.memory_store_path)
+
         return cls(
             max_iterations=config.max_iterations,
             max_retries=config.max_retries,
@@ -135,6 +155,7 @@ class RalphLoop:
             log_file=config.log_file,
             completion_promise=config.completion_promise,
             checkpoint_path=config.checkpoint_path,
+            memory_store=memory_store,
         )
 
     def _setup_logging(self, log_file: Optional[str] = None) -> None:
@@ -209,6 +230,7 @@ class RalphLoop:
             "iteration": self.iteration,
             "complete": self.complete,
             "max_iterations": self.max_iterations,
+            "session_id": self.session_id,
             "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
@@ -269,7 +291,10 @@ class RalphLoop:
         state = self.load_checkpoint(path)
         self.iteration = state.get("iteration", 0)
         self.complete = state.get("complete", False)
-        self.logger.info(f"Resumed from iteration {self.iteration}")
+        # Restore session_id if available, otherwise keep the current one
+        if "session_id" in state:
+            self.session_id = state["session_id"]
+        self.logger.info(f"Resumed from iteration {self.iteration} (session: {self.session_id[:8]}...)")
 
     def _log_iteration_start(self) -> None:
         """Log the start of an iteration with timestamp and iteration number."""
@@ -319,6 +344,77 @@ class RalphLoop:
         if output and self._completion_signal in output:
             return True
         return False
+
+    def _store_iteration_result(self, result: IterationResult) -> Optional[str]:
+        """Store an iteration result in memory.
+
+        Args:
+            result: The IterationResult from the completed iteration.
+
+        Returns:
+            Frame ID if stored successfully, None otherwise.
+        """
+        if self._memory_store is None:
+            return None
+
+        try:
+            content = f"Iteration {self.iteration + 1} {'completed successfully' if result.success else 'failed'}"
+            if result.output:
+                content += f": {result.output[:500]}"  # Truncate long outputs
+
+            frame_id = self._memory_store.append(
+                content=content,
+                frame_type="iteration_result",
+                metadata={
+                    "iteration": self.iteration + 1,
+                    "success": result.success,
+                    "has_output": result.output is not None,
+                },
+                session_id=self.session_id,
+                tags=["iteration", f"iter-{self.iteration + 1}"],
+            )
+            self.logger.debug(f"Stored iteration result as frame {frame_id[:8]}")
+            return frame_id
+
+        except Exception as e:
+            self.logger.warning(f"Failed to store iteration result in memory: {e}")
+            return None
+
+    def get_context(self, n: int = 10) -> list[Any]:
+        """Get recent context from memory for the current session.
+
+        Args:
+            n: Maximum number of frames to retrieve. Default: 10
+
+        Returns:
+            List of MemoryFrame objects, most recent first.
+        """
+        if self._memory_store is None:
+            return []
+
+        try:
+            return self._memory_store.get_by_session(self.session_id, limit=n)
+        except Exception as e:
+            self.logger.warning(f"Failed to load context from memory: {e}")
+            return []
+
+    def get_recent_context(self, n: int = 10) -> list[Any]:
+        """Get recent context from memory across all sessions.
+
+        Args:
+            n: Maximum number of frames to retrieve. Default: 10
+
+        Returns:
+            List of MemoryFrame objects, most recent first.
+        """
+        if self._memory_store is None:
+            return []
+
+        try:
+            return self._memory_store.get_recent(n)
+        except Exception as e:
+            self.logger.warning(f"Failed to load recent context from memory: {e}")
+            return []
 
     def _execute_with_retry(
         self,
@@ -387,7 +483,7 @@ class RalphLoop:
             LoopInterrupted: If interrupted by SIGINT/SIGTERM (with checkpoint saved).
         """
         self.logger.info(
-            f"Ralph Loop starting with max_iterations={self.max_iterations}"
+            f"Ralph Loop starting (session: {self.session_id[:8]}..., max_iterations={self.max_iterations})"
         )
 
         # Set up signal handlers for AFK mode
@@ -412,6 +508,9 @@ class RalphLoop:
                     # Execute with retry logic
                     result = self._execute_with_retry(self._execute_iteration)
                     self._log_iteration_end(result.success)
+
+                    # Store iteration result in memory (non-blocking)
+                    self._store_iteration_result(result)
 
                     # Check for completion signal in the iteration output
                     if self._check_completion(result.output):
@@ -475,11 +574,20 @@ class RalphLoop:
         self.complete = True
 
     def close(self) -> None:
-        """Clean up resources (logging handlers, file handles).
+        """Clean up resources (logging handlers, file handles, memory store).
 
         Should be called when the RalphLoop instance is no longer needed,
         especially if log_file was specified.
         """
+        # Close memory store
+        if self._memory_store is not None:
+            try:
+                self._memory_store.close()
+            except Exception as e:
+                self.logger.warning(f"Error closing memory store: {e}")
+            self._memory_store = None
+
+        # Close logging handlers
         for handler in self._handlers:
             handler.close()
             self.logger.removeHandler(handler)
