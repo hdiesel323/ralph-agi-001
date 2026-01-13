@@ -232,6 +232,93 @@ class TestRunLoop:
             result = run_loop(args)
             assert result == EXIT_SUCCESS
 
+    def test_run_loop_dry_run_requires_prd(self, tmp_path, capsys):
+        """Test dry-run requires --prd flag."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("max_iterations: 10\nmemory:\n  enabled: false\n")
+
+        parser = create_parser()
+        args = parser.parse_args(["run", "--dry-run", "--config", str(config_file)])
+
+        result = run_loop(args)
+        assert result == EXIT_ERROR
+
+        captured = capsys.readouterr()
+        assert "--dry-run requires --prd" in captured.out
+
+    def test_run_loop_dry_run_shows_real_task(self, tmp_path, capsys):
+        """Test dry-run shows actual task from PRD."""
+        import json
+
+        # Create config
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("max_iterations: 10\nmemory:\n  enabled: false\n")
+
+        # Create PRD with pending task
+        prd_file = tmp_path / "PRD.json"
+        prd_data = {
+            "project": {
+                "name": "Test Project",
+                "description": "A test project for dry-run",
+            },
+            "features": [
+                {
+                    "id": "TEST-001",
+                    "description": "A test task",
+                    "passes": False,
+                    "priority": 1,
+                    "acceptance_criteria": ["Task should work"],
+                }
+            ],
+        }
+        prd_file.write_text(json.dumps(prd_data))
+
+        parser = create_parser()
+        args = parser.parse_args(
+            ["run", "--dry-run", "--prd", str(prd_file), "--config", str(config_file)]
+        )
+
+        result = run_loop(args)
+        assert result == EXIT_SUCCESS
+
+        captured = capsys.readouterr()
+        # Verify real task info is shown
+        assert "DRY-RUN MODE" in captured.out
+        assert "Test Project" in captured.out
+        assert "TEST-001" in captured.out
+        assert "A test task" in captured.out
+        assert "AVAILABLE TOOLS" in captured.out
+        assert "read_file" in captured.out
+
+    def test_run_loop_dry_run_all_complete(self, tmp_path, capsys):
+        """Test dry-run shows all complete when no pending tasks."""
+        import json
+
+        # Create config
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("max_iterations: 10\nmemory:\n  enabled: false\n")
+
+        # Create PRD with completed task
+        prd_file = tmp_path / "PRD.json"
+        prd_data = {
+            "project": {"name": "Done Project", "description": "All tasks done"},
+            "features": [
+                {"id": "DONE-001", "description": "Already done", "passes": True}
+            ],
+        }
+        prd_file.write_text(json.dumps(prd_data))
+
+        parser = create_parser()
+        args = parser.parse_args(
+            ["run", "--dry-run", "--prd", str(prd_file), "--config", str(config_file)]
+        )
+
+        result = run_loop(args)
+        assert result == EXIT_SUCCESS
+
+        captured = capsys.readouterr()
+        assert "ALL TASKS COMPLETE" in captured.out
+
 
 class TestRunLoopExceptions:
     """Tests for exception handling in run_loop."""

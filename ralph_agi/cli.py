@@ -27,7 +27,7 @@ def create_parser() -> argparse.ArgumentParser:
         prog="ralph-agi",
         description="RALPH-AGI - Recursive Autonomous Long-horizon Processing",
         formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""\
+        epilog="""
 Examples:
   ralph-agi run                        Start the loop with default config
   ralph-agi run --prd PRD.json         Run with PRD file for LLM execution
@@ -96,6 +96,12 @@ Exit Codes:
         help="Quiet mode - errors only",
     )
 
+    run_parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show the next task and context without executing",
+    )
+
     return parser
 
 
@@ -160,6 +166,88 @@ def run_loop(args: argparse.Namespace) -> int:
             llm_temperature=config.llm_temperature,
             llm_rate_limit_retries=config.llm_rate_limit_retries,
         )
+
+    # Dry-run logic - show next task without executing
+    if args.dry_run:
+        prd_path = getattr(args, "prd", None)
+        if not prd_path:
+            formatter.error("--dry-run requires --prd <path> to specify the PRD file")
+            return EXIT_ERROR
+
+        try:
+            from ralph_agi.tasks.prd import load_prd
+            from ralph_agi.tasks.selector import TaskSelector
+
+            # Load PRD and find next task
+            prd = load_prd(Path(prd_path))
+            selector = TaskSelector()
+            result = selector.select(prd)
+            next_task = result.next_task
+
+            formatter.message("=" * 60)
+            formatter.message("DRY-RUN MODE - No LLM calls will be made")
+            formatter.message("=" * 60)
+            formatter.message("")
+
+            # Project info
+            formatter.message(f"Project: {prd.project.name}")
+            if prd.project.description:
+                formatter.message(f"Description: {prd.project.description[:200]}")
+            formatter.message("")
+
+            if next_task is None:
+                formatter.message("Status: ALL TASKS COMPLETE")
+                formatter.message("No pending tasks found in PRD.")
+                return EXIT_SUCCESS
+
+            # Task details
+            formatter.message("NEXT TASK:")
+            formatter.message(f"  ID: {next_task.id}")
+            formatter.message(f"  Description: {next_task.description}")
+            formatter.message(f"  Priority: {next_task.priority}")
+
+            if next_task.steps:
+                formatter.message("  Steps:")
+                for i, step in enumerate(next_task.steps, 1):
+                    formatter.message(f"    {i}. {step}")
+
+            if next_task.acceptance_criteria:
+                formatter.message("  Acceptance Criteria:")
+                for criterion in next_task.acceptance_criteria:
+                    formatter.message(f"    - {criterion}")
+
+            if next_task.dependencies:
+                formatter.message(f"  Dependencies: {', '.join(next_task.dependencies)}")
+
+            formatter.message("")
+
+            # Available tools (static list matching what Builder sees)
+            tools = [
+                ("read_file", "Read contents of a file"),
+                ("write_file", "Write content to a file"),
+                ("list_directory", "List files in a directory"),
+                ("run_command", "Execute a shell command"),
+                ("git_status", "Get git repository status"),
+                ("git_diff", "Show git diff of changes"),
+                ("git_commit", "Create a git commit"),
+            ]
+            formatter.message(f"AVAILABLE TOOLS ({len(tools)}):")
+            for name, desc in tools:
+                formatter.message(f"  - {name}: {desc}")
+
+            formatter.message("")
+            formatter.message("=" * 60)
+            formatter.message("Run without --dry-run to execute this task")
+            formatter.message("=" * 60)
+
+            return EXIT_SUCCESS
+
+        except FileNotFoundError:
+            formatter.error(f"PRD file not found: {prd_path}")
+            return EXIT_ERROR
+        except Exception as e:
+            formatter.error(f"Error loading PRD: {e}")
+            return EXIT_ERROR
 
     # Create and run the loop
     prd_path = getattr(args, "prd", None)

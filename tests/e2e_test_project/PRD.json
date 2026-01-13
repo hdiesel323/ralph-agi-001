@@ -1,0 +1,23 @@
+{
+  "project": {
+    "name": "E2E Test Project",
+    "description": "A simple test project to validate RALPH-AGI end-to-end execution"
+  },
+  "features": [
+    {
+      "id": "TASK-001",
+      "description": "Create a hello.py script that prints 'Hello from RALPH!'",
+      "passes": true,
+      "priority": 1,
+      "steps": [
+        "Create a file named hello.py",
+        "Add a print statement that outputs 'Hello from RALPH!'"
+      ],
+      "acceptance_criteria": [
+        "File hello.py exists",
+        "Running 'python hello.py' outputs 'Hello from RALPH!'"
+      ],
+      "completed_at": "2026-01-13T07:48:15.893731+00:00"
+    }
+  ]
+}

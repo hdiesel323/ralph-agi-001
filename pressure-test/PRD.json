@@ -1,0 +1,30 @@
+{
+  "project": {
+    "name": "Meta-Ralph: Self-Improvement",
+    "description": "RALPH-AGI improving itself - adding a dry-run feature to preview task selection without LLM calls"
+  },
+  "features": [
+    {
+      "id": "META-001",
+      "description": "Add a --dry-run flag to the CLI that shows which task would be selected and what context would be sent to the LLM, without actually making any LLM API calls",
+      "passes": true,
+      "priority": 1,
+      "steps": [
+        "Add --dry-run / -n flag to the 'run' subcommand in ralph_agi/cli.py",
+        "When --dry-run is set, load the PRD and select the next task using TaskSelector",
+        "Print the selected task ID, description, and acceptance criteria",
+        "Print a summary of what would be sent to the LLM (task context, available tools)",
+        "Exit without making any LLM API calls",
+        "Add a test in tests/test_cli.py to verify dry-run works"
+      ],
+      "acceptance_criteria": [
+        "Running 'ralph-agi run --dry-run --prd PRD.json' shows the next task without calling any LLM",
+        "Output includes task ID and description",
+        "Output shows available tools that would be used",
+        "No API calls are made (can verify by running without API keys set)",
+        "Test exists and passes"
+      ],
+      "completed_at": "2026-01-13T08:43:19.798566+00:00"
+    }
+  ]
+}

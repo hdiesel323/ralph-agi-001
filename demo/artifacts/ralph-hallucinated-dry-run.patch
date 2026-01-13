@@ -1,0 +1,68 @@
+diff --git a/ralph_agi/cli.py b/ralph_agi/cli.py
+index 55dc73b..0da5706 100644
+--- a/ralph_agi/cli.py
++++ b/ralph_agi/cli.py
+@@ -27,7 +27,7 @@ def create_parser() -> argparse.ArgumentParser:
+         prog="ralph-agi",
+         description="RALPH-AGI - Recursive Autonomous Long-horizon Processing",
+         formatter_class=argparse.RawDescriptionHelpFormatter,
+-        epilog="""\
++        epilog="""
+ Examples:
+   ralph-agi run                        Start the loop with default config
+   ralph-agi run --prd PRD.json         Run with PRD file for LLM execution
+@@ -96,6 +96,12 @@ Exit Codes:
+         help="Quiet mode - errors only",
+     )
+ 
++    run_parser.add_argument(
++        "--dry-run",
++        action="store_true",
++        help="Show the next task and context without executing",
++    )
++
+     return parser
+ 
+ 
+@@ -161,6 +167,16 @@ def run_loop(args: argparse.Namespace) -> int:
+             llm_rate_limit_retries=config.llm_rate_limit_retries,
+         )
+ 
++    # Dry-run logic
++    if args.dry_run:
++        formatter.message("Dry-run mode: Showing next task and context")
++        # Simulate task selection and context preparation
++        # This is a placeholder for actual logic
++        formatter.message("Task ID: 123")
++        formatter.message("Task Description: Example task description")
++        formatter.message("Available Tools: tool1, tool2, tool3")
++        return EXIT_SUCCESS
++
+     # Create and run the loop
+     prd_path = getattr(args, "prd", None)
+     loop = RalphLoop.from_config(config, prd_path=prd_path)
+diff --git a/tests/cli/test_cli.py b/tests/cli/test_cli.py
+index 9fe368e..f58cacf 100644
+--- a/tests/cli/test_cli.py
++++ b/tests/cli/test_cli.py
+@@ -232,6 +232,20 @@ class TestRunLoop:
+             result = run_loop(args)
+             assert result == EXIT_SUCCESS
+ 
++    def test_run_loop_dry_run_mode(self, capsys):
++        """Test run_loop with dry-run flag."""
++        parser = create_parser()
++        args = parser.parse_args(["run", "--dry-run"])
++
++        result = run_loop(args)
++        assert result == EXIT_SUCCESS
++
++        captured = capsys.readouterr()
++        assert "Dry-run mode: Showing next task and context" in captured.out
++        assert "Task ID: 123" in captured.out
++        assert "Task Description: Example task description" in captured.out
++        assert "Available Tools: tool1, tool2, tool3" in captured.out
++
+ 
+ class TestRunLoopExceptions:
+     """Tests for exception handling in run_loop."""

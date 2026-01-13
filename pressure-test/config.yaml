@@ -1,0 +1,16 @@
+# Meta-Ralph Pressure Test Config
+# RALPH improving itself
+
+max_iterations: 15
+memory_enabled: true
+memory_path: "./meta_ralph_memory"
+verbose: true
+
+# LLM Configuration
+llm:
+  builder_provider: "openai"
+  builder_model: "gpt-4o"
+  critic_enabled: false
+  max_tokens: 4096
+  max_tool_iterations: 10
+  temperature: 0.0
