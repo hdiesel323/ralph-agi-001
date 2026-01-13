@@ -17,6 +17,7 @@ from ralph_agi.llm.evaluator import (
     extract_file_check,
     extract_line_count_check,
     run_command,
+    criterion_mentions_keyword,
 )
 
 
@@ -290,3 +291,11 @@ class TestEvaluateAcceptanceCriteria:
         result = evaluate_acceptance_criteria(criteria)
         assert result.passed is True
         assert result.manual_count == 1
+
+
+def test_criterion_mentions_keyword():
+    """Test the criterion_mentions_keyword function."""
+    assert criterion_mentions_keyword("The code should be clean and efficient", "clean") is True
+    assert criterion_mentions_keyword("The code should be clean and efficient", "fast") is False
+    assert criterion_mentions_keyword("Ensure the function is tested", "tested") is True
+    assert criterion_mentions_keyword("Ensure the function is tested", "documented") is False

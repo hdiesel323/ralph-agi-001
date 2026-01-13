@@ -369,3 +369,16 @@ def evaluate_acceptance_criteria(
     if all_passed:
         return EvaluationResult.success(results)
     return EvaluationResult.failure(results)
+
+
+def criterion_mentions_keyword(criterion: str, keyword: str) -> bool:
+    """Check if a criterion mentions a specific keyword.
+
+    Args:
+        criterion: The acceptance criterion text.
+        keyword: The keyword to search for.
+
+    Returns:
+        True if the keyword is mentioned in the criterion, False otherwise.
+    """
+    return keyword in criterion
