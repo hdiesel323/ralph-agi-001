@@ -39,6 +39,29 @@ from ralph_agi.tools.executor import (
     ToolExecutor,
     ToolResult,
 )
+from ralph_agi.tools.filesystem import (
+    BinaryFileError,
+    FileInfo,
+    FileSystemError,
+    FileSystemTools,
+    FileTooLargeError,
+    PathSecurityError,
+)
+from ralph_agi.tools.shell import (
+    CommandNotAllowedError,
+    CommandResult,
+    CommandTimeoutError,
+    ShellError,
+    ShellTools,
+)
+from ralph_agi.tools.git import (
+    GitCommandError,
+    GitCommit,
+    GitError,
+    GitStatus,
+    GitTools,
+    NotARepositoryError,
+)
 
 __all__ = [
     # MCP Client
@@ -72,4 +95,24 @@ __all__ = [
     "ToolExecutionError",
     "ToolExecutor",
     "ToolResult",
+    # File System (Sprint 6)
+    "BinaryFileError",
+    "FileInfo",
+    "FileSystemError",
+    "FileSystemTools",
+    "FileTooLargeError",
+    "PathSecurityError",
+    # Shell (Sprint 6)
+    "CommandNotAllowedError",
+    "CommandResult",
+    "CommandTimeoutError",
+    "ShellError",
+    "ShellTools",
+    # Git (Sprint 6)
+    "GitCommandError",
+    "GitCommit",
+    "GitError",
+    "GitStatus",
+    "GitTools",
+    "NotARepositoryError",
 ]
