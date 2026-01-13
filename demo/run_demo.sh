@@ -49,6 +49,9 @@ BANNER
     echo ""
     echo -e "    ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
+    echo -e "    ${GREEN}\"Same energy as Ralph Wiggum eating glue... but with memory${NC}"
+    echo -e "    ${GREEN}that actually works and self-improves.\"${NC}"
+    echo ""
 }
 
 # Section header
