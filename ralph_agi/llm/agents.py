@@ -20,6 +20,7 @@ from ralph_agi.llm.prompts import (
     extract_completion_signal,
     extract_critic_verdict,
 )
+from ralph_agi.llm.verification import verify_files
 
 logger = logging.getLogger(__name__)
 
@@ -248,7 +249,26 @@ class BuilderAgent:
                 is_complete, status_msg = extract_completion_signal(response.content)
 
                 if is_complete:
-                    logger.info(f"Builder completed task: {status_msg}")
+                    logger.info(f"Builder signaled completion: {status_msg}")
+
+                    # Verify files before marking complete
+                    if files_changed:
+                        verification = verify_files(files_changed)
+
+                        if not verification.passed:
+                            # Verification failed - continue with error feedback
+                            error_msg = "VERIFICATION FAILED - Do NOT mark complete yet:\n"
+                            error_msg += "\n".join(f"- {e}" for e in verification.errors)
+                            error_msg += "\n\nFix these errors before signaling completion."
+
+                            logger.warning(f"Verification failed: {verification.errors}")
+                            messages.append({
+                                "role": "user",
+                                "content": error_msg,
+                            })
+                            continue  # Continue the loop to let Builder fix errors
+
+                    logger.info(f"Builder task verified and completed")
                     return BuilderResult(
                         status=AgentStatus.COMPLETED,
                         task=task,
