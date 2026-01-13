@@ -35,12 +35,19 @@ fi
 # Banner
 print_banner() {
     echo ""
-    echo -e "${PURPLE}╔══════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${PURPLE}║${NC}                                                              ${PURPLE}║${NC}"
-    echo -e "${PURPLE}║${NC}  ${BOLD}${CYAN}RALPH-AGI${NC} ${BOLD}Demo${NC}                                            ${PURPLE}║${NC}"
-    echo -e "${PURPLE}║${NC}  ${YELLOW}Recursive Autonomous Long-horizon Processing Handler${NC}      ${PURPLE}║${NC}"
-    echo -e "${PURPLE}║${NC}                                                              ${PURPLE}║${NC}"
-    echo -e "${PURPLE}╚══════════════════════════════════════════════════════════════╝${NC}"
+    echo -e "${PURPLE}"
+    cat << 'BANNER'
+    ██████╗  █████╗ ██╗     ██████╗ ██╗  ██╗       █████╗  ██████╗ ██╗
+    ██╔══██╗██╔══██╗██║     ██╔══██╗██║  ██║      ██╔══██╗██╔════╝ ██║
+    ██████╔╝███████║██║     ██████╔╝███████║█████╗███████║██║  ███╗██║
+    ██╔══██╗██╔══██║██║     ██╔═══╝ ██╔══██║╚════╝██╔══██║██║   ██║██║
+    ██║  ██║██║  ██║███████╗██║     ██║  ██║      ██║  ██║╚██████╔╝██║
+    ╚═╝  ╚═╝╚═╝  ╚═╝╚══════╝╚═╝     ╚═╝  ╚═╝      ╚═╝  ╚═╝ ╚═════╝ ╚═╝
+BANNER
+    echo -e "${NC}"
+    echo -e "    ${YELLOW}Recursive Autonomous Long-horizon Processing Handler${NC}"
+    echo ""
+    echo -e "    ${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
 }
 
@@ -263,10 +270,22 @@ main() {
     done
 
     echo ""
-    echo -e "${PURPLE}╔══════════════════════════════════════════════════════════════╗${NC}"
-    echo -e "${PURPLE}║${NC}  ${BOLD}Demo Complete!${NC}                                             ${PURPLE}║${NC}"
-    echo -e "${PURPLE}║${NC}  RALPH-AGI successfully demonstrated autonomous coding.      ${PURPLE}║${NC}"
-    echo -e "${PURPLE}╚══════════════════════════════════════════════════════════════╝${NC}"
+    echo -e "${GREEN}"
+    cat << 'COMPLETE'
+    ╔═══════════════════════════════════════════════════════════════╗
+    ║                                                               ║
+    ║   ██████╗  ██████╗ ███╗   ██╗███████╗██╗                      ║
+    ║   ██╔══██╗██╔═══██╗████╗  ██║██╔════╝██║                      ║
+    ║   ██║  ██║██║   ██║██╔██╗ ██║█████╗  ██║                      ║
+    ║   ██║  ██║██║   ██║██║╚██╗██║██╔══╝  ╚═╝                      ║
+    ║   ██████╔╝╚██████╔╝██║ ╚████║███████╗██╗                      ║
+    ║   ╚═════╝  ╚═════╝ ╚═╝  ╚═══╝╚══════╝╚═╝                      ║
+    ║                                                               ║
+    ║   RALPH-AGI successfully demonstrated autonomous coding!      ║
+    ║                                                               ║
+    ╚═══════════════════════════════════════════════════════════════╝
+COMPLETE
+    echo -e "${NC}"
 }
 
 # Run single scenario if specified
