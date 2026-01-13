@@ -1,7 +1,8 @@
 # Story 4.1: MCP CLI Integration
 
-Status: in_progress
+Status: completed
 Started: 2026-01-11
+Completed: 2026-01-12
 
 ## Story
 
@@ -37,37 +38,49 @@ so that **I can discover and use tools programmatically**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create tools module structure (AC: 4)
-  - [ ] Create `ralph_agi/tools/` package
-  - [ ] Create `ralph_agi/tools/__init__.py`
-  - [ ] Create `ralph_agi/tools/mcp.py` for MCP client
+- [x] Task 1: Create tools module structure (AC: 4)
+  - [x] Create `ralph_agi/tools/` package
+  - [x] Create `ralph_agi/tools/__init__.py`
+  - [x] Create `ralph_agi/tools/mcp.py` for MCP client
 
-- [ ] Task 2: Implement JSON-RPC protocol (AC: 2)
-  - [ ] `MCPMessage` dataclass for requests/responses
-  - [ ] `MCPError` exception class with code/message
-  - [ ] Request ID generation and tracking
-  - [ ] Message serialization/deserialization
+- [x] Task 2: Implement JSON-RPC protocol (AC: 2)
+  - [x] `MCPMessage` dataclass for requests/responses
+  - [x] `MCPError` exception class with code/message
+  - [x] Request ID generation and tracking
+  - [x] Message serialization/deserialization
 
-- [ ] Task 3: Implement stdio transport (AC: 1, 3)
-  - [ ] `StdioTransport` class for subprocess communication
-  - [ ] Async message reading from stdout
-  - [ ] Message writing to stdin
-  - [ ] Process lifecycle management
+- [x] Task 3: Implement stdio transport (AC: 1, 3)
+  - [x] `StdioTransport` class for subprocess communication
+  - [x] Async message reading from stdout
+  - [x] Message writing to stdin
+  - [x] Process lifecycle management
 
-- [ ] Task 4: Implement MCPClient (AC: 1, 2, 3, 4)
-  - [ ] `MCPClient` class wrapping transport
-  - [ ] `connect()` method to start server
-  - [ ] `send_request()` with timeout handling
-  - [ ] `disconnect()` for cleanup
-  - [ ] Context manager support (`async with`)
+- [x] Task 4: Implement MCPClient (AC: 1, 2, 3, 4)
+  - [x] `MCPClient` class wrapping transport
+  - [x] `connect()` method to start server
+  - [x] `send_request()` with timeout handling
+  - [x] `disconnect()` for cleanup
+  - [x] Context manager support (`async with`)
 
-- [ ] Task 5: Write unit tests (AC: all)
-  - [ ] Create `tests/tools/test_mcp.py`
-  - [ ] Test: JSON-RPC message formatting
-  - [ ] Test: Request/response correlation
-  - [ ] Test: Timeout handling
-  - [ ] Test: Error parsing
-  - [ ] Test: Server lifecycle (mock subprocess)
+- [x] Task 5: Write unit tests (AC: all)
+  - [x] Create `tests/tools/test_mcp.py`
+  - [x] Test: JSON-RPC message formatting
+  - [x] Test: Request/response correlation
+  - [x] Test: Timeout handling
+  - [x] Test: Error parsing
+  - [x] Test: Server lifecycle (mock subprocess)
+
+## Implementation Summary
+
+**Delivered:**
+- `StdioTransport` - async subprocess management with stdin/stdout JSON-RPC
+- `MCPClient` - full async MCP protocol client with handshake
+- `SyncMCPClient` - synchronous wrapper using background event loop
+- `MCPRequest`, `MCPResponse`, `MCPNotification` - message types
+- `MCPError`, `MCPTimeoutError`, `MCPConnectionError` - error hierarchy
+- `ServerInfo`, `ServerCapabilities` - server metadata parsing
+
+**Test Coverage:** 41 tests passing (1 integration test skipped)
 
 ## Dev Notes
 

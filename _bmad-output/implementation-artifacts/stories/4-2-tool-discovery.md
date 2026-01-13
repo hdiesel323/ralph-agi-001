@@ -1,6 +1,8 @@
 # Story 4.2: Tool Discovery
 
-Status: not_started
+Status: completed
+Started: 2026-01-12
+Completed: 2026-01-12
 
 ## Story
 
@@ -36,39 +38,49 @@ so that **the agent knows what tools are available without static loading**.
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Create ToolInfo dataclass (AC: 2)
-  - [ ] `ToolInfo` with name, description, server, input_schema
-  - [ ] `ServerInfo` with name, command, status, tools
-  - [ ] JSON serialization support
-  - [ ] Type hints throughout
+- [x] Task 1: Create ToolInfo dataclass (AC: 2)
+  - [x] `ToolInfo` with name, description, server, input_schema
+  - [x] `ServerConfig` and `ServerState` dataclasses
+  - [x] JSON serialization support
+  - [x] Type hints throughout
 
-- [ ] Task 2: Implement ToolRegistry (AC: 1, 2, 3, 4)
-  - [ ] `ToolRegistry` class managing all servers
-  - [ ] `list_servers() -> List[ServerInfo]`
-  - [ ] `list_tools(server: str = None) -> List[ToolInfo]`
-  - [ ] `get_tool(name: str) -> ToolInfo`
-  - [ ] `refresh(server: str = None, force: bool = False)`
+- [x] Task 2: Implement ToolRegistry (AC: 1, 2, 3, 4)
+  - [x] `ToolRegistry` class managing all servers
+  - [x] `list_servers() -> List[ServerInfo]`
+  - [x] `list_tools(server: str = None) -> List[ToolInfo]`
+  - [x] `get_tool(name: str) -> ToolInfo`
+  - [x] `refresh(server: str = None, force: bool = False)`
 
-- [ ] Task 3: Implement caching layer (AC: 3)
-  - [ ] `ToolCache` class with TTL support
-  - [ ] `get(key) -> Optional[T]`
-  - [ ] `set(key, value, ttl: int = None)`
-  - [ ] `invalidate(key)` and `clear()`
-  - [ ] Automatic TTL expiration
+- [x] Task 3: Implement caching layer (AC: 3)
+  - [x] `TTLCache` class with TTL support
+  - [x] `get(key) -> Optional[T]`
+  - [x] `set(key, value, ttl: int = None)`
+  - [x] `invalidate(key)` and `clear()`
+  - [x] Automatic TTL expiration
 
-- [ ] Task 4: Integrate with MCPClient (AC: 1, 2)
-  - [ ] `_discover_tools(server: str) -> List[ToolInfo]`
-  - [ ] Parse `tools/list` response
-  - [ ] Extract input schema from tool definitions
-  - [ ] Handle discovery errors gracefully
+- [x] Task 4: Integrate with MCPClient (AC: 1, 2)
+  - [x] `_discover_tools(server: str) -> List[ToolInfo]`
+  - [x] Parse `tools/list` response
+  - [x] Extract input schema from tool definitions
+  - [x] Handle discovery errors gracefully
 
-- [ ] Task 5: Write unit tests (AC: all)
-  - [ ] Test: List servers from config
-  - [ ] Test: Discover tools from server
-  - [ ] Test: Cache hit/miss behavior
-  - [ ] Test: TTL expiration
-  - [ ] Test: Refresh invalidates cache
-  - [ ] Test: Handle server errors
+- [x] Task 5: Write unit tests (AC: all)
+  - [x] Test: List servers from config
+  - [x] Test: Discover tools from server
+  - [x] Test: Cache hit/miss behavior
+  - [x] Test: TTL expiration
+  - [x] Test: Refresh invalidates cache
+  - [x] Test: Handle server errors
+
+## Implementation Summary
+
+**Delivered:**
+- `TTLCache` - Generic thread-safe cache with configurable TTL (42 tests)
+- `ToolRegistry` - Multi-server tool discovery with caching (40 tests)
+- `ToolInfo` - Tool metadata dataclass with MCP response parsing
+- `ServerConfig` / `ServerState` - Server configuration and runtime state
+
+**Test Coverage:** 82 new tests (768 total passing)
 
 ## Dev Notes
 
