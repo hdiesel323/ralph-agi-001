@@ -30,10 +30,11 @@ logger = logging.getLogger(__name__)
 
 # Popular model aliases for convenience
 MODELS = {
-    # Anthropic Claude models via OpenRouter
-    "claude-opus": "anthropic/claude-3.5-opus",
-    "claude-sonnet": "anthropic/claude-sonnet-4-20250514",
-    "claude-haiku": "anthropic/claude-3-haiku",
+    # Anthropic Claude models via OpenRouter (2025)
+    "claude-opus": "anthropic/claude-opus-4.5",
+    "claude-sonnet": "anthropic/claude-sonnet-4.5",
+    "claude-haiku": "anthropic/claude-3.5-haiku",
+    "claude-3.7-sonnet": "anthropic/claude-3.7-sonnet",
     # OpenAI models via OpenRouter
     "gpt-4o": "openai/gpt-4o",
     "gpt-4-turbo": "openai/gpt-4-turbo",
@@ -82,7 +83,7 @@ class OpenRouterClient(OpenAIClient):
     """
 
     OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-    DEFAULT_MODEL = "anthropic/claude-sonnet-4-20250514"
+    DEFAULT_MODEL = "anthropic/claude-sonnet-4.5"
 
     def __init__(
         self,

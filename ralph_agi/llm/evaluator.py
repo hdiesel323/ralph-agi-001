@@ -80,7 +80,8 @@ class EvaluationResult:
 # Patterns to detect executable criteria
 COMMAND_PATTERNS = [
     # Explicit command format: Running 'command' shows/returns/outputs...
-    r"[Rr]unning ['\"](.+?)['\"]",
+    # Use a more sophisticated pattern that handles nested quotes
+    r"[Rr]unning ['\"](.+?)['\"](?:\s+(?:shows|returns|outputs|passes|produces)|\s*$)",
     # pytest/python -m pytest format
     r"(python -m pytest .+?)(?:\s+shows|\s+passes|\s+returns|$)",
     # Shell command in backticks
@@ -372,7 +373,7 @@ def evaluate_acceptance_criteria(
 
 
 def criterion_mentions_keyword(criterion: str, keyword: str) -> bool:
-    """Check if a criterion mentions a specific keyword.
+    """Check if a criterion mentions a specific keyword (case-insensitive).
 
     Args:
         criterion: The acceptance criterion text.
@@ -381,4 +382,4 @@ def criterion_mentions_keyword(criterion: str, keyword: str) -> bool:
     Returns:
         True if the keyword is mentioned in the criterion, False otherwise.
     """
-    return keyword in criterion
+    return keyword.lower() in criterion.lower()

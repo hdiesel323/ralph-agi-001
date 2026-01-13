@@ -299,3 +299,7 @@ def test_criterion_mentions_keyword():
     assert criterion_mentions_keyword("The code should be clean and efficient", "fast") is False
     assert criterion_mentions_keyword("Ensure the function is tested", "tested") is True
     assert criterion_mentions_keyword("Ensure the function is tested", "documented") is False
+    # Test case-insensitivity
+    assert criterion_mentions_keyword("The code should be CLEAN and efficient", "clean") is True
+    assert criterion_mentions_keyword("The code should be clean and efficient", "CLEAN") is True
+    assert criterion_mentions_keyword("The CODE should be Clean", "code") is True
