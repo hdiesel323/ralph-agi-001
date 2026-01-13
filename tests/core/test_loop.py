@@ -354,13 +354,16 @@ class TestRalphLoopCleanup:
     def test_close_removes_handlers(self):
         """Test that close() removes logging handlers."""
         loop = RalphLoop(max_iterations=1)
-        initial_handler_count = len(loop._handlers)
-        assert initial_handler_count > 0
+        initial_handlers = loop._handlers.copy()
+        assert len(initial_handlers) > 0
 
         loop.close()
 
         assert len(loop._handlers) == 0
-        assert len(loop.logger.handlers) == 0
+        # Verify our handlers were removed from the logger
+        # (don't check total count as pytest may add its own handlers)
+        for handler in initial_handlers:
+            assert handler not in loop.logger.handlers
 
     def test_file_logging_creates_file(self, tmp_path):
         """Test that log_file parameter creates and writes to file."""
@@ -389,3 +392,166 @@ class TestRalphLoopCleanup:
 
         loop1.close()
         loop2.close()
+
+
+class TestSessionManagement:
+    """Tests for session ID management."""
+
+    def test_auto_generates_session_id(self):
+        """Test that session_id is auto-generated if not provided."""
+        loop = RalphLoop()
+        assert loop.session_id is not None
+        assert len(loop.session_id) == 36  # UUID length
+
+    def test_custom_session_id(self):
+        """Test that custom session_id can be provided."""
+        custom_id = "custom-session-123"
+        loop = RalphLoop(session_id=custom_id)
+        assert loop.session_id == custom_id
+
+    def test_unique_session_ids(self):
+        """Test that each loop gets a unique session_id."""
+        loop1 = RalphLoop()
+        loop2 = RalphLoop()
+        assert loop1.session_id != loop2.session_id
+
+    def test_session_id_in_state(self):
+        """Test that session_id is included in state."""
+        loop = RalphLoop(session_id="test-session")
+        state = loop.get_state()
+        assert state["session_id"] == "test-session"
+
+    def test_session_id_in_checkpoint(self, tmp_path):
+        """Test that session_id is saved to checkpoint."""
+        checkpoint_file = tmp_path / "checkpoint.json"
+        loop = RalphLoop(
+            max_iterations=3,
+            checkpoint_path=str(checkpoint_file),
+            session_id="checkpoint-session",
+        )
+        loop.run()
+        loop.save_checkpoint()
+
+        # Load and verify
+        import json
+        data = json.loads(checkpoint_file.read_text())
+        assert data["session_id"] == "checkpoint-session"
+
+    def test_resume_restores_session_id(self, tmp_path):
+        """Test that resume_from_checkpoint restores session_id."""
+        checkpoint_file = tmp_path / "checkpoint.json"
+
+        # Create initial loop with known session_id
+        loop1 = RalphLoop(
+            max_iterations=5,
+            checkpoint_path=str(checkpoint_file),
+            session_id="original-session",
+        )
+        loop1.iteration = 3
+        loop1.save_checkpoint()
+        loop1.close()
+
+        # Create new loop and resume
+        loop2 = RalphLoop(checkpoint_path=str(checkpoint_file))
+        loop2.resume_from_checkpoint()
+
+        assert loop2.session_id == "original-session"
+        assert loop2.iteration == 3
+
+
+class TestMemoryIntegration:
+    """Tests for memory store integration."""
+
+    def test_no_memory_by_default(self):
+        """Test that memory store is None by default."""
+        loop = RalphLoop()
+        assert loop._memory_store is None
+
+    def test_memory_store_parameter(self):
+        """Test that memory_store parameter is accepted."""
+        mock_store = MagicMock()
+        loop = RalphLoop(memory_store=mock_store)
+        assert loop._memory_store is mock_store
+
+    def test_get_context_without_memory(self):
+        """Test that get_context returns empty list without memory."""
+        loop = RalphLoop()
+        context = loop.get_context()
+        assert context == []
+
+    def test_get_recent_context_without_memory(self):
+        """Test that get_recent_context returns empty list without memory."""
+        loop = RalphLoop()
+        context = loop.get_recent_context()
+        assert context == []
+
+    def test_store_iteration_result_without_memory(self):
+        """Test that _store_iteration_result handles no memory gracefully."""
+        loop = RalphLoop()
+        result = IterationResult(success=True, output="Test output")
+        frame_id = loop._store_iteration_result(result)
+        assert frame_id is None
+
+    def test_store_iteration_result_with_memory(self):
+        """Test that iteration results are stored in memory."""
+        mock_store = MagicMock()
+        mock_store.append.return_value = "frame-123"
+
+        loop = RalphLoop(memory_store=mock_store, session_id="test-session")
+        result = IterationResult(success=True, output="Test completed")
+
+        frame_id = loop._store_iteration_result(result)
+
+        assert frame_id == "frame-123"
+        mock_store.append.assert_called_once()
+
+        # Verify call arguments
+        call_kwargs = mock_store.append.call_args.kwargs
+        assert "Iteration 1 completed successfully" in call_kwargs["content"]
+        assert call_kwargs["frame_type"] == "iteration_result"
+        assert call_kwargs["session_id"] == "test-session"
+        assert call_kwargs["metadata"]["iteration"] == 1
+        assert call_kwargs["metadata"]["success"] is True
+
+    def test_iteration_stores_result(self):
+        """Test that running loop stores iteration results."""
+        mock_store = MagicMock()
+        mock_store.append.return_value = "frame-456"
+
+        loop = RalphLoop(max_iterations=2, memory_store=mock_store)
+        loop.run()
+        loop.close()
+
+        # Should have been called twice (once per iteration)
+        assert mock_store.append.call_count == 2
+
+    def test_close_closes_memory_store(self):
+        """Test that close() closes the memory store."""
+        mock_store = MagicMock()
+        loop = RalphLoop(memory_store=mock_store)
+        loop.close()
+
+        mock_store.close.assert_called_once()
+        assert loop._memory_store is None
+
+    def test_get_context_calls_memory(self):
+        """Test that get_context queries memory store."""
+        mock_store = MagicMock()
+        mock_store.get_by_session.return_value = ["frame1", "frame2"]
+
+        loop = RalphLoop(memory_store=mock_store, session_id="ctx-session")
+        context = loop.get_context(n=5)
+
+        mock_store.get_by_session.assert_called_once_with("ctx-session", limit=5)
+        assert context == ["frame1", "frame2"]
+
+    def test_get_recent_context_calls_memory(self):
+        """Test that get_recent_context queries memory store."""
+        mock_store = MagicMock()
+        mock_store.get_recent.return_value = ["recent1", "recent2"]
+
+        loop = RalphLoop(memory_store=mock_store)
+        context = loop.get_recent_context(n=3)
+
+        mock_store.get_recent.assert_called_once_with(3)
+        assert context == ["recent1", "recent2"]
