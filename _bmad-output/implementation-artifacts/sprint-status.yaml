@@ -535,15 +535,17 @@ sprints:
       stories:
         - id: story-8.1
           name: Stress Test PRD Suite
-          status: not_started
+          status: completed
           priority: P0
           points: 3
+          notes: META_PRD v1-v6 created and executed
 
         - id: story-8.2
           name: Edge Case Test Coverage
-          status: not_started
+          status: completed
           priority: P0
           points: 3
+          notes: META_PRD_v4 TestFileExtensionValidation, verification tests
 
         - id: story-8.3
           name: Integration Test Suite
@@ -553,9 +555,10 @@ sprints:
 
         - id: story-8.4
           name: Bug Fixes (Feature.title, etc.)
-          status: not_started
+          status: completed
           priority: P0
           points: 2
+          notes: Fixed Feature.title bug, OpenRouter model alias tests
 
         - id: story-8.5
           name: Error Recovery Testing
@@ -565,27 +568,34 @@ sprints:
 
         - id: story-8.6
           name: Multi-Provider Stress Tests
-          status: not_started
+          status: completed
           priority: P2
           points: 2
+          notes: META_PRD v5 (OpenAI), v6 (OpenRouter/Claude) both passing
 
     deferred: []
 
     total_points: 15
-    completed_points: 0
+    completed_points: 10
 
     blockers: []
 
     notes: |
-      Testing sprint running in parallel with remaining epic completion.
-      Known bugs to fix:
-      - 'Feature' object has no attribute 'title'
-      - 'sequence item 1: expected str instance, list found'
-      Stress test PRDs should cover:
-      - Simple single-file changes
-      - Multi-file refactors
-      - Test writing tasks
-      - Edge cases (empty PRD, circular deps, invalid JSON)
+      Sprint 8 progress: 10/15 points (67%)
+
+      COMPLETED:
+      - Story 8.1: META_PRD v1-v6 stress test suite created and executed
+      - Story 8.2: TestFileExtensionValidation, META_PRD_v4 verification tests
+      - Story 8.4: Fixed Feature.title bug (used task.title instead of task_title)
+      - Story 8.4: Fixed OpenRouter test failures (model alias updates)
+      - Story 8.6: META_PRD v5 (OpenAI) and v6 (OpenRouter/Claude) passing
+      - Added --show-cost flag to CLI with token tracking
+
+      REMAINING:
+      - Story 8.3: Integration test suite
+      - Story 8.5: Error recovery testing
+
+      Test count: 1308 passing, 2 skipped
 
 # Velocity tracking
 velocity:
@@ -612,7 +622,7 @@ velocity:
     completed: 31
   sprint-08:
     planned: 15
-    completed: 0
+    completed: 10
 
 # Epic progress
 epic_progress:
