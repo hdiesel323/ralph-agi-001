@@ -58,6 +58,14 @@ class RalphConfig:
         llm_max_tool_iterations: Maximum tool loop iterations. Default: 10
         llm_temperature: Sampling temperature (0.0 = deterministic). Default: 0.0
         llm_rate_limit_retries: Max retries on rate limit. Default: 3
+        git_workflow: Git workflow mode (direct, branch, pr). Default: "branch"
+            - direct: Commit anywhere (risky, for solo dev)
+            - branch: Create feature branches, push branches
+            - pr: Create feature branches, push, create PRs
+        git_protected_branches: Branches that cannot be committed to directly.
+            Default: ["main", "master"]
+        git_branch_prefix: Prefix for auto-created branches. Default: "ralph/"
+        git_auto_push: Whether to auto-push after commits. Default: True
     """
 
     max_iterations: int = 100
@@ -86,6 +94,11 @@ class RalphConfig:
     llm_max_tool_iterations: int = 10
     llm_temperature: float = 0.0
     llm_rate_limit_retries: int = 3
+    # Git Configuration
+    git_workflow: str = "branch"
+    git_protected_branches: list[str] = field(default_factory=lambda: ["main", "master"])
+    git_branch_prefix: str = "ralph/"
+    git_auto_push: bool = True
 
     def __post_init__(self):
         """Validate configuration after initialization."""
@@ -111,6 +124,12 @@ class RalphConfig:
 
         if not self.completion_promise:
             raise ConfigValidationError("completion_promise must not be empty")
+
+        valid_workflows = ("direct", "branch", "pr")
+        if self.git_workflow not in valid_workflows:
+            raise ConfigValidationError(
+                f"git_workflow must be one of {valid_workflows}, got '{self.git_workflow}'"
+            )
 
 
 def load_config(config_path: Optional[str | Path] = None) -> RalphConfig:
@@ -151,6 +170,7 @@ def load_config(config_path: Optional[str | Path] = None) -> RalphConfig:
     memory_config = data.get("memory", {})
     hooks_config = data.get("hooks", {})
     llm_config = data.get("llm", {})
+    git_config = data.get("git", {})
 
     return RalphConfig(
         max_iterations=data.get("max_iterations", 100),
@@ -178,6 +198,10 @@ def load_config(config_path: Optional[str | Path] = None) -> RalphConfig:
         llm_max_tool_iterations=llm_config.get("max_tool_iterations", 10),
         llm_temperature=llm_config.get("temperature", 0.0),
         llm_rate_limit_retries=llm_config.get("rate_limit_retries", 3),
+        git_workflow=git_config.get("workflow", "branch"),
+        git_protected_branches=git_config.get("protected_branches", ["main", "master"]),
+        git_branch_prefix=git_config.get("branch_prefix", "ralph/"),
+        git_auto_push=git_config.get("auto_push", True),
     )
 
 
@@ -219,6 +243,12 @@ def save_config(config: RalphConfig, config_path: str | Path = "config.yaml") ->
             "max_tool_iterations": config.llm_max_tool_iterations,
             "temperature": config.llm_temperature,
             "rate_limit_retries": config.llm_rate_limit_retries,
+        },
+        "git": {
+            "workflow": config.git_workflow,
+            "protected_branches": config.git_protected_branches,
+            "branch_prefix": config.git_branch_prefix,
+            "auto_push": config.git_auto_push,
         },
     }
 

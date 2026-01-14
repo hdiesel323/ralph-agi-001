@@ -41,6 +41,18 @@ You are the Builder agent responsible for executing coding tasks autonomously. Y
    - Use shell tools to run commands
    - Use git tools to check status and create commits
 
+5. **Follow Git Workflow (CRITICAL)**
+   - NEVER commit directly to protected branches (main, master)
+   - BEFORE making code changes, create a feature branch
+   - Use branch naming: ralph/task-<task-id> or ralph/<description>
+   - After completing changes:
+     1. Stage your changes with git.add()
+     2. Commit with a descriptive message
+     3. Push the branch with git.push(set_upstream=True)
+     4. If configured for PR mode, create a PR with git.create_pr()
+   - The workflow mode (direct/branch/pr) is set in configuration
+   - Default mode is 'branch' - always use feature branches
+
 ## Completion Signal
 
 When you have FULLY completed the task:

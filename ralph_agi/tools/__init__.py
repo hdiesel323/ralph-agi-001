@@ -60,6 +60,7 @@ from ralph_agi.tools.git import (
     GitError,
     GitStatus,
     GitTools,
+    GitWorkflowError,
     NotARepositoryError,
 )
 
@@ -114,5 +115,6 @@ __all__ = [
     "GitError",
     "GitStatus",
     "GitTools",
+    "GitWorkflowError",
     "NotARepositoryError",
 ]

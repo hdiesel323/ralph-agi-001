@@ -15,6 +15,7 @@ from ralph_agi.tools.git import (
     GitError,
     GitStatus,
     GitTools,
+    GitWorkflowError,
     NotARepositoryError,
 )
 
@@ -523,3 +524,197 @@ class TestRemoteUrl:
         url = git.get_remote_url()
 
         assert url is None
+
+
+class TestListBranches:
+    """Tests for list_branches method."""
+
+    def test_list_single_branch(self, git_repo_with_commits: Path) -> None:
+        """Test listing branches in repo with only main."""
+        git = GitTools(repo_path=git_repo_with_commits)
+        branches = git.list_branches()
+
+        assert "main" in branches
+
+    def test_list_multiple_branches(self, git_repo_with_commits: Path) -> None:
+        """Test listing branches after creating new ones."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # Create new branches
+        git.checkout("feature-a", create=True)
+        git.checkout("feature-b", create=True)
+        git.checkout("main")
+
+        branches = git.list_branches()
+
+        assert "main" in branches
+        assert "feature-a" in branches
+        assert "feature-b" in branches
+
+
+class TestDeleteBranch:
+    """Tests for delete_branch method."""
+
+    def test_delete_branch(self, git_repo_with_commits: Path) -> None:
+        """Test deleting a branch."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # Create and switch to feature branch
+        git.checkout("to-delete", create=True)
+        git.checkout("main")
+
+        # Delete the branch
+        result = git.delete_branch("to-delete")
+
+        assert result is True
+        assert "to-delete" not in git.list_branches()
+
+    def test_delete_nonexistent_branch(self, git_repo_with_commits: Path) -> None:
+        """Test deleting a branch that doesn't exist."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        with pytest.raises(GitCommandError):
+            git.delete_branch("nonexistent-branch")
+
+    def test_delete_unmerged_branch_fails(self, git_repo_with_commits: Path) -> None:
+        """Test that deleting unmerged branch fails without force."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # Create branch with unique commit
+        git.checkout("unmerged", create=True)
+        (git_repo_with_commits / "unmerged.txt").write_text("unmerged content")
+        git.add(["unmerged.txt"])
+        git.commit("Unmerged commit")
+        git.checkout("main")
+
+        # Should fail without force
+        with pytest.raises(GitCommandError):
+            git.delete_branch("unmerged")
+
+    def test_delete_unmerged_branch_with_force(self, git_repo_with_commits: Path) -> None:
+        """Test force deleting unmerged branch."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # Create branch with unique commit
+        git.checkout("unmerged", create=True)
+        (git_repo_with_commits / "unmerged.txt").write_text("unmerged content")
+        git.add(["unmerged.txt"])
+        git.commit("Unmerged commit")
+        git.checkout("main")
+
+        # Force delete should work
+        result = git.delete_branch("unmerged", force=True)
+        assert result is True
+
+
+class TestValidateWorkflow:
+    """Tests for validate_workflow method and GitWorkflowError."""
+
+    def test_direct_mode_allows_main(self, git_repo_with_commits: Path) -> None:
+        """Test that direct mode allows commits to main."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # Should not raise
+        git.validate_workflow("direct")
+        git.validate_workflow("direct", protected_branches=["main", "master"])
+
+    def test_branch_mode_blocks_main(self, git_repo_with_commits: Path) -> None:
+        """Test that branch mode blocks commits to main."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        with pytest.raises(GitWorkflowError) as exc_info:
+            git.validate_workflow("branch")
+
+        assert exc_info.value.branch == "main"
+        assert "main" in exc_info.value.protected_branches
+
+    def test_pr_mode_blocks_main(self, git_repo_with_commits: Path) -> None:
+        """Test that pr mode blocks commits to main."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        with pytest.raises(GitWorkflowError) as exc_info:
+            git.validate_workflow("pr")
+
+        assert "Cannot commit to protected branch" in str(exc_info.value)
+
+    def test_branch_mode_allows_feature_branch(self, git_repo_with_commits: Path) -> None:
+        """Test that branch mode allows commits to feature branches."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # Create and switch to feature branch
+        git.checkout("feature/test", create=True)
+
+        # Should not raise
+        git.validate_workflow("branch")
+        git.validate_workflow("pr")
+
+    def test_custom_protected_branches(self, git_repo_with_commits: Path) -> None:
+        """Test with custom protected branches list."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # Main is not in custom list
+        git.validate_workflow("branch", protected_branches=["develop", "release"])
+
+        # Create develop branch
+        git.checkout("develop", create=True)
+
+        with pytest.raises(GitWorkflowError):
+            git.validate_workflow("branch", protected_branches=["develop", "release"])
+
+    def test_error_includes_helpful_message(self, git_repo_with_commits: Path) -> None:
+        """Test that error message includes instructions."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        with pytest.raises(GitWorkflowError) as exc_info:
+            git.validate_workflow("branch")
+
+        error_msg = str(exc_info.value)
+        assert "checkout" in error_msg.lower()
+        assert "create=True" in error_msg or "feature" in error_msg.lower()
+
+
+class TestPush:
+    """Tests for push method (basic validation, no remote)."""
+
+    def test_push_fails_without_remote(self, git_repo_with_commits: Path) -> None:
+        """Test that push fails when no remote is configured."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        with pytest.raises(GitCommandError):
+            git.push()
+
+
+class TestPull:
+    """Tests for pull method (basic validation, no remote)."""
+
+    def test_pull_fails_without_remote(self, git_repo_with_commits: Path) -> None:
+        """Test that pull fails when no remote is configured."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        with pytest.raises(GitCommandError):
+            git.pull()
+
+
+class TestCreatePr:
+    """Tests for create_pr method (basic validation, no gh)."""
+
+    def test_create_pr_fails_without_gh(self, git_repo_with_commits: Path) -> None:
+        """Test that create_pr fails when gh is not available or not authenticated."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # This will fail because either gh isn't installed, or repo has no remote
+        # Either way, it should raise GitCommandError
+        with pytest.raises(GitCommandError):
+            git.create_pr("Test PR", body="Test body")
+
+
+class TestGetPrStatus:
+    """Tests for get_pr_status method."""
+
+    def test_get_pr_status_no_pr(self, git_repo_with_commits: Path) -> None:
+        """Test get_pr_status returns None when no PR exists."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # No remote/PR, should return None
+        result = git.get_pr_status()
+        assert result is None

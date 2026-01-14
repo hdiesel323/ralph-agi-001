@@ -42,6 +42,15 @@ class GitCommandError(GitError):
         super().__init__(f"Git command failed: {command}\n{stderr}")
 
 
+class GitWorkflowError(GitError):
+    """Raised when git workflow rules are violated."""
+
+    def __init__(self, message: str, branch: str, protected_branches: list[str]):
+        self.branch = branch
+        self.protected_branches = protected_branches
+        super().__init__(message)
+
+
 @dataclass
 class GitStatus:
     """Repository status information.
@@ -222,6 +231,43 @@ class GitTools:
         """
         if not self.is_repo():
             raise NotARepositoryError(str(self._repo_path))
+
+    def validate_workflow(
+        self,
+        workflow: str,
+        protected_branches: list[str] | None = None,
+    ) -> None:
+        """Validate that current branch is allowed for commits.
+
+        In 'branch' or 'pr' workflow modes, commits to protected branches
+        are not allowed. This should be called before committing.
+
+        Args:
+            workflow: Workflow mode ('direct', 'branch', or 'pr')
+            protected_branches: List of protected branch names.
+                Defaults to ['main', 'master']
+
+        Raises:
+            GitWorkflowError: If on protected branch in branch/pr mode
+            NotARepositoryError: If not a repository
+        """
+        if workflow == "direct":
+            # Direct mode allows commits anywhere
+            return
+
+        if protected_branches is None:
+            protected_branches = ["main", "master"]
+
+        self._ensure_repo()
+        current = self.current_branch()
+
+        if current in protected_branches:
+            raise GitWorkflowError(
+                f"Cannot commit to protected branch '{current}' in '{workflow}' mode. "
+                f"Create a feature branch first with: git.checkout('feature-name', create=True)",
+                branch=current,
+                protected_branches=protected_branches,
+            )
 
     def status(self) -> GitStatus:
         """Get repository status.
@@ -621,3 +667,221 @@ class GitTools:
             cwd=self._repo_path,
         )
         return result.success
+
+    def push(
+        self,
+        remote: str = "origin",
+        branch: str | None = None,
+        set_upstream: bool = False,
+        force: bool = False,
+    ) -> str:
+        """Push commits to remote.
+
+        Args:
+            remote: Remote name (default: origin)
+            branch: Branch to push (default: current branch)
+            set_upstream: Set upstream tracking (-u flag)
+            force: Force push (use with caution!)
+
+        Returns:
+            Push output message
+
+        Raises:
+            NotARepositoryError: If not a repository
+            GitCommandError: If push fails
+        """
+        self._ensure_repo()
+
+        args = ["push"]
+        if set_upstream:
+            args.append("-u")
+        if force:
+            args.append("--force")
+        args.append(remote)
+        if branch:
+            args.append(branch)
+
+        output = self._run_git(*args)
+        logger.info(f"GIT_PUSH: {remote}/{branch or 'current'}")
+        return output
+
+    def pull(
+        self,
+        remote: str = "origin",
+        branch: str | None = None,
+    ) -> str:
+        """Pull from remote.
+
+        Args:
+            remote: Remote name (default: origin)
+            branch: Branch to pull (default: current tracking branch)
+
+        Returns:
+            Pull output message
+
+        Raises:
+            NotARepositoryError: If not a repository
+            GitCommandError: If pull fails
+        """
+        self._ensure_repo()
+
+        args = ["pull", remote]
+        if branch:
+            args.append(branch)
+
+        output = self._run_git(*args)
+        logger.info(f"GIT_PULL: {remote}/{branch or 'tracking'}")
+        return output
+
+    def list_branches(self, remote: bool = False, all: bool = False) -> list[str]:
+        """List branches.
+
+        Args:
+            remote: List remote branches only
+            all: List all branches (local and remote)
+
+        Returns:
+            List of branch names
+
+        Raises:
+            NotARepositoryError: If not a repository
+        """
+        self._ensure_repo()
+
+        args = ["branch"]
+        if all:
+            args.append("-a")
+        elif remote:
+            args.append("-r")
+
+        output = self._run_git(*args)
+
+        # Parse output: each line is "  branch" or "* current-branch"
+        branches = []
+        for line in output.strip().split("\n"):
+            if not line:
+                continue
+            # Remove leading whitespace and * marker for current branch
+            branch = line.strip().lstrip("* ").strip()
+            # Skip remotes/origin/HEAD -> origin/main type lines
+            if " -> " in branch:
+                continue
+            if branch:
+                branches.append(branch)
+
+        return branches
+
+    def delete_branch(self, branch: str, force: bool = False) -> bool:
+        """Delete a branch.
+
+        Args:
+            branch: Branch name to delete
+            force: Force delete even if not merged (-D flag)
+
+        Returns:
+            True if successful
+
+        Raises:
+            NotARepositoryError: If not a repository
+            GitCommandError: If delete fails (e.g., branch doesn't exist)
+        """
+        self._ensure_repo()
+
+        flag = "-D" if force else "-d"
+        self._run_git("branch", flag, branch)
+        logger.info(f"GIT_DELETE_BRANCH: {branch}")
+        return True
+
+    def create_pr(
+        self,
+        title: str,
+        body: str = "",
+        base: str = "main",
+        draft: bool = False,
+    ) -> dict:
+        """Create a pull request via GitHub CLI (gh).
+
+        Requires gh CLI to be installed and authenticated.
+
+        Args:
+            title: PR title
+            body: PR description/body
+            base: Base branch to merge into (default: main)
+            draft: Create as draft PR
+
+        Returns:
+            Dict with PR info: {number, url, state, title}
+
+        Raises:
+            NotARepositoryError: If not a repository
+            GitCommandError: If PR creation fails (gh not installed, auth issues, etc.)
+        """
+        self._ensure_repo()
+
+        # Build gh pr create command
+        args = ["gh", "pr", "create"]
+        args.extend(["--title", f'"{title}"'])
+        if body:
+            # Escape quotes in body
+            escaped_body = body.replace('"', '\\"')
+            args.extend(["--body", f'"{escaped_body}"'])
+        args.extend(["--base", base])
+        if draft:
+            args.append("--draft")
+
+        cmd = " ".join(args)
+        result = self._shell.execute(cmd, cwd=self._repo_path)
+
+        if not result.success:
+            raise GitCommandError(cmd, result.stderr, result.exit_code)
+
+        # gh pr create outputs the PR URL on success
+        pr_url = result.stdout.strip()
+
+        # Extract PR number from URL (e.g., .../pull/123)
+        pr_number = None
+        match = re.search(r"/pull/(\d+)", pr_url)
+        if match:
+            pr_number = int(match.group(1))
+
+        logger.info(f"GIT_CREATE_PR: #{pr_number} - {title}")
+
+        return {
+            "number": pr_number,
+            "url": pr_url,
+            "state": "draft" if draft else "open",
+            "title": title,
+        }
+
+    def get_pr_status(self, pr_number: int | None = None) -> dict | None:
+        """Get pull request status via GitHub CLI (gh).
+
+        Args:
+            pr_number: PR number (default: PR for current branch)
+
+        Returns:
+            Dict with PR info or None if no PR found
+
+        Raises:
+            NotARepositoryError: If not a repository
+        """
+        self._ensure_repo()
+
+        if pr_number:
+            cmd = f"gh pr view {pr_number} --json number,url,state,title,mergeable"
+        else:
+            cmd = "gh pr view --json number,url,state,title,mergeable"
+
+        result = self._shell.execute(cmd, cwd=self._repo_path)
+
+        if not result.success:
+            # No PR found for current branch
+            return None
+
+        # Parse JSON output
+        import json
+
+        try:
+            return json.loads(result.stdout)
+        except json.JSONDecodeError:
+            return None
