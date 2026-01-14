@@ -414,3 +414,62 @@ class TestExitCodes:
     def test_exit_max_iterations_is_two(self):
         """Test EXIT_MAX_ITERATIONS is 2."""
         assert EXIT_MAX_ITERATIONS == 2
+
+
+class TestShowCostFlag:
+    """Tests for --show-cost flag functionality."""
+
+    def test_show_cost_flag_exists(self):
+        """Test that --show-cost flag is recognized by the parser."""
+        parser = create_parser()
+        args = parser.parse_args(["run", "--show-cost"])
+        assert args.show_cost is True
+
+    def test_show_cost_displays_tokens(self, tmp_path: Path, capsys):
+        """Test that --show-cost displays token usage information."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("max_iterations: 1\nmemory:\n  enabled: false\n")
+
+        parser = create_parser()
+        args = parser.parse_args(["run", "--config", str(config_file), "--show-cost"])
+
+        with patch("ralph_agi.cli.RalphLoop") as mock_loop_class:
+            mock_loop = MagicMock()
+            mock_loop.run.return_value = False  # Max iterations reached
+            mock_loop.session_id = "test-session"
+            mock_loop.iteration = 1
+            mock_loop.total_input_tokens = 1000
+            mock_loop.total_output_tokens = 500
+            mock_loop_class.from_config.return_value = mock_loop
+
+            result = run_loop(args)
+            assert result == EXIT_MAX_ITERATIONS
+
+            captured = capsys.readouterr()
+            assert "Input tokens:" in captured.out
+            assert "Output tokens:" in captured.out
+            assert "Estimated cost: $" in captured.out
+
+    def test_show_cost_calculates_correct_cost(self, tmp_path: Path, capsys):
+        """Test that cost calculation is correct."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("max_iterations: 1\nmemory:\n  enabled: false\n")
+
+        parser = create_parser()
+        args = parser.parse_args(["run", "--config", str(config_file), "--show-cost"])
+
+        with patch("ralph_agi.cli.RalphLoop") as mock_loop_class:
+            mock_loop = MagicMock()
+            mock_loop.run.return_value = True  # Completed
+            mock_loop.session_id = "test-session"
+            mock_loop.iteration = 1
+            # 1M input tokens = $3, 1M output tokens = $15
+            mock_loop.total_input_tokens = 1_000_000
+            mock_loop.total_output_tokens = 1_000_000
+            mock_loop_class.from_config.return_value = mock_loop
+
+            run_loop(args)
+
+            captured = capsys.readouterr()
+            # Total cost should be $3 + $15 = $18
+            assert "18.0000" in captured.out or "$18" in captured.out

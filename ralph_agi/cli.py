@@ -102,7 +102,42 @@ Exit Codes:
         help="Show the next task and context without executing",
     )
 
+    run_parser.add_argument(
+        "--show-cost",
+        action="store_true",
+        help="Display token usage and estimated cost after the run",
+    )
+
     return parser
+
+
+def _display_cost_summary(formatter: OutputFormatter, loop: RalphLoop) -> None:
+    """Display token usage and estimated cost summary.
+
+    Args:
+        formatter: Output formatter for display.
+        loop: RalphLoop instance with token tracking.
+    """
+    input_tokens = loop.total_input_tokens
+    output_tokens = loop.total_output_tokens
+    total_tokens = input_tokens + output_tokens
+
+    # Claude pricing: $3/1M input tokens, $15/1M output tokens
+    input_cost = (input_tokens / 1_000_000) * 3.0
+    output_cost = (output_tokens / 1_000_000) * 15.0
+    total_cost = input_cost + output_cost
+
+    formatter.message("")
+    formatter.message("=" * 40)
+    formatter.message("TOKEN USAGE SUMMARY")
+    formatter.message("=" * 40)
+    formatter.message(f"Input tokens: {input_tokens:,}")
+    formatter.message(f"Output tokens: {output_tokens:,}")
+    formatter.message(f"Total tokens: {total_tokens:,}")
+    formatter.message("")
+    formatter.message(f"Estimated cost: ${total_cost:.4f}")
+    formatter.message("  (Based on Claude pricing: $3/1M input, $15/1M output)")
+    formatter.message("=" * 40)
 
 
 def run_loop(args: argparse.Namespace) -> int:
@@ -274,6 +309,8 @@ def run_loop(args: argparse.Namespace) -> int:
                 session_id=loop.session_id,
                 reason="completed",
             )
+            if args.show_cost:
+                _display_cost_summary(formatter, loop)
             return EXIT_SUCCESS
         else:
             formatter.completion_banner(
@@ -281,6 +318,8 @@ def run_loop(args: argparse.Namespace) -> int:
                 session_id=loop.session_id,
                 reason="max_iterations",
             )
+            if args.show_cost:
+                _display_cost_summary(formatter, loop)
             return EXIT_MAX_ITERATIONS
 
     except LoopInterrupted as e:

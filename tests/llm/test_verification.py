@@ -153,3 +153,63 @@ class TestVerifyFiles:
 
         assert result.passed is True
         assert result.files_checked == 0
+
+
+class TestFileExtensionValidation:
+    """Tests for file extension validation in verify_files."""
+
+    def test_validates_python_extension(self, tmp_path: Path):
+        """Test that verify_files only checks .py files."""
+        # Create files with various extensions
+        py_file = tmp_path / "script.py"
+        py_file.write_text("x = 1\n")
+
+        txt_file = tmp_path / "readme.txt"
+        txt_file.write_text("Not Python code")
+
+        json_file = tmp_path / "config.json"
+        json_file.write_text('{"key": "value"}')
+
+        md_file = tmp_path / "docs.md"
+        md_file.write_text("# Documentation")
+
+        # verify_files should only check .py files
+        result = verify_files(
+            [str(py_file), str(txt_file), str(json_file), str(md_file)],
+            tmp_path,
+        )
+
+        # Only the .py file should be checked
+        assert result.passed is True
+        assert result.files_checked == 1
+
+    def test_pyi_files_are_skipped(self, tmp_path: Path):
+        """Test that .pyi stub files are not validated (only .py)."""
+        pyi_file = tmp_path / "types.pyi"
+        pyi_file.write_text("def func(x: int) -> str: ...\n")
+
+        result = verify_files([str(pyi_file)], tmp_path)
+
+        # .pyi files are skipped - only .py files are checked
+        assert result.passed is True
+        assert result.files_checked == 0
+
+    def test_mixed_extensions_only_checks_python(self, tmp_path: Path):
+        """Test mixed file types only validates Python files."""
+        valid_py = tmp_path / "valid.py"
+        valid_py.write_text("def hello(): pass\n")
+
+        invalid_js = tmp_path / "broken.js"
+        invalid_js.write_text("function { broken syntax")  # Invalid JS
+
+        css_file = tmp_path / "styles.css"
+        css_file.write_text(".class { color: red; }")
+
+        # Should pass because only .py is checked
+        result = verify_files(
+            [str(valid_py), str(invalid_js), str(css_file)],
+            tmp_path,
+        )
+
+        assert result.passed is True
+        assert result.files_checked == 1

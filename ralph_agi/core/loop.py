@@ -272,6 +272,10 @@ class RalphLoop:
         # Session management
         self.session_id = session_id or str(uuid4())
 
+        # Token usage tracking
+        self.total_input_tokens = 0
+        self.total_output_tokens = 0
+
         # Memory store (optional)
         self._memory_store = memory_store
 
@@ -1123,6 +1127,11 @@ class RalphLoop:
                     # Execute with retry logic
                     result = self._execute_with_retry(self._execute_iteration)
                     self._log_iteration_end(result.success)
+
+                    # Accumulate token usage (estimate 70/30 input/output split)
+                    if result.tokens_used:
+                        self.total_input_tokens += int(result.tokens_used * 0.7)
+                        self.total_output_tokens += int(result.tokens_used * 0.3)
 
                     # Store iteration result in memory (non-blocking)
                     self._store_iteration_result(result)

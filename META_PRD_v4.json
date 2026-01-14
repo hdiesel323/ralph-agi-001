@@ -1,0 +1,27 @@
+{
+  "project": {
+    "name": "Meta-Ralph v4: Verification Test",
+    "description": "Test that RALPH's verification catches syntax errors"
+  },
+  "features": [
+    {
+      "id": "META-004",
+      "description": "Add a utility function to tests/llm/test_verification.py that validates file extensions",
+      "passes": true,
+      "priority": 1,
+      "completed_at": "2026-01-14T00:52:00.000000+00:00",
+      "steps": [
+        "Read tests/llm/test_verification.py to understand its structure",
+        "Use append_to_file to add a new test class named 'TestFileExtensionValidation'",
+        "The class should have a test method 'test_validates_python_extension'",
+        "The test should verify that verify_files only checks .py files"
+      ],
+      "acceptance_criteria": [
+        "tests/llm/test_verification.py contains a class 'TestFileExtensionValidation'",
+        "The class has a test method 'test_validates_python_extension'",
+        "File still contains at least 150 lines (original content preserved)",
+        "Running 'python -m pytest tests/llm/test_verification.py -k TestFileExtensionValidation -v' shows at least 1 test passing"
+      ]
+    }
+  ]
+}
