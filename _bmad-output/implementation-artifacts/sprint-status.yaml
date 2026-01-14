@@ -1,7 +1,7 @@
 # RALPH-AGI Sprint Status
-# Updated: 2026-01-12
+# Updated: 2026-01-13
 
-current_sprint: sprint-06
+current_sprint: sprint-08
 
 sprints:
   sprint-01:
@@ -403,6 +403,190 @@ sprints:
       Total: 142 new tests, 1002 tests passing overall.
       Meta-Ralph enabled: Ralph can now read/write code, run tests, commit changes.
 
+  sprint-07:
+    name: "Week 7: LLM Integration & Multi-Agent Wiring"
+    start_date: 2026-01-13
+    end_date: 2026-01-13
+    status: completed
+
+    goal: |
+      Wire up RALPH-AGI to actually execute tasks using LLMs, implementing the
+      Builder + Critic pattern with verification, evaluation, and anti-hallucination safeguards.
+
+    success_criteria:
+      - Builder agent executing tasks with Claude via OpenRouter
+      - Critic agent reviewing with hallucination detection
+      - External acceptance criteria evaluator (independent of Builder)
+      - Verification layer (syntax + imports) before completion
+      - Anti-hallucination prompts preventing fake outputs
+      - Stress tests passing (META-005, META-006)
+      - 250+ LLM tests passing
+
+    scope:
+      epic: epic-05-evaluation-pipeline
+      stories:
+        - id: story-7.1
+          name: LLM Client Abstraction
+          status: completed
+          priority: P0
+          points: 3
+
+        - id: story-7.2
+          name: Anthropic Claude Client
+          status: completed
+          priority: P0
+          points: 3
+
+        - id: story-7.3
+          name: OpenAI GPT Client
+          status: completed
+          priority: P0
+          points: 2
+
+        - id: story-7.4
+          name: OpenRouter Client
+          status: completed
+          priority: P0
+          points: 2
+
+        - id: story-7.5
+          name: Prompt Templates
+          status: completed
+          priority: P0
+          points: 2
+
+        - id: story-7.6
+          name: Builder Agent
+          status: completed
+          priority: P0
+          points: 5
+
+        - id: story-7.7
+          name: Critic Agent
+          status: completed
+          priority: P0
+          points: 3
+
+        - id: story-7.8
+          name: LLM Orchestrator
+          status: completed
+          priority: P0
+          points: 3
+
+        - id: story-7.9
+          name: Verification Layer
+          status: completed
+          priority: P0
+          points: 3
+
+        - id: story-7.10
+          name: External Acceptance Evaluator
+          status: completed
+          priority: P0
+          points: 3
+
+        - id: story-7.11
+          name: Anti-Hallucination Safeguards
+          status: completed
+          priority: P0
+          points: 2
+
+    deferred: []
+
+    total_points: 31
+    completed_points: 31
+
+    blockers: []
+
+    notes: |
+      SPRINT 7 COMPLETE! All 31 points delivered in single day.
+      Full LLM integration with Builder + Critic pattern.
+      Key deliverables:
+      - LLM clients: Anthropic, OpenAI, OpenRouter (unified access to 400+ models)
+      - Builder agent with tool loop, completion detection, context building
+      - Critic agent with hallucination detection and code review
+      - Verification layer: syntax checking (ast.parse) + import validation
+      - External evaluator: shell commands, file checks, line counts (Builder cannot game)
+      - Anti-hallucination prompts preventing fake/placeholder outputs
+      - Stress tests: META-005 (OpenAI), META-006 (OpenRouter/Claude) both passing
+      Total: 250+ LLM tests passing.
+      GitHub issues closed: #8, #9, #10.
+
+  sprint-08:
+    name: "Week 8: Testing & Hardening"
+    start_date: 2026-01-14
+    end_date: 2026-01-21
+    status: in_progress
+
+    goal: |
+      Build comprehensive stress test suite and harden RALPH against edge cases
+      as remaining epics are completed. Continuous testing throughout development.
+
+    success_criteria:
+      - Stress test PRD suite covering diverse scenarios
+      - Edge case coverage for task parsing, LLM errors, tool failures
+      - Integration tests for end-to-end workflows
+      - Fix any bugs discovered during stress testing
+      - Maintain 90%+ test coverage across all modules
+      - Known bugs fixed (Feature.title, sequence item errors)
+
+    scope:
+      epic: epic-05-evaluation-pipeline
+      stories:
+        - id: story-8.1
+          name: Stress Test PRD Suite
+          status: not_started
+          priority: P0
+          points: 3
+
+        - id: story-8.2
+          name: Edge Case Test Coverage
+          status: not_started
+          priority: P0
+          points: 3
+
+        - id: story-8.3
+          name: Integration Test Suite
+          status: not_started
+          priority: P1
+          points: 3
+
+        - id: story-8.4
+          name: Bug Fixes (Feature.title, etc.)
+          status: not_started
+          priority: P0
+          points: 2
+
+        - id: story-8.5
+          name: Error Recovery Testing
+          status: not_started
+          priority: P1
+          points: 2
+
+        - id: story-8.6
+          name: Multi-Provider Stress Tests
+          status: not_started
+          priority: P2
+          points: 2
+
+    deferred: []
+
+    total_points: 15
+    completed_points: 0
+
+    blockers: []
+
+    notes: |
+      Testing sprint running in parallel with remaining epic completion.
+      Known bugs to fix:
+      - 'Feature' object has no attribute 'title'
+      - 'sequence item 1: expected str instance, list found'
+      Stress test PRDs should cover:
+      - Simple single-file changes
+      - Multi-file refactors
+      - Test writing tasks
+      - Edge cases (empty PRD, circular deps, invalid JSON)
+
 # Velocity tracking
 velocity:
   sprint-01:
@@ -423,6 +607,12 @@ velocity:
   sprint-06:
     planned: 8
     completed: 8
+  sprint-07:
+    planned: 31
+    completed: 31
+  sprint-08:
+    planned: 15
+    completed: 0
 
 # Epic progress
 epic_progress:
@@ -451,9 +641,9 @@ epic_progress:
     status: completed
 
   epic-05-evaluation-pipeline:
-    total_stories: 7
-    completed: 0
-    in_progress: 0
-    status: backlog
+    total_stories: 17
+    completed: 11
+    in_progress: 6
+    status: in_progress
 
 # Story status values: not_started, in_progress, in_review, completed, blocked

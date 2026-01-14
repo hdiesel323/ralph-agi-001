@@ -841,7 +841,7 @@ class RalphLoop:
             return IterationResult(
                 success=False,
                 task_id=task.id,
-                task_title=task.title,
+                task_title=task_title,
                 error=str(e),
             )
 
@@ -856,7 +856,7 @@ class RalphLoop:
                 return IterationResult(
                     success=False,
                     task_id=task.id,
-                    task_title=task.title,
+                    task_title=task_title,
                     files_changed=result.files_changed,
                     tokens_used=result.token_usage.total,
                     error=f"Failed to mark complete: {e}",

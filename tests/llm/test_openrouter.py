@@ -82,7 +82,7 @@ class TestOpenRouterClientInit:
         """Test default initialization."""
         client = OpenRouterClient()
 
-        assert client.model == "anthropic/claude-sonnet-4-20250514"
+        assert client.model == "anthropic/claude-sonnet-4.5"
         assert client._base_url == "https://openrouter.ai/api/v1"
         assert client.app_name == "RALPH-AGI"
         assert client._client is None
@@ -91,7 +91,7 @@ class TestOpenRouterClientInit:
         """Test that model aliases are resolved."""
         client = OpenRouterClient(model="claude-sonnet")
 
-        assert client.model == "anthropic/claude-sonnet-4-20250514"
+        assert client.model == "anthropic/claude-sonnet-4.5"
 
     def test_full_model_path(self) -> None:
         """Test using full model path."""
@@ -128,7 +128,7 @@ class TestModelAliases:
         """Test resolving model alias."""
         resolved = OpenRouterClient.resolve_model("claude-haiku")
 
-        assert resolved == "anthropic/claude-3-haiku"
+        assert resolved == "anthropic/claude-3.5-haiku"
 
     def test_resolve_full_path(self) -> None:
         """Test resolving full model path (no change)."""
