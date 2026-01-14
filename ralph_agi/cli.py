@@ -224,6 +224,33 @@ Exit Codes:
         help="Also generate a sample PRD.json file",
     )
 
+    # TUI command for terminal interface
+    tui_parser = subparsers.add_parser(
+        "tui",
+        help="Launch the Terminal User Interface",
+        description="Launch a rich terminal interface for monitoring RALPH-AGI execution.",
+    )
+    tui_parser.add_argument(
+        "--prd",
+        "-p",
+        type=str,
+        metavar="PATH",
+        help="Path to PRD.json file to display tasks",
+    )
+    tui_parser.add_argument(
+        "--config",
+        "-c",
+        type=str,
+        default="config.yaml",
+        metavar="PATH",
+        help="Path to config file (default: config.yaml)",
+    )
+    tui_parser.add_argument(
+        "--demo",
+        action="store_true",
+        help="Show demo data for testing the interface",
+    )
+
     return parser
 
 
@@ -698,6 +725,34 @@ def run_init(args: argparse.Namespace) -> int:
         return EXIT_ERROR
 
 
+def run_tui(args: argparse.Namespace) -> int:
+    """Execute the tui command (terminal interface).
+
+    Args:
+        args: Parsed command-line arguments.
+
+    Returns:
+        Exit code.
+    """
+    from ralph_agi.tui.app import run_tui as launch_tui
+
+    try:
+        launch_tui(
+            prd_path=args.prd,
+            config_path=args.config,
+            demo=args.demo,
+        )
+        return EXIT_SUCCESS
+
+    except KeyboardInterrupt:
+        return EXIT_SUCCESS
+
+    except Exception as e:
+        formatter = OutputFormatter(verbosity=Verbosity.NORMAL)
+        formatter.error("TUI error", exception=e)
+        return EXIT_ERROR
+
+
 def main(argv: list[str] | None = None) -> int:
     """Main entry point for ralph-agi CLI.
 
@@ -722,6 +777,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "init":
         return run_init(args)
+
+    if args.command == "tui":
+        return run_tui(args)
 
     # Unknown command (shouldn't happen with subparsers)
     parser.print_help()

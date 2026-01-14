@@ -27,6 +27,7 @@ dependencies = [
     "rich>=13.0",
     "croniter>=2.0.0",
     "APScheduler>=3.10.0",
+    "textual>=0.50.0",
 ]
 
 [project.scripts]
