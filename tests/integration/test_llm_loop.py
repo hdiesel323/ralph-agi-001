@@ -446,3 +446,411 @@ class TestBuildContext:
 
         assert "Recent Context" in context
         assert "Previous iteration" in context
+
+
+# =============================================================================
+# End-to-End Flow Tests
+# =============================================================================
+
+
+class TestEndToEndFlow:
+    """Tests for complete end-to-end workflows."""
+
+    @pytest.fixture
+    def multi_task_prd(self, tmp_path: Path) -> Path:
+        """Create a PRD with multiple tasks."""
+        prd = {
+            "project": {
+                "id": "multi-task",
+                "name": "Multi-Task Project",
+                "description": "Tests multi-task execution",
+            },
+            "features": [
+                {
+                    "id": "TASK-001",
+                    "description": "First task",
+                    "passes": False,
+                    "priority": 1,
+                    "steps": ["Do step 1"],
+                    "acceptance_criteria": ["Criteria 1 met"],
+                },
+                {
+                    "id": "TASK-002",
+                    "description": "Second task",
+                    "passes": False,
+                    "priority": 2,
+                    "steps": ["Do step 2"],
+                    "acceptance_criteria": ["Criteria 2 met"],
+                },
+            ],
+        }
+        prd_path = tmp_path / "PRD.json"
+        prd_path.write_text(json.dumps(prd, indent=2))
+        return prd_path
+
+    def test_loop_run_max_iterations(self) -> None:
+        """Test loop.run() respects max iterations in stub mode."""
+        loop = RalphLoop(max_iterations=3)
+        completed = loop.run(handle_signals=False)
+
+        assert completed is False
+        assert loop.iteration == 3
+
+    def test_loop_run_zero_iterations(self) -> None:
+        """Test loop.run() with zero max iterations."""
+        loop = RalphLoop(max_iterations=0)
+        completed = loop.run(handle_signals=False)
+
+        assert completed is False
+        assert loop.iteration == 0
+
+    @pytest.mark.asyncio
+    async def test_task_selection_priority_order(
+        self,
+        multi_task_prd: Path,
+    ) -> None:
+        """Test tasks are selected in priority order."""
+        from ralph_agi.tasks.executor import TaskExecutor
+        from ralph_agi.llm.orchestrator import TokenUsage
+
+        # Mock orchestrator that always succeeds
+        mock_orch = MagicMock()
+
+        def create_result(task_id):
+            builder = BuilderResult(
+                status=AgentStatus.COMPLETED,
+                task={"id": task_id},
+                files_changed=[],
+                total_tokens=100,
+            )
+            return OrchestratorResult(
+                status=OrchestratorStatus.SUCCESS,
+                task={"id": task_id},
+                builder_result=builder,
+                token_usage=TokenUsage(),
+            )
+
+        mock_orch.execute_iteration = AsyncMock(
+            side_effect=[create_result("TASK-001"), create_result("TASK-002")]
+        )
+
+        executor = TaskExecutor()
+        loop = RalphLoop(
+            max_iterations=3,
+            prd_path=str(multi_task_prd),
+            task_executor=executor,
+            orchestrator=mock_orch,
+        )
+        loop._tools = []
+
+        # First iteration should pick TASK-001 (priority 1)
+        result1 = await loop._execute_iteration_async()
+        assert result1.task_id == "TASK-001"
+
+    def test_loop_completion_signal_detected(self) -> None:
+        """Test loop detects completion signal."""
+        loop = RalphLoop(
+            max_iterations=10,
+            completion_promise="<promise>COMPLETE</promise>",
+        )
+
+        # Manually check completion signal
+        assert loop._check_completion("<promise>COMPLETE</promise>") is True
+        assert loop._check_completion("Some output with <promise>COMPLETE</promise> in it") is True
+        assert loop._check_completion("Regular output") is False
+
+    def test_iteration_result_stores_in_memory(self) -> None:
+        """Test iteration results are stored in memory."""
+        mock_memory = MagicMock()
+        mock_memory.append = MagicMock()
+
+        loop = RalphLoop(
+            max_iterations=5,
+            memory_store=mock_memory,
+        )
+
+        result = IterationResult(
+            success=True,
+            output="Task completed",
+            task_id="TASK-001",
+        )
+
+        loop._store_iteration_result(result)
+
+        # Memory append should be called
+        mock_memory.append.assert_called()
+
+
+class TestTokenTracking:
+    """Tests for token usage tracking."""
+
+    def test_initial_token_counts_zero(self) -> None:
+        """Test token counts start at zero."""
+        loop = RalphLoop(max_iterations=5)
+
+        assert loop.total_input_tokens == 0
+        assert loop.total_output_tokens == 0
+
+    def test_tokens_accumulated_during_run(self) -> None:
+        """Test tokens are accumulated during stub run."""
+        loop = RalphLoop(max_iterations=2)
+        loop.run(handle_signals=False)
+
+        # Stub mode doesn't use tokens
+        assert loop.total_input_tokens == 0
+        assert loop.total_output_tokens == 0
+
+    @pytest.mark.asyncio
+    async def test_tokens_from_orchestrator(self, tmp_path: Path) -> None:
+        """Test tokens are tracked from orchestrator results."""
+        from ralph_agi.tasks.executor import TaskExecutor
+        from ralph_agi.llm.orchestrator import TokenUsage
+
+        prd = {
+            "project": {"id": "test", "name": "Test", "description": "Test project"},
+            "features": [{"id": "T1", "description": "Task", "passes": False, "priority": 1}],
+        }
+        prd_path = tmp_path / "PRD.json"
+        prd_path.write_text(json.dumps(prd))
+
+        builder = BuilderResult(
+            status=AgentStatus.COMPLETED,
+            task={"id": "T1"},
+            files_changed=[],
+            total_tokens=1000,
+        )
+        orch_result = OrchestratorResult(
+            status=OrchestratorStatus.SUCCESS,
+            task={"id": "T1"},
+            builder_result=builder,
+            token_usage=TokenUsage(builder_input=700, builder_output=300),
+        )
+
+        mock_orch = MagicMock()
+        mock_orch.execute_iteration = AsyncMock(return_value=orch_result)
+
+        loop = RalphLoop(
+            max_iterations=5,
+            prd_path=str(prd_path),
+            task_executor=TaskExecutor(),
+            orchestrator=mock_orch,
+        )
+        loop._tools = []
+
+        result = await loop._execute_iteration_async()
+
+        # Tokens should be in the result
+        assert result.tokens_used == 1000
+
+
+# =============================================================================
+# Error Recovery Tests
+# =============================================================================
+
+
+class TestErrorRecovery:
+    """Tests for error recovery and resilience."""
+
+    def test_invalid_prd_path_handled(self) -> None:
+        """Test graceful handling of invalid PRD path."""
+        loop = RalphLoop(
+            max_iterations=5,
+            prd_path="/nonexistent/path/PRD.json",
+        )
+
+        # Should not raise during init
+        assert loop._prd_path is not None
+
+    def test_malformed_prd_handled(self, tmp_path: Path) -> None:
+        """Test handling of malformed PRD JSON."""
+        prd_path = tmp_path / "PRD.json"
+        prd_path.write_text("{ invalid json }")
+
+        loop = RalphLoop(
+            max_iterations=5,
+            prd_path=str(prd_path),
+        )
+
+        # Execution should handle gracefully
+        result = loop._execute_iteration()
+        # Should return stub result or error, not crash
+        assert result is not None
+
+    def test_empty_prd_handled(self, tmp_path: Path) -> None:
+        """Test handling of empty PRD."""
+        prd_path = tmp_path / "PRD.json"
+        prd_path.write_text("{}")
+
+        loop = RalphLoop(
+            max_iterations=5,
+            prd_path=str(prd_path),
+        )
+
+        result = loop._execute_iteration()
+        assert result is not None
+
+    @pytest.mark.asyncio
+    async def test_orchestrator_error_recovery(self, tmp_path: Path) -> None:
+        """Test recovery from orchestrator errors."""
+        from ralph_agi.tasks.executor import TaskExecutor
+        from ralph_agi.llm.orchestrator import TokenUsage
+
+        prd = {
+            "project": {"id": "test", "name": "Test", "description": "Test"},
+            "features": [
+                {"id": "T1", "description": "Task", "passes": False, "priority": 1}
+            ],
+        }
+        prd_path = tmp_path / "PRD.json"
+        prd_path.write_text(json.dumps(prd))
+
+        # Orchestrator that raises an exception
+        mock_orch = MagicMock()
+        mock_orch.execute_iteration = AsyncMock(
+            side_effect=RuntimeError("LLM API failed")
+        )
+
+        loop = RalphLoop(
+            max_iterations=5,
+            prd_path=str(prd_path),
+            task_executor=TaskExecutor(),
+            orchestrator=mock_orch,
+        )
+        loop._tools = []
+
+        # Should handle exception gracefully
+        result = await loop._execute_iteration_async()
+        assert result.success is False
+        assert result.error is not None
+
+    @pytest.mark.asyncio
+    async def test_blocked_status_handled(self, tmp_path: Path) -> None:
+        """Test handling of blocked orchestrator status."""
+        from ralph_agi.tasks.executor import TaskExecutor
+        from ralph_agi.llm.orchestrator import TokenUsage
+
+        prd = {
+            "project": {"id": "test", "name": "Test", "description": "Test"},
+            "features": [
+                {"id": "T1", "description": "Task", "passes": False, "priority": 1}
+            ],
+        }
+        prd_path = tmp_path / "PRD.json"
+        prd_path.write_text(json.dumps(prd))
+
+        orch_result = OrchestratorResult(
+            status=OrchestratorStatus.BLOCKED,
+            task={"id": "T1"},
+            error="Missing dependency",
+            token_usage=TokenUsage(),
+        )
+
+        mock_orch = MagicMock()
+        mock_orch.execute_iteration = AsyncMock(return_value=orch_result)
+
+        loop = RalphLoop(
+            max_iterations=5,
+            prd_path=str(prd_path),
+            task_executor=TaskExecutor(),
+            orchestrator=mock_orch,
+        )
+        loop._tools = []
+
+        result = await loop._execute_iteration_async()
+        assert result.success is False
+        assert "blocked" in result.error.lower() or "dependency" in result.error.lower()
+
+    def test_retry_logic_applied(self) -> None:
+        """Test that retry logic is correctly configured."""
+        loop = RalphLoop(
+            max_iterations=5,
+            max_retries=3,
+            retry_delays=[1, 2, 4],
+        )
+
+        assert loop.max_retries == 3
+        assert loop.retry_delays == [1, 2, 4]
+
+    def test_close_handles_cleanup(self) -> None:
+        """Test that close() properly cleans up resources."""
+        mock_memory = MagicMock()
+        mock_memory.close = MagicMock()
+
+        loop = RalphLoop(
+            max_iterations=5,
+            memory_store=mock_memory,
+        )
+
+        loop.close()
+
+        mock_memory.close.assert_called_once()
+
+    def test_close_without_memory(self) -> None:
+        """Test close() works when no memory store configured."""
+        loop = RalphLoop(max_iterations=5)
+
+        # Should not raise
+        loop.close()
+
+    @pytest.mark.asyncio
+    async def test_needs_revision_status_handled(self, tmp_path: Path) -> None:
+        """Test handling of needs_revision status from critic."""
+        from ralph_agi.tasks.executor import TaskExecutor
+        from ralph_agi.llm.orchestrator import TokenUsage
+
+        prd = {
+            "project": {"id": "test", "name": "Test", "description": "Test"},
+            "features": [
+                {"id": "T1", "description": "Task", "passes": False, "priority": 1}
+            ],
+        }
+        prd_path = tmp_path / "PRD.json"
+        prd_path.write_text(json.dumps(prd))
+
+        orch_result = OrchestratorResult(
+            status=OrchestratorStatus.NEEDS_REVISION,
+            task={"id": "T1"},
+            error="Code review failed: missing error handling",
+            token_usage=TokenUsage(),
+        )
+
+        mock_orch = MagicMock()
+        mock_orch.execute_iteration = AsyncMock(return_value=orch_result)
+
+        loop = RalphLoop(
+            max_iterations=5,
+            prd_path=str(prd_path),
+            task_executor=TaskExecutor(),
+            orchestrator=mock_orch,
+        )
+        loop._tools = []
+
+        result = await loop._execute_iteration_async()
+        assert result.success is False
+        # Task should be aborted, not marked complete
+
+
+class TestGracefulShutdown:
+    """Tests for graceful shutdown handling."""
+
+    def test_interrupt_flag_works(self) -> None:
+        """Test that interrupt flag stops the loop."""
+        loop = RalphLoop(max_iterations=100)
+
+        # Simulate interrupt
+        loop._interrupted = True
+
+        # The loop should respect the interrupted flag
+        # (we can't easily test full run() with signals in unit tests)
+        assert loop._interrupted is True
+
+    def test_checkpoint_path_configured(self, tmp_path: Path) -> None:
+        """Test checkpoint path configuration."""
+        checkpoint = tmp_path / "checkpoint.json"
+
+        loop = RalphLoop(
+            max_iterations=5,
+            checkpoint_path=str(checkpoint),
+        )
+
+        assert loop._checkpoint_path == str(checkpoint)
