@@ -198,6 +198,32 @@ Exit Codes:
         help="Path to config file (default: config.yaml)",
     )
 
+    # Init command for first-run setup
+    init_parser = subparsers.add_parser(
+        "init",
+        help="Interactive setup wizard for first-run configuration",
+        description="Guide through initial configuration of RALPH-AGI.",
+    )
+    init_parser.add_argument(
+        "--quick",
+        "-q",
+        action="store_true",
+        help="Quick mode - use defaults with minimal prompts",
+    )
+    init_parser.add_argument(
+        "--output",
+        "-o",
+        type=str,
+        default="config.yaml",
+        metavar="PATH",
+        help="Output path for config file (default: config.yaml)",
+    )
+    init_parser.add_argument(
+        "--sample-prd",
+        action="store_true",
+        help="Also generate a sample PRD.json file",
+    )
+
     return parser
 
 
@@ -629,6 +655,49 @@ def run_daemon(args: argparse.Namespace) -> int:
     return EXIT_ERROR
 
 
+def run_init(args: argparse.Namespace) -> int:
+    """Execute the init command (setup wizard).
+
+    Args:
+        args: Parsed command-line arguments.
+
+    Returns:
+        Exit code.
+    """
+    from ralph_agi.init_wizard import generate_sample_prd, run_wizard
+
+    formatter = OutputFormatter(verbosity=Verbosity.NORMAL)
+
+    try:
+        success, message = run_wizard(
+            quick=args.quick,
+            output_path=args.output,
+        )
+
+        if not success:
+            formatter.warning(message)
+            return EXIT_ERROR
+
+        # Generate sample PRD if requested
+        if args.sample_prd:
+            prd_success, prd_message = generate_sample_prd()
+            if prd_success:
+                formatter.message(f"\n{prd_message}")
+            else:
+                formatter.warning(prd_message)
+
+        return EXIT_SUCCESS
+
+    except KeyboardInterrupt:
+        formatter.message("\n")
+        formatter.warning("Setup cancelled by user")
+        return EXIT_ERROR
+
+    except Exception as e:
+        formatter.error("Setup failed", exception=e)
+        return EXIT_ERROR
+
+
 def main(argv: list[str] | None = None) -> int:
     """Main entry point for ralph-agi CLI.
 
@@ -650,6 +719,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "daemon":
         return run_daemon(args)
+
+    if args.command == "init":
+        return run_init(args)
 
     # Unknown command (shouldn't happen with subparsers)
     parser.print_help()
