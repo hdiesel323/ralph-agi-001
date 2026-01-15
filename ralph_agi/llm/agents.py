@@ -26,6 +26,35 @@ from ralph_agi.llm.evaluator import evaluate_acceptance_criteria
 logger = logging.getLogger(__name__)
 
 
+def _extract_text_content(content: Any) -> str:
+    """Extract text content from message content that may be string or list.
+
+    Handles both string content and Anthropic-style list content with blocks.
+
+    Args:
+        content: Message content (string or list of blocks)
+
+    Returns:
+        Extracted text as string
+    """
+    if content is None:
+        return ""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        # Extract text from content blocks
+        text_parts = []
+        for block in content:
+            if isinstance(block, dict):
+                if block.get("type") == "text":
+                    text_value = block.get("text", "")
+                    text_parts.append(str(text_value) if not isinstance(text_value, str) else text_value)
+            elif isinstance(block, str):
+                text_parts.append(block)
+        return "\n".join(text_parts) if text_parts else ""
+    return str(content)
+
+
 # =============================================================================
 # Types and Protocols
 # =============================================================================
@@ -349,7 +378,7 @@ class BuilderAgent:
             task=task,
             iterations=self._max_iterations,
             tool_calls=tool_records,
-            final_response=messages[-1].get("content", "") if messages else "",
+            final_response=_extract_text_content(messages[-1].get("content")) if messages else "",
             files_changed=files_changed,
             total_tokens=total_tokens,
         )
