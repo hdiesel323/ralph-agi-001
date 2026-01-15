@@ -196,6 +196,123 @@ class TestConvertTools:
         assert result == []
 
 
+class TestConvertMessage:
+    """Tests for message conversion from Anthropic to OpenAI format."""
+
+    def test_convert_simple_user_message(self) -> None:
+        """Test converting a simple user message (no conversion needed)."""
+        from ralph_agi.llm.openai import OpenAIClient
+
+        client = OpenAIClient()
+        msg = {"role": "user", "content": "Hello"}
+
+        result = client._convert_message(msg)
+
+        assert result == msg
+
+    def test_convert_tool_result_message(self) -> None:
+        """Test converting user message with tool_result blocks."""
+        from ralph_agi.llm.openai import OpenAIClient
+
+        client = OpenAIClient()
+        msg = {
+            "role": "user",
+            "content": [
+                {"type": "tool_result", "tool_use_id": "tc_123", "content": "Success"}
+            ],
+        }
+
+        result = client._convert_message(msg)
+
+        assert isinstance(result, list)
+        assert len(result) == 1
+        assert result[0]["role"] == "tool"
+        assert result[0]["tool_call_id"] == "tc_123"
+        assert result[0]["content"] == "Success"
+
+    def test_convert_assistant_with_tool_use(self) -> None:
+        """Test converting assistant message with tool_use blocks."""
+        from ralph_agi.llm.openai import OpenAIClient
+
+        client = OpenAIClient()
+        msg = {
+            "role": "assistant",
+            "content": [
+                {"type": "text", "text": "I'll read that file."},
+                {"type": "tool_use", "id": "tc_456", "name": "read_file", "input": {"path": "test.py"}},
+            ],
+        }
+
+        result = client._convert_message(msg)
+
+        assert isinstance(result, dict)
+        assert result["role"] == "assistant"
+        assert result["content"] == "I'll read that file."
+        assert len(result["tool_calls"]) == 1
+        assert result["tool_calls"][0]["id"] == "tc_456"
+
+    def test_convert_handles_non_string_text(self) -> None:
+        """Test that non-string text values are converted to strings."""
+        from ralph_agi.llm.openai import OpenAIClient
+
+        client = OpenAIClient()
+        # Edge case: text field contains a list instead of string
+        msg = {
+            "role": "assistant",
+            "content": [
+                {"type": "text", "text": ["unexpected", "list"]},  # Bug: text is a list
+            ],
+        }
+
+        # Should not raise "sequence item expected str, found list"
+        result = client._convert_message(msg)
+
+        assert isinstance(result, dict)
+        assert result["role"] == "assistant"
+        # The list should be converted to string representation
+        assert "unexpected" in result["content"]
+
+    def test_convert_handles_non_string_tool_content(self) -> None:
+        """Test that non-string tool result content is converted to strings."""
+        from ralph_agi.llm.openai import OpenAIClient
+
+        client = OpenAIClient()
+        # Edge case: content field contains a list instead of string
+        msg = {
+            "role": "user",
+            "content": [
+                {"type": "tool_result", "tool_use_id": "tc_789", "content": {"data": [1, 2, 3]}},
+            ],
+        }
+
+        # Should not raise
+        result = client._convert_message(msg)
+
+        assert isinstance(result, list)
+        assert len(result) == 1
+        # The dict should be converted to string representation
+        assert "data" in result[0]["content"]
+
+    def test_convert_user_with_text_blocks(self) -> None:
+        """Test converting user message with text blocks."""
+        from ralph_agi.llm.openai import OpenAIClient
+
+        client = OpenAIClient()
+        msg = {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Line 1"},
+                {"type": "text", "text": "Line 2"},
+            ],
+        }
+
+        result = client._convert_message(msg)
+
+        assert isinstance(result, dict)
+        assert result["role"] == "user"
+        assert result["content"] == "Line 1\nLine 2"
+
+
 class TestBuildMessages:
     """Tests for message building with system prompt."""
 

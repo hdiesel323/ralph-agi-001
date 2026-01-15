@@ -820,9 +820,9 @@ class RalphLoop:
             "title": task_title,
             "description": task.description,
             "priority": task.priority,
-            "steps": task.steps,
-            "acceptance_criteria": task.acceptance_criteria,
-            "dependencies": task.dependencies,
+            "steps": list(task.steps) if task.steps else [],
+            "acceptance_criteria": list(task.acceptance_criteria) if task.acceptance_criteria else [],
+            "dependencies": list(task.dependencies) if task.dependencies else [],
         }
 
         self.logger.info(f"Working on task: {task.id} - {task_title}")
