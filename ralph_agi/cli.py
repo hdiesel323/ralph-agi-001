@@ -762,6 +762,13 @@ def main(argv: list[str] | None = None) -> int:
     Returns:
         Exit code.
     """
+    # Auto-load .env file for API keys
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except ImportError:
+        pass  # dotenv is optional
+
     parser = create_parser()
     args = parser.parse_args(argv)
 
