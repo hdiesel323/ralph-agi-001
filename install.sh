@@ -24,7 +24,30 @@ if ! command -v python3 &> /dev/null; then
 fi
 
 PYTHON_VERSION=$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")')
+PYTHON_MAJOR=$(python3 -c 'import sys; print(sys.version_info.major)')
+PYTHON_MINOR=$(python3 -c 'import sys; print(sys.version_info.minor)')
+
 echo "Found Python $PYTHON_VERSION"
+
+# Require Python 3.11+
+if [ "$PYTHON_MAJOR" -lt 3 ] || ([ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -lt 11 ]); then
+    echo ""
+    echo "ERROR: Python 3.11 or higher is required."
+    echo "       You have Python $PYTHON_VERSION"
+    echo ""
+    echo "To install Python 3.11+:"
+    echo "  macOS:   brew install python@3.12"
+    echo "  Ubuntu:  sudo apt install python3.12"
+    echo "  Windows: Download from https://python.org/downloads/"
+    echo ""
+    echo "If you have Python 3.11+ installed elsewhere, use it directly:"
+    echo "  python3.12 -m venv venv"
+    echo "  source venv/bin/activate"
+    echo "  pip install -e ."
+    exit 1
+fi
+
+echo "Python version OK"
 
 # Create virtual environment
 echo ""
