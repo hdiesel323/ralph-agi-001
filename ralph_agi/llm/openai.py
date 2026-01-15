@@ -184,7 +184,9 @@ class OpenAIClient:
                     if isinstance(block, dict):
                         block_type = block.get("type")
                         if block_type == "text":
-                            text_parts.append(block.get("text", ""))
+                            # Ensure text is always a string (API may return unexpected types)
+                            text_value = block.get("text", "")
+                            text_parts.append(str(text_value) if not isinstance(text_value, str) else text_value)
                         elif block_type == "tool_use":
                             tool_calls.append({
                                 "id": block.get("id"),
@@ -214,12 +216,16 @@ class OpenAIClient:
                     if isinstance(block, dict):
                         block_type = block.get("type")
                         if block_type == "text":
-                            text_parts.append(block.get("text", ""))
+                            # Ensure text is always a string (API may return unexpected types)
+                            text_value = block.get("text", "")
+                            text_parts.append(str(text_value) if not isinstance(text_value, str) else text_value)
                         elif block_type == "tool_result":
+                            # Ensure content is always a string
+                            content_value = block.get("content", "")
                             tool_messages.append({
                                 "role": "tool",
                                 "tool_call_id": block.get("tool_use_id"),
-                                "content": block.get("content", ""),
+                                "content": str(content_value) if not isinstance(content_value, str) else content_value,
                             })
 
                 # If there are both text and tool results, combine appropriately
