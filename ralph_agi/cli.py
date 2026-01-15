@@ -14,6 +14,8 @@ from ralph_agi import __version__
 from ralph_agi.core.config import ConfigValidationError, RalphConfig, load_config
 from ralph_agi.core.loop import LoopInterrupted, MaxRetriesExceeded, RalphLoop
 from ralph_agi.output import OutputFormatter, Verbosity
+from ralph_agi.scheduler.config import SchedulerConfig, load_scheduler_config
+from ralph_agi.scheduler.cron import CronValidationError
 
 # Exit codes
 EXIT_SUCCESS = 0
@@ -106,6 +108,147 @@ Exit Codes:
         "--show-cost",
         action="store_true",
         help="Display token usage and estimated cost after the run",
+    )
+
+    # Daemon command for AFK mode
+    daemon_parser = subparsers.add_parser(
+        "daemon",
+        help="Manage the scheduler daemon for AFK mode",
+        description="Control the background scheduler daemon for autonomous operation.",
+    )
+
+    daemon_subparsers = daemon_parser.add_subparsers(
+        dest="daemon_command",
+        help="Daemon action to perform",
+    )
+
+    # daemon start
+    daemon_start = daemon_subparsers.add_parser(
+        "start",
+        help="Start the scheduler daemon",
+    )
+    daemon_start.add_argument(
+        "--config",
+        "-c",
+        type=str,
+        default="config.yaml",
+        help="Path to config file (default: config.yaml)",
+    )
+    daemon_start.add_argument(
+        "--foreground",
+        "-f",
+        action="store_true",
+        help="Run in foreground (don't daemonize)",
+    )
+
+    # daemon stop
+    daemon_stop = daemon_subparsers.add_parser(
+        "stop",
+        help="Stop the scheduler daemon",
+    )
+    daemon_stop.add_argument(
+        "--config",
+        "-c",
+        type=str,
+        default="config.yaml",
+        help="Path to config file (default: config.yaml)",
+    )
+
+    # daemon status
+    daemon_status = daemon_subparsers.add_parser(
+        "status",
+        help="Check daemon status",
+    )
+    daemon_status.add_argument(
+        "--config",
+        "-c",
+        type=str,
+        default="config.yaml",
+        help="Path to config file (default: config.yaml)",
+    )
+
+    # daemon install
+    daemon_install = daemon_subparsers.add_parser(
+        "install",
+        help="Install system service (launchd/systemd)",
+    )
+    daemon_install.add_argument(
+        "--config",
+        "-c",
+        type=str,
+        default="config.yaml",
+        help="Path to config file (default: config.yaml)",
+    )
+    daemon_install.add_argument(
+        "--mode",
+        choices=["launchd", "systemd"],
+        help="Service type to install (auto-detected if not specified)",
+    )
+
+    # daemon run-once (internal use by system scheduler)
+    daemon_run_once = daemon_subparsers.add_parser(
+        "run-once",
+        help="Execute a single scheduled wake (used by system scheduler)",
+    )
+    daemon_run_once.add_argument(
+        "--config",
+        "-c",
+        type=str,
+        default="config.yaml",
+        help="Path to config file (default: config.yaml)",
+    )
+
+    # Init command for first-run setup
+    init_parser = subparsers.add_parser(
+        "init",
+        help="Interactive setup wizard for first-run configuration",
+        description="Guide through initial configuration of RALPH-AGI.",
+    )
+    init_parser.add_argument(
+        "--quick",
+        "-q",
+        action="store_true",
+        help="Quick mode - use defaults with minimal prompts",
+    )
+    init_parser.add_argument(
+        "--output",
+        "-o",
+        type=str,
+        default="config.yaml",
+        metavar="PATH",
+        help="Output path for config file (default: config.yaml)",
+    )
+    init_parser.add_argument(
+        "--sample-prd",
+        action="store_true",
+        help="Also generate a sample PRD.json file",
+    )
+
+    # TUI command for terminal interface
+    tui_parser = subparsers.add_parser(
+        "tui",
+        help="Launch the Terminal User Interface",
+        description="Launch a rich terminal interface for monitoring RALPH-AGI execution.",
+    )
+    tui_parser.add_argument(
+        "--prd",
+        "-p",
+        type=str,
+        metavar="PATH",
+        help="Path to PRD.json file to display tasks",
+    )
+    tui_parser.add_argument(
+        "--config",
+        "-c",
+        type=str,
+        default="config.yaml",
+        metavar="PATH",
+        help="Path to config file (default: config.yaml)",
+    )
+    tui_parser.add_argument(
+        "--demo",
+        action="store_true",
+        help="Show demo data for testing the interface",
     )
 
     return parser
@@ -350,6 +493,266 @@ def run_loop(args: argparse.Namespace) -> int:
         loop.close()
 
 
+def _load_scheduler_config_from_file(config_path: str) -> tuple[SchedulerConfig | None, str | None]:
+    """Load scheduler config from YAML file.
+
+    Args:
+        config_path: Path to config file.
+
+    Returns:
+        Tuple of (config, error_message).
+    """
+    import yaml
+
+    config_file = Path(config_path)
+    if not config_file.exists():
+        return None, f"Config file not found: {config_path}"
+
+    try:
+        with open(config_file) as f:
+            data = yaml.safe_load(f) or {}
+        return load_scheduler_config(data), None
+    except CronValidationError as e:
+        return None, f"Invalid cron expression: {e}"
+    except Exception as e:
+        return None, f"Failed to load config: {e}"
+
+
+def run_daemon(args: argparse.Namespace) -> int:
+    """Execute daemon commands.
+
+    Args:
+        args: Parsed command-line arguments.
+
+    Returns:
+        Exit code.
+    """
+    from ralph_agi.scheduler.cron import CronExpression, describe_cron
+    from ralph_agi.scheduler.daemon import (
+        DaemonManager,
+        DaemonStatus,
+        generate_launchd_plist,
+        generate_systemd_unit,
+    )
+    from ralph_agi.scheduler.hooks import WakeHookExecutor
+
+    formatter = OutputFormatter(verbosity=Verbosity.NORMAL)
+
+    if args.daemon_command is None:
+        formatter.error("No daemon command specified. Use 'ralph-agi daemon --help'")
+        return EXIT_ERROR
+
+    # Load scheduler config
+    scheduler_config, error = _load_scheduler_config_from_file(args.config)
+    if error:
+        formatter.error(error)
+        return EXIT_ERROR
+
+    daemon = DaemonManager(scheduler_config)
+
+    if args.daemon_command == "status":
+        state = daemon.status()
+        formatter.message(f"Status: {state.status.value}")
+        formatter.message(f"Message: {state.message}")
+        if state.pid:
+            formatter.message(f"PID: {state.pid}")
+        if state.next_run:
+            cron = CronExpression(scheduler_config.cron, "")
+            formatter.message(f"Schedule: {scheduler_config.cron} ({describe_cron(scheduler_config.cron)})")
+            formatter.message(f"Next run: {state.next_run.strftime('%Y-%m-%d %H:%M:%S')}")
+            formatter.message(f"Time until: {cron.time_until_next()}")
+        return EXIT_SUCCESS
+
+    elif args.daemon_command == "start":
+        if not scheduler_config.enabled:
+            formatter.warning("Scheduler is disabled in config. Set scheduler.enabled: true")
+            return EXIT_ERROR
+
+        formatter.message(f"Starting daemon with schedule: {scheduler_config.cron}")
+        formatter.message(f"({describe_cron(scheduler_config.cron)})")
+
+        state = daemon.start(background=not args.foreground)
+
+        if state.status == DaemonStatus.RUNNING:
+            formatter.message(f"Daemon started: {state.message}")
+            if state.next_run:
+                formatter.message(f"Next run: {state.next_run.strftime('%Y-%m-%d %H:%M:%S')}")
+            return EXIT_SUCCESS
+        else:
+            formatter.error(f"Failed to start: {state.message}")
+            return EXIT_ERROR
+
+    elif args.daemon_command == "stop":
+        state = daemon.stop()
+        if state.status == DaemonStatus.STOPPED:
+            formatter.message(f"Daemon stopped: {state.message}")
+            return EXIT_SUCCESS
+        else:
+            formatter.error(f"Failed to stop: {state.message}")
+            return EXIT_ERROR
+
+    elif args.daemon_command == "install":
+        import platform
+
+        working_dir = str(Path.cwd())
+
+        # Auto-detect platform if not specified
+        mode = args.mode
+        if mode is None:
+            system = platform.system()
+            if system == "Darwin":
+                mode = "launchd"
+            elif system == "Linux":
+                mode = "systemd"
+            else:
+                formatter.error(f"Unsupported platform: {system}. Use --mode to specify.")
+                return EXIT_ERROR
+
+        if mode == "launchd":
+            plist_content = generate_launchd_plist(scheduler_config, working_dir)
+            plist_path = Path("~/Library/LaunchAgents/com.ralph-agi.scheduler.plist").expanduser()
+            plist_path.parent.mkdir(parents=True, exist_ok=True)
+            plist_path.write_text(plist_content)
+            formatter.message(f"Installed launchd plist: {plist_path}")
+            formatter.message("")
+            formatter.message("To enable:")
+            formatter.message(f"  launchctl load {plist_path}")
+            formatter.message("")
+            formatter.message("To disable:")
+            formatter.message(f"  launchctl unload {plist_path}")
+
+        elif mode == "systemd":
+            service_content, timer_content = generate_systemd_unit(scheduler_config, working_dir)
+            service_dir = Path("~/.config/systemd/user").expanduser()
+            service_dir.mkdir(parents=True, exist_ok=True)
+
+            service_path = service_dir / "ralph-agi-scheduler.service"
+            timer_path = service_dir / "ralph-agi-scheduler.timer"
+
+            service_path.write_text(service_content)
+            timer_path.write_text(timer_content)
+
+            formatter.message(f"Installed systemd service: {service_path}")
+            formatter.message(f"Installed systemd timer: {timer_path}")
+            formatter.message("")
+            formatter.message("To enable:")
+            formatter.message("  systemctl --user daemon-reload")
+            formatter.message("  systemctl --user enable --now ralph-agi-scheduler.timer")
+            formatter.message("")
+            formatter.message("To disable:")
+            formatter.message("  systemctl --user disable --now ralph-agi-scheduler.timer")
+
+        return EXIT_SUCCESS
+
+    elif args.daemon_command == "run-once":
+        # Single wake execution (called by system scheduler)
+        formatter.message("=" * 50)
+        formatter.message("RALPH-AGI Scheduled Wake")
+        formatter.message("=" * 50)
+
+        executor = WakeHookExecutor(
+            prd_path=scheduler_config.prd_path,
+            config_path=scheduler_config.config_path,
+        )
+
+        results = executor.execute(scheduler_config.wake_hooks)
+
+        for result in results:
+            status_symbol = "OK" if result.result.value == "success" else "FAIL" if result.result.value == "failure" else "SKIP"
+            formatter.message(f"  [{status_symbol}] {result.hook}: {result.message}")
+
+        # Run the main loop if configured
+        if scheduler_config.prd_path:
+            formatter.message("")
+            formatter.message("Running RALPH-AGI loop...")
+            # Re-use run_loop with synthetic args
+            run_args = argparse.Namespace(
+                config=args.config,
+                prd=scheduler_config.prd_path,
+                max_iterations=None,
+                verbose=False,
+                quiet=False,
+                dry_run=False,
+                show_cost=False,
+            )
+            return run_loop(run_args)
+
+        return EXIT_SUCCESS
+
+    return EXIT_ERROR
+
+
+def run_init(args: argparse.Namespace) -> int:
+    """Execute the init command (setup wizard).
+
+    Args:
+        args: Parsed command-line arguments.
+
+    Returns:
+        Exit code.
+    """
+    from ralph_agi.init_wizard import generate_sample_prd, run_wizard
+
+    formatter = OutputFormatter(verbosity=Verbosity.NORMAL)
+
+    try:
+        success, message = run_wizard(
+            quick=args.quick,
+            output_path=args.output,
+        )
+
+        if not success:
+            formatter.warning(message)
+            return EXIT_ERROR
+
+        # Generate sample PRD if requested
+        if args.sample_prd:
+            prd_success, prd_message = generate_sample_prd()
+            if prd_success:
+                formatter.message(f"\n{prd_message}")
+            else:
+                formatter.warning(prd_message)
+
+        return EXIT_SUCCESS
+
+    except KeyboardInterrupt:
+        formatter.message("\n")
+        formatter.warning("Setup cancelled by user")
+        return EXIT_ERROR
+
+    except Exception as e:
+        formatter.error("Setup failed", exception=e)
+        return EXIT_ERROR
+
+
+def run_tui(args: argparse.Namespace) -> int:
+    """Execute the tui command (terminal interface).
+
+    Args:
+        args: Parsed command-line arguments.
+
+    Returns:
+        Exit code.
+    """
+    from ralph_agi.tui.app import run_tui as launch_tui
+
+    try:
+        launch_tui(
+            prd_path=args.prd,
+            config_path=args.config,
+            demo=args.demo,
+        )
+        return EXIT_SUCCESS
+
+    except KeyboardInterrupt:
+        return EXIT_SUCCESS
+
+    except Exception as e:
+        formatter = OutputFormatter(verbosity=Verbosity.NORMAL)
+        formatter.error("TUI error", exception=e)
+        return EXIT_ERROR
+
+
 def main(argv: list[str] | None = None) -> int:
     """Main entry point for ralph-agi CLI.
 
@@ -368,6 +771,15 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "run":
         return run_loop(args)
+
+    if args.command == "daemon":
+        return run_daemon(args)
+
+    if args.command == "init":
+        return run_init(args)
+
+    if args.command == "tui":
+        return run_tui(args)
 
     # Unknown command (shouldn't happen with subparsers)
     parser.print_help()

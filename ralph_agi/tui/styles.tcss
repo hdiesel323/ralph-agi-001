@@ -1,0 +1,106 @@
+/* RALPH-AGI TUI Styles */
+/* Based on the TUI-first hybrid architecture mockups */
+
+/* Main container layout */
+#main-container {
+    layout: grid;
+    grid-size: 1;
+    grid-rows: auto 1fr 1fr;
+    height: 100%;
+    padding: 0;
+}
+
+/* Top row: Stories + Metrics side by side */
+#top-row {
+    layout: horizontal;
+    height: auto;
+    min-height: 8;
+    max-height: 12;
+}
+
+#story-grid {
+    width: 2fr;
+    min-width: 40;
+}
+
+#metrics-bar {
+    width: 1fr;
+    min-width: 25;
+    max-width: 35;
+}
+
+/* Agent viewer in middle */
+#agent-viewer {
+    height: 1fr;
+    min-height: 10;
+}
+
+/* Log panel at bottom */
+#log-panel {
+    height: 1fr;
+    min-height: 8;
+}
+
+/* Header styling */
+Header {
+    background: $primary-darken-2;
+}
+
+/* Footer styling */
+Footer {
+    background: $surface;
+}
+
+/* Panel borders - consistent styling */
+StoryGrid, MetricsBar, AgentViewer, LogPanel {
+    border: solid $primary-darken-1;
+    border-title-color: $text;
+    border-title-background: $primary;
+    border-title-style: bold;
+}
+
+/* Progress bar styling */
+ProgressBar > .bar--bar {
+    color: $success;
+}
+
+ProgressBar > .bar--complete {
+    color: $success-darken-2;
+}
+
+/* Notification styling */
+Toast {
+    background: $surface-lighten-1;
+    border: solid $primary;
+}
+
+/* Status color overrides for task rows */
+.pending {
+    color: $text-muted;
+}
+
+.running {
+    color: $warning;
+    text-style: bold;
+}
+
+.done {
+    color: $success;
+}
+
+.failed {
+    color: $error;
+    text-style: bold;
+}
+
+.blocked {
+    color: $text-disabled;
+}
+
+/* Scrollbar styling */
+VerticalScroll {
+    scrollbar-background: $surface;
+    scrollbar-color: $primary-darken-1;
+    scrollbar-color-hover: $primary;
+    scrollbar-color-active: $primary-lighten-1;
+}

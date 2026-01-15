@@ -23,3 +23,23 @@ retry_delays: [1, 2, 4]  # Exponential backoff in seconds
 
 # Optional: Checkpoint file for AFK mode (saves state on interrupt)
 # checkpoint_path: "checkpoint.json"
+
+# Git Workflow Configuration
+# Controls how RALPH manages git operations
+git:
+  # Workflow mode:
+  #   - direct: Commit anywhere (risky, for solo dev only)
+  #   - branch: Create feature branches, push branches (default)
+  #   - pr: Create feature branches, push, and create PRs via gh CLI
+  workflow: "branch"
+
+  # Branches that cannot be committed to directly in branch/pr mode
+  protected_branches:
+    - main
+    - master
+
+  # Prefix for auto-created feature branches
+  branch_prefix: "ralph/"
+
+  # Whether to automatically push after committing
+  auto_push: true

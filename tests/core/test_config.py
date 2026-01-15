@@ -597,3 +597,113 @@ llm:
         assert loaded.llm_max_tool_iterations == original.llm_max_tool_iterations
         assert loaded.llm_temperature == original.llm_temperature
         assert loaded.llm_rate_limit_retries == original.llm_rate_limit_retries
+
+
+class TestGitConfig:
+    """Tests for git workflow configuration options."""
+
+    def test_default_git_workflow(self):
+        """Test default git_workflow is 'branch'."""
+        config = RalphConfig()
+        assert config.git_workflow == "branch"
+
+    def test_default_git_protected_branches(self):
+        """Test default git_protected_branches."""
+        config = RalphConfig()
+        assert config.git_protected_branches == ["main", "master"]
+
+    def test_default_git_branch_prefix(self):
+        """Test default git_branch_prefix."""
+        config = RalphConfig()
+        assert config.git_branch_prefix == "ralph/"
+
+    def test_default_git_auto_push(self):
+        """Test default git_auto_push."""
+        config = RalphConfig()
+        assert config.git_auto_push is True
+
+    def test_custom_git_workflow_direct(self):
+        """Test custom git_workflow set to 'direct'."""
+        config = RalphConfig(git_workflow="direct")
+        assert config.git_workflow == "direct"
+
+    def test_custom_git_workflow_pr(self):
+        """Test custom git_workflow set to 'pr'."""
+        config = RalphConfig(git_workflow="pr")
+        assert config.git_workflow == "pr"
+
+    def test_invalid_git_workflow_raises(self):
+        """Test that invalid git_workflow raises ConfigValidationError."""
+        with pytest.raises(ConfigValidationError, match="git_workflow"):
+            RalphConfig(git_workflow="invalid")
+
+    def test_custom_protected_branches(self):
+        """Test custom git_protected_branches."""
+        config = RalphConfig(
+            git_protected_branches=["main", "develop", "release"]
+        )
+        assert config.git_protected_branches == ["main", "develop", "release"]
+
+    def test_custom_branch_prefix(self):
+        """Test custom git_branch_prefix."""
+        config = RalphConfig(git_branch_prefix="feature/")
+        assert config.git_branch_prefix == "feature/"
+
+    def test_custom_auto_push(self):
+        """Test custom git_auto_push."""
+        config = RalphConfig(git_auto_push=False)
+        assert config.git_auto_push is False
+
+    def test_load_git_config_from_yaml(self, tmp_path):
+        """Test loading git config from YAML."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("""
+git:
+  workflow: pr
+  protected_branches:
+    - main
+    - production
+  branch_prefix: "feat/"
+  auto_push: false
+""")
+
+        config = load_config(config_file)
+
+        assert config.git_workflow == "pr"
+        assert config.git_protected_branches == ["main", "production"]
+        assert config.git_branch_prefix == "feat/"
+        assert config.git_auto_push is False
+
+    def test_load_partial_git_config(self, tmp_path):
+        """Test loading partial git config with defaults."""
+        config_file = tmp_path / "config.yaml"
+        config_file.write_text("""
+git:
+  workflow: direct
+""")
+
+        config = load_config(config_file)
+
+        assert config.git_workflow == "direct"
+        assert config.git_protected_branches == ["main", "master"]  # default
+        assert config.git_branch_prefix == "ralph/"  # default
+        assert config.git_auto_push is True  # default
+
+    def test_save_and_load_git_config_roundtrip(self, tmp_path):
+        """Test save and load roundtrip for git config."""
+        config_file = tmp_path / "config.yaml"
+
+        original = RalphConfig(
+            git_workflow="pr",
+            git_protected_branches=["main", "staging", "production"],
+            git_branch_prefix="auto/",
+            git_auto_push=False,
+        )
+
+        save_config(original, config_file)
+        loaded = load_config(config_file)
+
+        assert loaded.git_workflow == original.git_workflow
+        assert loaded.git_protected_branches == original.git_protected_branches
+        assert loaded.git_branch_prefix == original.git_branch_prefix
+        assert loaded.git_auto_push == original.git_auto_push
