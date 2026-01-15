@@ -1,5 +1,7 @@
 """Story grid widget for displaying task status."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from enum import Enum
 from typing import ClassVar

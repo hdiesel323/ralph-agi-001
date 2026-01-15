@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import threading
 import time
+from typing import Optional
 
 import pytest
 
@@ -506,7 +507,7 @@ class TestTTLCacheTypes:
 
     def test_cache_none_value(self):
         """Test caching None as a value (different from missing)."""
-        cache = TTLCache[str | None](default_ttl=100)
+        cache = TTLCache[Optional[str]](default_ttl=100)
 
         cache.set("nullable", None)
 

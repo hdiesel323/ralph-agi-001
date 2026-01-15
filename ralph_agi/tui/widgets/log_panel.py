@@ -1,5 +1,7 @@
 """Log panel widget for real-time log streaming."""
 
+from __future__ import annotations
+
 from datetime import datetime
 from typing import ClassVar
 

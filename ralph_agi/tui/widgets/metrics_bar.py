@@ -1,5 +1,7 @@
 """Metrics bar widget for displaying cost, time, and iteration stats."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import ClassVar

@@ -426,7 +426,7 @@ class TestShellIntegration:
     def test_run_python_command(self) -> None:
         """Test running Python via shell."""
         shell = ShellTools()
-        result = shell.execute('python -c "print(1+1)"')
+        result = shell.execute('python3 -c "print(1+1)"')
 
         assert result.success is True
         assert "2" in result.stdout
@@ -442,7 +442,7 @@ class TestShellIntegration:
     def test_run_pytest_help(self) -> None:
         """Test running pytest help."""
         shell = ShellTools()
-        result = shell.execute("python -m pytest --version", timeout=30)
+        result = shell.execute("python3 -m pytest --version", timeout=30)
 
         assert result.success is True
         assert "pytest" in result.stdout.lower()
