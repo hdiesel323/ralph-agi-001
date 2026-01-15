@@ -21,10 +21,34 @@
 <p align="center">
   <a href="#installation">Installation</a> •
   <a href="#quick-start">Quick Start</a> •
-  <a href="#commands">Commands</a> •
-  <a href="#configuration">Configuration</a> •
-  <a href="#creating-tasks">Creating Tasks</a>
+  <a href="#the-approach">The Approach</a> •
+  <a href="#the-12-week-roadmap">Roadmap</a> •
+  <a href="#standing-on-the-shoulders-of-giants">Credits</a>
 </p>
+
+---
+
+## The Problem
+
+AI coding assistants are brilliant... for about 5 minutes.
+
+Then they forget everything. Lose context. Start hallucinating. You're back to square one.
+
+**Current AI limitations:**
+- 🧠 **No persistent memory** - Every conversation starts from zero
+- ⏱️ **Context window limits** - Long tasks get truncated
+- 🎯 **No task completion awareness** - Doesn't know when it's actually done
+- 🔄 **No learning** - Makes the same mistakes repeatedly
+- 👀 **Requires constant supervision** - Can't run autonomously
+
+**What if an AI could:**
+- Work on complex tasks for hours (or days) without losing track
+- Remember what it learned yesterday, last week, last month
+- Know when it's genuinely done vs. when it's stuck
+- Learn from mistakes and improve over time
+- Run autonomously while you sleep (AFK Mode)
+
+That's RALPH-AGI.
 
 ---
 
@@ -45,10 +69,11 @@ cd ralph-agi-001
 ```
 
 The installer will:
-1. Create a Python virtual environment
-2. Install all dependencies
-3. Prompt for your API key (saved to `.env`)
-4. Verify the installation
+1. Check Python version (requires 3.11+)
+2. Create a Python virtual environment
+3. Install all dependencies
+4. Prompt for your API key (saved to `.env`)
+5. Verify the installation
 
 ### Manual Install
 
@@ -68,6 +93,23 @@ pip install -e ".[dev]"
 
 # Create .env file with your API key
 echo "ANTHROPIC_API_KEY=your-key-here" > .env
+```
+
+### Python Version Issues
+
+If you have Python 3.9 but need 3.11+:
+
+```bash
+# macOS
+brew install python@3.12
+
+# Ubuntu/Debian
+sudo apt install python3.12
+
+# Then use it explicitly
+python3.12 -m venv venv
+source venv/bin/activate
+pip install -e .
 ```
 
 ---
@@ -133,7 +175,7 @@ RALPH will:
 
 ---
 
-## Commands
+## Commands Reference
 
 All commands can be run via `./run-ralph.sh` or by activating the venv and using `ralph-agi` directly.
 
@@ -176,25 +218,11 @@ Options:
 # Dry run to validate PRD without executing
 ./run-ralph.sh run --prd PRD.json --dry-run
 
-# Show estimated costs
-./run-ralph.sh run --prd PRD.json --show-cost
-
 # Launch the TUI for real-time monitoring
 ./run-ralph.sh tui --prd PRD.json
 
 # TUI demo mode (see what it looks like)
 ./run-ralph.sh tui --demo
-```
-
-### Init Command Options
-
-```bash
-./run-ralph.sh init [OPTIONS]
-
-Options:
-  --quick           Use defaults (minimal prompts)
-  --output PATH     Custom output path for config.yaml
-  --sample-prd      Also generate a sample PRD.json
 ```
 
 ---
@@ -221,21 +249,9 @@ retry_delays: [1, 2, 4]  # Exponential backoff in seconds
 
 # Git workflow configuration
 git:
-  # Workflow modes:
-  #   direct: Commit anywhere (solo dev, risky)
-  #   branch: Create feature branches (recommended)
-  #   pr: Create branches + open PRs via gh CLI
-  workflow: "branch"
-
-  # Protected branches (cannot commit directly)
-  protected_branches:
-    - main
-    - master
-
-  # Prefix for auto-created branches
+  workflow: "branch"        # direct, branch, or pr
+  protected_branches: [main, master]
   branch_prefix: "ralph/"
-
-  # Auto-push after commits
   auto_push: true
 ```
 
@@ -254,40 +270,7 @@ OPENROUTER_API_KEY=sk-or-...
 
 ---
 
-## Creating Tasks
-
-### PRD.json Structure
-
-The PRD (Product Requirements Document) file tells RALPH what to build:
-
-```json
-{
-  "project": {
-    "name": "Project Name",
-    "description": "Brief description of the project"
-  },
-  "features": [
-    {
-      "id": "unique-feature-id",
-      "name": "Feature Name",
-      "description": "What this feature does",
-      "tasks": [
-        {
-          "id": "unique-task-id",
-          "description": "Specific task to complete",
-          "priority": "P0",
-          "status": "pending",
-          "dependencies": ["other-task-id"],
-          "acceptance_criteria": [
-            "Criterion 1 that must be true",
-            "Criterion 2 that must be true"
-          ]
-        }
-      ]
-    }
-  ]
-}
-```
+## Creating Tasks (PRD.json)
 
 ### Task Fields
 
@@ -299,7 +282,6 @@ The PRD (Product Requirements Document) file tells RALPH what to build:
 | `status` | Yes | `pending`, `in_progress`, `complete`, `blocked` |
 | `dependencies` | No | List of task IDs that must complete first |
 | `acceptance_criteria` | Recommended | List of conditions that prove completion |
-| `steps` | No | Explicit step-by-step instructions |
 
 ### Writing Good Tasks
 
@@ -312,7 +294,6 @@ The PRD (Product Requirements Document) file tells RALPH what to build:
   "status": "pending",
   "acceptance_criteria": [
     "POST /api/login endpoint exists",
-    "Accepts JSON body with email and password fields",
     "Returns 200 with JWT token on valid credentials",
     "Returns 401 on invalid credentials",
     "Tests pass: pytest tests/test_auth.py -v"
@@ -330,113 +311,163 @@ The PRD (Product Requirements Document) file tells RALPH what to build:
 }
 ```
 
-### Tips for Effective Tasks
-
+**Tips:**
 1. **Be specific** - "Add a button" vs "Add a blue 'Submit' button in the form footer"
 2. **Include acceptance criteria** - How will RALPH know it's done?
 3. **Use dependencies** - Tasks that need other tasks completed first
 4. **Start small** - Break large features into smaller tasks
-5. **Test commands** - Include the exact test command to verify
 
 ---
 
-## How RALPH Works
+## The Approach
 
-### The Loop
+Most AI agent frameworks are overengineered. Complex orchestration, state machines, planning systems, agent hierarchies...
 
-RALPH runs a simple, robust loop:
+RALPH-AGI takes a radically simple approach inspired by the best open-source agent systems:
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                                                         │
-│   1. Load Context (memory, previous work, PRD)          │
-│                        ↓                                │
-│   2. Select Next Task (highest priority, unblocked)     │
-│                        ↓                                │
-│   3. Execute with LLM (Claude generates code)           │
-│                        ↓                                │
-│   4. Verify Completion (run acceptance criteria)        │
-│                        ↓                                │
-│   5. Update State (mark complete, save memory)          │
-│                        ↓                                │
-│   6. Check if Done → Exit                               │
-│          ↓ not done                                     │
-│   Loop back to step 1                                   │
-│                                                         │
-└─────────────────────────────────────────────────────────┘
+**The "Ralph Wiggum Pattern"** - Start simple, keep trying, get smarter.
+
+```python
+while not complete and under_budget:
+    context = load_memory()
+    result = execute_task_with_retry(context)
+
+    if task_complete(result):
+        celebrate()
+        break
+
+    save_to_memory(result)
+    learn_from_result(result)
 ```
 
-### Completion Detection
+> *"Same energy as Ralph Wiggum eating glue... but with memory that actually works and self-improves so it eventually stops eating glue and starts building real stuff."*
 
-RALPH knows a task is complete when:
-1. All acceptance criteria pass (tests, file checks, etc.)
-2. The LLM outputs the completion signal: `<promise>COMPLETE</promise>`
+### Core Principles
 
-### Error Handling
-
-- **Retries** - Failed iterations retry with exponential backoff
-- **Checkpoints** - State saved regularly for crash recovery
-- **Max iterations** - Safety limit prevents infinite loops
+| Principle | Why It Matters |
+|-----------|----------------|
+| **Simple Loop > Complex Orchestration** | A while loop beats fancy agent frameworks |
+| **Persistent Memory** | Context survives across sessions |
+| **Completion Detection** | Knows when to stop (and when to keep going) |
+| **Graceful Failure** | Retries with exponential backoff, learns from errors |
+| **Human-in-the-Loop Option** | AFK mode OR supervised mode |
 
 ---
 
-## Terminal UI (TUI)
+## The 12-Week Roadmap
 
-RALPH includes a rich terminal interface for monitoring:
+| Phase | Weeks | Epic | Goal |
+|-------|-------|------|------|
+| **1. Core Loop** | 1-2 | `epic-01` | Basic execution engine + completion detection |
+| **2. Task Management** | 3-4 | `epic-02` | Beads integration, priorities, dependencies |
+| **3. Memory System** | 5-6 | `epic-03` | Persistent context, semantic search, learning |
+| **4. Tool Integration** | 7-8 | `epic-04` | File ops, git, testing, external APIs |
+| **5. Evaluation Pipeline** | 9-10 | `epic-05` | Self-verification, quality gates, metrics |
+| **6. Polish & Ship** | 11-12 | - | CLI, documentation, real-world testing |
 
-```bash
-./run-ralph.sh tui --prd PRD.json
-```
+### Success Metrics
 
-Features:
-- Real-time task status grid
-- Live metrics (iterations, cost, tokens, time)
-- Agent output viewer (see what RALPH is thinking)
-- Log panel with filtering
-- Keyboard shortcuts (q=quit, p=pause, s=stop)
-
-Demo mode (no PRD required):
-```bash
-./run-ralph.sh tui --demo
-```
+- **Autonomous Task Completion:** 80%+ success rate on SWE-bench-lite
+- **Context Retention:** Maintain coherent context over 100+ iterations
+- **Self-Recovery:** 90%+ recovery from common errors without human intervention
+- **Cost Efficiency:** <$5 average cost per completed task
 
 ---
 
-## Troubleshooting
+## Standing on the Shoulders of Giants
 
-### Common Issues
+**RALPH-AGI wouldn't exist without these incredible open-source projects and research.**
 
-**"ANTHROPIC_API_KEY not set"**
-```bash
-# Add to .env file
-echo "ANTHROPIC_API_KEY=your-key-here" >> .env
+This project synthesizes ideas and patterns from the following (all credit to the original authors):
+
+### 🎉 Special Thanks
+
+**Big shoutout to [Geoffrey Huntley (@GeoffreyHuntley)](https://twitter.com/GeoffreyHuntley)** for creating the "Ralph Wiggum Pattern" that inspired this entire project. His original post at [ghuntley.com/ralph](https://ghuntley.com/ralph/) laid the foundation. If RALPH-AGI works, it's because Geoffrey figured out the simple truth, a while loop beats a fancy framework.
+
+### Core Inspiration
+
+| Project | Author | Stars | What We Learned |
+|---------|--------|-------|-----------------|
+| [**The Ralph Wiggum Pattern**](https://ghuntley.com/ralph/) | [@GeoffreyHuntley](https://twitter.com/GeoffreyHuntley) | - | The original! Simple loop > complex orchestration |
+| [**Anthropic Agent Guidance**](https://www.anthropic.com/engineering/building-effective-agents) | Anthropic | - | Official best practices for long-running agents |
+| [**Memvid**](https://github.com/memvid/memvid) | memvid | - | Portable AI memory in a single file (Sprint 2) |
+| [**Beads**](https://github.com/steveyegge/beads) | @steveyegge | 9.4k⭐ | Dependency-aware task management |
+| [**Claude-Mem**](https://github.com/thedotmack/claude-mem) | @thedotmack | 12.9k⭐ | Persistent memory architecture |
+
+### Additional Research
+
+| Project | What We Learned |
+|---------|-----------------|
+| [**AI-Long-Task**](https://github.com/FareedKhan-dev/ai-long-task) | AlphaEvolve-inspired autonomous execution |
+| [**Continuous-Claude-v3**](https://github.com/zckly/continuous-claude-v3) | Hooks system for automatic behaviors |
+| [**MCP-CLI**](https://github.com/anthropics/anthropic-tools) | Tool integration patterns |
+
+### Research Papers & Posts
+
+- [Building Effective Agents](https://www.anthropic.com/engineering/building-effective-agents) - Anthropic Engineering
+- [Effective Harnesses for Long-Running Agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) - Anthropic Engineering
+
+**We're not claiming to have invented any of these patterns.** We're combining the best ideas into a cohesive, well-tested system and building it in public so others can learn and contribute.
+
+---
+
+## License: Open Core Model
+
+RALPH-AGI uses an **open core** licensing model (similar to GitLab, Grafana, and Mozilla):
+
+### Community Edition (This Repo) - MPL 2.0
+
+```
+✅ Free forever for personal use
+✅ Free for open source projects
+✅ Free for commercial use (self-hosted)
+✅ Modify and distribute freely
+✅ Contribute improvements back to the community
 ```
 
-**"ModuleNotFoundError: No module named 'ralph_agi'"**
-```bash
-# Activate the virtual environment
-source venv/bin/activate
-# Or reinstall
-pip install -e .
+**Mozilla Public License 2.0** - You can use, modify, and distribute this code. Modifications to MPL-licensed files must be shared, but you can combine with proprietary code.
+
+### Enterprise Edition (Coming Soon)
+
+For teams that want managed infrastructure and enterprise features:
+
+```
+🏢 Hosted cloud version (no setup required)
+🔐 SSO/SAML authentication
+📊 Team dashboards & analytics
+🛡️ Priority support & SLAs
+🔧 Custom integrations
+💰 Subscription pricing
 ```
 
-**"Python 3.11+ required"**
-```bash
-# Check your version
-python3 --version
-# Install Python 3.11+ from python.org
-```
+*Interested in Enterprise?* [Join the waitlist](https://glittery-pasca-96b28f.netlify.app/enterprise) to get early access and special pricing.
 
-**"Permission denied: ./run-ralph.sh"**
-```bash
-chmod +x run-ralph.sh install.sh
-```
+---
 
-### Getting Help
+## Follow the Build
 
-- Check the [Documentation](https://glittery-pasca-96b28f.netlify.app)
-- Open an [Issue](https://github.com/hdiesel323/ralph-agi-001/issues)
-- Follow [@hdiesel_](https://twitter.com/hdiesel_) for updates
+This is a 12-week build-in-public journey. Follow along for daily updates, technical deep-dives, and all the wins and fails.
+
+| Platform | Link | Content |
+|----------|------|---------|
+| **Twitter/X** | [@hdiesel_](https://twitter.com/hdiesel_) | Daily updates, hot takes |
+| **Main Thread** | [The Journey](https://x.com/hdiesel_/status/2009969887356256679) | Full build story |
+| **Documentation** | [View Docs](https://glittery-pasca-96b28f.netlify.app) | Technical docs |
+| **Enterprise** | [Join Waitlist](https://glittery-pasca-96b28f.netlify.app/enterprise) | Early access signup |
+| **This Repo** | Star ⭐ for updates | Code, issues, discussions |
+
+---
+
+## Tech Stack
+
+| Layer | Technology | Why |
+|-------|------------|-----|
+| **Language** | Python 3.11+ | Type hints, async support, ecosystem |
+| **LLM** | Claude (Anthropic) | Best-in-class reasoning, long context |
+| **Task Management** | Beads | Dependency-aware, SQLite-backed |
+| **Memory** | Claude-Mem patterns | Semantic search, compaction |
+| **Testing** | pytest | 99% coverage target |
+| **CI/CD** | GitHub Actions | Automated testing & deployment |
 
 ---
 
@@ -469,6 +500,40 @@ ralph-agi-001/
 
 ---
 
+## Troubleshooting
+
+### Common Issues
+
+**"Python 3.11 or higher is required"**
+```bash
+# macOS
+brew install python@3.12
+
+# Ubuntu
+sudo apt install python3.12
+
+# Then use explicitly
+python3.12 -m venv venv
+```
+
+**"ANTHROPIC_API_KEY not set"**
+```bash
+echo "ANTHROPIC_API_KEY=your-key-here" >> .env
+```
+
+**"ModuleNotFoundError: No module named 'ralph_agi'"**
+```bash
+source venv/bin/activate
+pip install -e .
+```
+
+**"Permission denied: ./run-ralph.sh"**
+```bash
+chmod +x run-ralph.sh install.sh
+```
+
+---
+
 ## Development
 
 ### Running Tests
@@ -483,36 +548,41 @@ python3 -m pytest --cov=ralph_agi    # With coverage
 
 ### Contributing
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/my-feature`
-3. Make your changes
-4. Run tests: `python3 -m pytest`
-5. Submit a pull request
+**Not accepting PRs yet** (still in early build phase), but here's how to get involved:
+
+| Action | How |
+|--------|-----|
+| ⭐ **Star the repo** | Get notified of updates |
+| 🐛 **Open issues** | Bug reports, feature ideas, questions |
+| 💬 **Join Twitter** | Daily discussions, polls, feedback |
+| 📧 **Enterprise interest** | DM [@hdiesel_](https://twitter.com/hdiesel_) |
+
+Once we hit Week 8, we'll open up for community contributions with clear guidelines.
 
 ---
 
-## License
+## FAQ
 
-RALPH-AGI is licensed under the **Mozilla Public License 2.0 (MPL-2.0)**.
+**Q: Why "Ralph Wiggum"?**
+A: The pattern is named after the Simpsons character who famously eats paste. The idea is that the agent starts simple (even dumb), but unlike Ralph, it actually learns and improves over time.
 
-- Free for personal and commercial use
-- Modifications to MPL files must be shared
-- Can be combined with proprietary code
+**Q: How is this different from AutoGPT, BabyAGI, etc.?**
+A: Those projects focus on complex planning and agent hierarchies. RALPH-AGI focuses on a simple, robust execution loop with persistent memory. Less magic, more reliability.
 
-See [LICENSE](LICENSE) for full details.
+**Q: When will it be ready to use?**
+A: It's usable now! Clone the repo, run the installer, and try it. We're building in public - expect rough edges.
 
----
-
-## Credits
-
-RALPH-AGI is inspired by:
-
-- [The Ralph Wiggum Pattern](https://ghuntley.com/ralph/) by [@GeoffreyHuntley](https://twitter.com/GeoffreyHuntley)
-- [Anthropic's Agent Guidance](https://www.anthropic.com/engineering/building-effective-agents)
-- [Beads](https://github.com/steveyegge/beads) by @steveyegge
-- [Claude-Mem](https://github.com/thedotmack/claude-mem) by @thedotmack
+**Q: Can I use this for my company?**
+A: Yes! The MPL 2.0 license allows commercial use. For managed hosting and enterprise features, stay tuned for the Enterprise Edition.
 
 ---
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12,14,25,27&height=100&section=footer">
+    <img src="https://capsule-render.vercel.app/api?type=waving&color=gradient&customColorList=12,14,25,27&height=100&section=footer" alt="Footer">
+  </picture>
+</p>
 
 <p align="center">
   <i>Building in public, one commit at a time.</i>
