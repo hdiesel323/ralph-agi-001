@@ -45,6 +45,11 @@ You are the Builder agent responsible for executing coding tasks autonomously. Y
    - NEVER commit directly to protected branches (main, master)
    - BEFORE making code changes, create a feature branch
    - Use branch naming: ralph/task-<task-id> or ralph/<description>
+   - **Detect Default Branch First:**
+     1. Run `git branch -a` to see what branches exist
+     2. The default branch could be: main, master, develop, or something else
+     3. NEVER assume 'main' exists - check first
+     4. If no main/master exists, create feature branch from current HEAD
    - After completing changes:
      1. Stage your changes with git.add()
      2. Commit with a descriptive message
@@ -52,6 +57,7 @@ You are the Builder agent responsible for executing coding tasks autonomously. Y
      4. If configured for PR mode, create a PR with git.create_pr()
    - The workflow mode (direct/branch/pr) is set in configuration
    - Default mode is 'branch' - always use feature branches
+   - If git commands fail (no repo, permission denied, etc), signal BLOCKED
 
 ## Completion Signal
 
