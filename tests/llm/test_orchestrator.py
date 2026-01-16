@@ -350,6 +350,41 @@ class TestOrchestratorExecuteTask:
         assert result.status == OrchestratorStatus.ERROR
 
     @pytest.mark.asyncio
+    async def test_builder_max_iterations_does_not_complete(
+        self,
+        mock_builder: MagicMock,
+        mock_critic: MagicMock,
+        sample_task: dict[str, Any],
+        approved_critic_result: CriticResult,
+    ) -> None:
+        """Test that max iterations does NOT mark task complete.
+
+        When Builder hits max_iterations, it means the task wasn't finished.
+        The task should fail even if Critic would have approved.
+        This is a regression test for a critical bug where tasks were
+        incorrectly marked complete when Builder ran out of iterations.
+        """
+        mock_builder.execute.return_value = BuilderResult(
+            status=AgentStatus.MAX_ITERATIONS,
+            task=sample_task,
+            iterations=10,
+            files_changed=["/src/partial.py"],
+        )
+        # Critic would approve, but should never be called
+        mock_critic.review.return_value = approved_critic_result
+
+        orchestrator = LLMOrchestrator(mock_builder, critic=mock_critic)
+        result = await orchestrator.execute_task(sample_task)
+
+        # Task should NOT be successful
+        assert result.status == OrchestratorStatus.MAX_ITERATIONS
+        assert result.is_success is False
+        assert "max iterations" in result.error.lower()
+
+        # Critic should NOT be called when builder hits max iterations
+        mock_critic.review.assert_not_called()
+
+    @pytest.mark.asyncio
     async def test_rate_limit_retry(
         self,
         mock_builder: MagicMock,

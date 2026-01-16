@@ -33,6 +33,7 @@ class OrchestratorStatus(Enum):
     NEEDS_REVISION = "needs_revision"  # Critic requested changes
     BLOCKED = "blocked"  # Cannot proceed
     MAX_RETRIES = "max_retries"  # Rate limit retries exhausted
+    MAX_ITERATIONS = "max_iterations"  # Builder hit iteration limit without completing
     ERROR = "error"  # Unexpected error
 
 
@@ -263,8 +264,17 @@ class LLMOrchestrator:
             )
 
         if builder_result.status == AgentStatus.MAX_ITERATIONS:
-            logger.warning("Builder hit max iterations")
-            # Continue to critic review even if max iterations
+            logger.warning("Builder hit max iterations without completing task")
+            # Do NOT continue to critic - task is incomplete
+            return OrchestratorResult(
+                status=OrchestratorStatus.MAX_ITERATIONS,
+                task=task,
+                builder_result=builder_result,
+                token_usage=token_usage,
+                iterations=builder_result.iterations,
+                error="Builder reached max iterations without completing the task. "
+                      "Consider breaking the task into smaller pieces or increasing max_iterations.",
+            )
 
         # Run Critic review if enabled
         if not self._critic_enabled or self._critic is None:
