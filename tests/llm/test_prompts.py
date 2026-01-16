@@ -43,6 +43,13 @@ class TestBuilderSystemPrompt:
         assert "REAL" in BUILDER_SYSTEM_PROMPT
         assert "fake" in BUILDER_SYSTEM_PROMPT.lower()
 
+    def test_contains_git_branch_detection(self) -> None:
+        """Test that prompt instructs to detect default branch before checkout."""
+        assert "git branch -a" in BUILDER_SYSTEM_PROMPT
+        assert "NEVER assume" in BUILDER_SYSTEM_PROMPT
+        assert "main" in BUILDER_SYSTEM_PROMPT.lower()
+        assert "master" in BUILDER_SYSTEM_PROMPT.lower()
+
 
 class TestCriticSystemPrompt:
     """Tests for Critic system prompt."""
