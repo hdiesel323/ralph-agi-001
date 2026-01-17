@@ -17,6 +17,7 @@ from ralph_agi.tools.git import (
     GitTools,
     GitWorkflowError,
     NotARepositoryError,
+    WorktreeInfo,
 )
 
 
@@ -718,3 +719,316 @@ class TestGetPrStatus:
         # No remote/PR, should return None
         result = git.get_pr_status()
         assert result is None
+
+
+class TestWorktreeInfo:
+    """Tests for WorktreeInfo dataclass."""
+
+    def test_worktree_info_creation(self) -> None:
+        """Test creating WorktreeInfo."""
+        wt = WorktreeInfo(
+            path="/path/to/worktree",
+            branch="feature-branch",
+            commit="abc123def456",
+            is_main=False,
+        )
+        assert wt.path == "/path/to/worktree"
+        assert wt.branch == "feature-branch"
+        assert wt.commit == "abc123def456"
+        assert wt.is_main is False
+        assert wt.is_bare is False
+        assert wt.is_detached is False
+
+    def test_worktree_info_frozen(self) -> None:
+        """Test that WorktreeInfo is immutable."""
+        wt = WorktreeInfo(
+            path="/path",
+            branch="main",
+            commit="abc123",
+            is_main=True,
+        )
+        with pytest.raises(AttributeError):
+            wt.path = "/new/path"  # type: ignore
+
+    def test_worktree_info_to_dict(self) -> None:
+        """Test WorktreeInfo serialization."""
+        wt = WorktreeInfo(
+            path="/path/to/worktree",
+            branch="feature",
+            commit="abc123",
+            is_main=False,
+            is_bare=False,
+            is_detached=True,
+        )
+        d = wt.to_dict()
+        assert d["path"] == "/path/to/worktree"
+        assert d["branch"] == "feature"
+        assert d["commit"] == "abc123"
+        assert d["is_main"] is False
+        assert d["is_bare"] is False
+        assert d["is_detached"] is True
+
+
+class TestWorktreeAdd:
+    """Tests for worktree_add method."""
+
+    def test_worktree_add_creates_worktree(self, git_repo_with_commits: Path, tmp_path: Path) -> None:
+        """Test creating a new worktree."""
+        git = GitTools(repo_path=git_repo_with_commits)
+        worktree_path = tmp_path / "worktree1"
+
+        result = git.worktree_add(str(worktree_path), "test-branch")
+
+        assert result == str(worktree_path)
+        assert worktree_path.exists()
+        assert (worktree_path / ".git").exists()
+
+    def test_worktree_add_with_new_branch(self, git_repo_with_commits: Path, tmp_path: Path) -> None:
+        """Test creating worktree with new branch."""
+        git = GitTools(repo_path=git_repo_with_commits)
+        worktree_path = tmp_path / "worktree-new-branch"
+
+        git.worktree_add(str(worktree_path), "new-feature", create_branch=True)
+
+        # Verify branch was created
+        branches = git.list_branches()
+        assert "new-feature" in branches
+
+    def test_worktree_add_with_existing_branch(self, git_repo_with_commits: Path, tmp_path: Path) -> None:
+        """Test creating worktree with existing branch."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # Create a branch first
+        git.checkout("existing-branch", create=True)
+        git.checkout("main")
+
+        worktree_path = tmp_path / "worktree-existing"
+        git.worktree_add(str(worktree_path), "existing-branch", create_branch=True)
+
+        assert worktree_path.exists()
+
+    def test_worktree_add_path_exists_raises(self, git_repo_with_commits: Path, tmp_path: Path) -> None:
+        """Test that adding worktree to existing path raises error."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # Create directory first
+        existing_dir = tmp_path / "existing-dir"
+        existing_dir.mkdir()
+
+        with pytest.raises(GitCommandError) as exc_info:
+            git.worktree_add(str(existing_dir), "test-branch")
+
+        assert "already exists" in str(exc_info.value)
+
+    def test_worktree_add_branch_conflict_raises(self, git_repo_with_commits: Path, tmp_path: Path) -> None:
+        """Test that adding worktree for branch already checked out raises error."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # First worktree
+        wt1_path = tmp_path / "worktree1"
+        git.worktree_add(str(wt1_path), "conflict-branch")
+
+        # Second worktree with same branch should fail
+        wt2_path = tmp_path / "worktree2"
+        with pytest.raises(GitCommandError):
+            git.worktree_add(str(wt2_path), "conflict-branch", create_branch=False)
+
+    def test_worktree_add_relative_path(self, git_repo_with_commits: Path) -> None:
+        """Test creating worktree with relative path."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # Use relative path
+        result = git.worktree_add("../relative-worktree", "relative-branch")
+
+        # Should resolve to absolute path
+        assert Path(result).is_absolute()
+        assert Path(result).exists()
+
+        # Cleanup
+        git.worktree_remove(result, force=True)
+
+    def test_worktree_add_absolute_path(self, git_repo_with_commits: Path, tmp_path: Path) -> None:
+        """Test creating worktree with absolute path."""
+        git = GitTools(repo_path=git_repo_with_commits)
+        abs_path = tmp_path / "absolute-worktree"
+
+        result = git.worktree_add(str(abs_path), "absolute-branch")
+
+        assert result == str(abs_path)
+        assert abs_path.exists()
+
+
+class TestWorktreeList:
+    """Tests for worktree_list method."""
+
+    def test_worktree_list_returns_all_worktrees(self, git_repo_with_commits: Path, tmp_path: Path) -> None:
+        """Test listing all worktrees."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # Create some worktrees
+        wt1 = tmp_path / "wt1"
+        wt2 = tmp_path / "wt2"
+        git.worktree_add(str(wt1), "branch1")
+        git.worktree_add(str(wt2), "branch2")
+
+        worktrees = git.worktree_list()
+
+        # Should have main + 2 worktrees
+        assert len(worktrees) == 3
+
+        # All should be WorktreeInfo instances
+        assert all(isinstance(wt, WorktreeInfo) for wt in worktrees)
+
+    def test_worktree_list_main_worktree_marked(self, git_repo_with_commits: Path, tmp_path: Path) -> None:
+        """Test that main worktree is correctly marked."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # Create a worktree
+        wt_path = tmp_path / "secondary"
+        git.worktree_add(str(wt_path), "secondary-branch")
+
+        worktrees = git.worktree_list()
+
+        # First should be main
+        main_wt = worktrees[0]
+        assert main_wt.is_main is True
+
+        # Others should not be main
+        for wt in worktrees[1:]:
+            assert wt.is_main is False
+
+    def test_worktree_list_detached_head(self, git_repo_with_commits: Path, tmp_path: Path) -> None:
+        """Test listing worktree with detached HEAD."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # Get current commit hash
+        commits = git.log(limit=1)
+        commit_hash = commits[0].hash
+
+        # Create worktree at specific commit (detached)
+        wt_path = tmp_path / "detached"
+        git.worktree_add(str(wt_path), commit_hash, create_branch=False)
+
+        worktrees = git.worktree_list()
+
+        # Find the detached worktree
+        detached_wt = next((wt for wt in worktrees if str(wt_path) == wt.path), None)
+        assert detached_wt is not None
+        assert detached_wt.is_detached is True
+
+    def test_worktree_list_empty_repo(self, git_repo: Path) -> None:
+        """Test listing worktrees in repo with no commits."""
+        git = GitTools(repo_path=git_repo)
+
+        # Even empty repo has one worktree (the main one)
+        worktrees = git.worktree_list()
+        assert len(worktrees) >= 1
+
+
+class TestWorktreeRemove:
+    """Tests for worktree_remove method."""
+
+    def test_worktree_remove_deletes_worktree(self, git_repo_with_commits: Path, tmp_path: Path) -> None:
+        """Test removing a worktree."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # Create worktree
+        wt_path = tmp_path / "to-remove"
+        git.worktree_add(str(wt_path), "to-remove-branch")
+
+        # Verify it exists
+        assert wt_path.exists()
+        worktrees_before = git.worktree_list()
+        assert len(worktrees_before) == 2
+
+        # Remove it
+        git.worktree_remove(str(wt_path))
+
+        # Verify it's gone
+        worktrees_after = git.worktree_list()
+        assert len(worktrees_after) == 1
+        assert worktrees_after[0].is_main is True
+
+    def test_worktree_remove_not_exists_raises(self, git_repo_with_commits: Path, tmp_path: Path) -> None:
+        """Test removing non-existent worktree raises error."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        non_existent = tmp_path / "non-existent"
+
+        with pytest.raises(GitCommandError):
+            git.worktree_remove(str(non_existent))
+
+    def test_worktree_remove_dirty_requires_force(self, git_repo_with_commits: Path, tmp_path: Path) -> None:
+        """Test that removing dirty worktree requires force."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # Create worktree
+        wt_path = tmp_path / "dirty-worktree"
+        git.worktree_add(str(wt_path), "dirty-branch")
+
+        # Make changes in worktree (don't commit)
+        (wt_path / "new-file.txt").write_text("uncommitted changes")
+
+        # Should fail without force
+        with pytest.raises(GitCommandError):
+            git.worktree_remove(str(wt_path))
+
+        # Should succeed with force
+        git.worktree_remove(str(wt_path), force=True)
+
+
+class TestWorktreePrune:
+    """Tests for worktree_prune method."""
+
+    def test_worktree_prune_cleans_stale(self, git_repo_with_commits: Path, tmp_path: Path) -> None:
+        """Test that prune cleans up stale worktree metadata."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # Create worktree
+        wt_path = tmp_path / "stale-worktree"
+        git.worktree_add(str(wt_path), "stale-branch")
+
+        # Verify worktree exists
+        worktrees_before = git.worktree_list()
+        assert len(worktrees_before) == 2
+
+        # Manually delete the directory (simulating external deletion)
+        import shutil
+
+        shutil.rmtree(wt_path)
+
+        # Worktree list may still show it (stale entry)
+        # Prune should clean it up
+        pruned = git.worktree_prune()
+
+        # Verify pruned
+        worktrees_after = git.worktree_list()
+        assert len(worktrees_after) == 1
+
+    def test_worktree_prune_dry_run(self, git_repo_with_commits: Path, tmp_path: Path) -> None:
+        """Test prune dry run mode."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # Create and manually delete worktree
+        wt_path = tmp_path / "dry-run-worktree"
+        git.worktree_add(str(wt_path), "dry-run-branch")
+
+        import shutil
+
+        shutil.rmtree(wt_path)
+
+        # Dry run should report but not actually prune
+        pruned = git.worktree_prune(dry_run=True)
+
+        # Should report something (may be empty if git version doesn't report)
+        # The important thing is it doesn't raise an error
+        assert isinstance(pruned, list)
+
+    def test_worktree_prune_nothing_to_prune(self, git_repo_with_commits: Path) -> None:
+        """Test prune when nothing needs pruning."""
+        git = GitTools(repo_path=git_repo_with_commits)
+
+        # Prune should return empty list
+        pruned = git.worktree_prune()
+
+        assert pruned == []

@@ -141,6 +141,38 @@ class GitCommit:
         }
 
 
+@dataclass(frozen=True)
+class WorktreeInfo:
+    """Information about a git worktree.
+
+    Attributes:
+        path: Absolute path to worktree
+        branch: Branch name (or HEAD for detached)
+        commit: Current commit hash
+        is_main: True if this is the main worktree
+        is_bare: True if bare worktree
+        is_detached: True if detached HEAD
+    """
+
+    path: str
+    branch: str
+    commit: str
+    is_main: bool
+    is_bare: bool = False
+    is_detached: bool = False
+
+    def to_dict(self) -> dict:
+        """Convert to dictionary."""
+        return {
+            "path": self.path,
+            "branch": self.branch,
+            "commit": self.commit,
+            "is_main": self.is_main,
+            "is_bare": self.is_bare,
+            "is_detached": self.is_detached,
+        }
+
+
 class GitTools:
     """Git operations for version control.
 
@@ -756,13 +788,14 @@ class GitTools:
 
         output = self._run_git(*args)
 
-        # Parse output: each line is "  branch" or "* current-branch"
+        # Parse output: each line is "  branch", "* current-branch", or "+ worktree-branch"
         branches = []
         for line in output.strip().split("\n"):
             if not line:
                 continue
-            # Remove leading whitespace and * marker for current branch
-            branch = line.strip().lstrip("* ").strip()
+            # Remove leading whitespace and markers:
+            # * = current branch, + = branch checked out in linked worktree
+            branch = line.strip().lstrip("*+ ").strip()
             # Skip remotes/origin/HEAD -> origin/main type lines
             if " -> " in branch:
                 continue
@@ -885,3 +918,203 @@ class GitTools:
             return json.loads(result.stdout)
         except json.JSONDecodeError:
             return None
+
+    def worktree_add(
+        self,
+        path: str,
+        branch: str,
+        create_branch: bool = True,
+        base_ref: str = "HEAD",
+    ) -> str:
+        """Create new worktree at path for branch.
+
+        Args:
+            path: Path for new worktree (relative or absolute)
+            branch: Branch name to checkout
+            create_branch: If True, create branch if it doesn't exist
+            base_ref: Base reference for new branch (default: HEAD)
+
+        Returns:
+            Absolute path to created worktree
+
+        Raises:
+            NotARepositoryError: If not a repository
+            GitCommandError: If worktree creation fails
+        """
+        self._ensure_repo()
+
+        # Resolve path to absolute
+        if not Path(path).is_absolute():
+            abs_path = (self._repo_path / path).resolve()
+        else:
+            abs_path = Path(path).resolve()
+
+        # Check if path already exists
+        if abs_path.exists():
+            raise GitCommandError(
+                f"git worktree add {path}",
+                f"Path already exists: {abs_path}",
+                1,
+            )
+
+        # Build command
+        args = ["worktree", "add"]
+
+        if create_branch:
+            # Check if branch already exists
+            existing_branches = self.list_branches()
+            if branch in existing_branches:
+                # Branch exists, just checkout to new worktree
+                args.append(f'"{abs_path}"')
+                args.append(branch)
+            else:
+                # Create new branch from base_ref
+                args.append("-b")
+                args.append(branch)
+                args.append(f'"{abs_path}"')
+                args.append(base_ref)
+        else:
+            # Don't create branch, expect it to exist or use detached HEAD
+            args.append(f'"{abs_path}"')
+            args.append(branch)
+
+        self._run_git(*args)
+        logger.info(f"GIT_WORKTREE_ADD: {abs_path} -> {branch}")
+
+        return str(abs_path)
+
+    def worktree_list(self) -> list[WorktreeInfo]:
+        """List all worktrees in the repository.
+
+        Returns:
+            List of WorktreeInfo for each worktree
+
+        Raises:
+            NotARepositoryError: If not a repository
+        """
+        self._ensure_repo()
+
+        # Use porcelain format for easy parsing
+        output = self._run_git("worktree", "list", "--porcelain")
+
+        worktrees = []
+        current_worktree: dict = {}
+        is_first = True
+
+        for line in output.split("\n"):
+            if not line:
+                # Empty line marks end of worktree entry
+                if current_worktree:
+                    worktrees.append(
+                        WorktreeInfo(
+                            path=current_worktree.get("worktree", ""),
+                            branch=current_worktree.get("branch", "HEAD"),
+                            commit=current_worktree.get("HEAD", ""),
+                            is_main=is_first,
+                            is_bare=current_worktree.get("bare", False),
+                            is_detached=current_worktree.get("detached", False),
+                        )
+                    )
+                    is_first = False
+                    current_worktree = {}
+                continue
+
+            if line.startswith("worktree "):
+                current_worktree["worktree"] = line[9:]
+            elif line.startswith("HEAD "):
+                current_worktree["HEAD"] = line[5:]
+            elif line.startswith("branch "):
+                # Branch format: refs/heads/branch-name
+                branch_ref = line[7:]
+                if branch_ref.startswith("refs/heads/"):
+                    current_worktree["branch"] = branch_ref[11:]
+                else:
+                    current_worktree["branch"] = branch_ref
+            elif line == "bare":
+                current_worktree["bare"] = True
+            elif line == "detached":
+                current_worktree["detached"] = True
+
+        # Handle last entry if no trailing newline
+        if current_worktree:
+            worktrees.append(
+                WorktreeInfo(
+                    path=current_worktree.get("worktree", ""),
+                    branch=current_worktree.get("branch", "HEAD"),
+                    commit=current_worktree.get("HEAD", ""),
+                    is_main=is_first,
+                    is_bare=current_worktree.get("bare", False),
+                    is_detached=current_worktree.get("detached", False),
+                )
+            )
+
+        return worktrees
+
+    def worktree_remove(self, path: str, force: bool = False) -> None:
+        """Remove worktree at path.
+
+        Args:
+            path: Path to worktree to remove
+            force: If True, remove even if worktree has changes
+
+        Raises:
+            NotARepositoryError: If not a repository
+            GitCommandError: If worktree removal fails
+        """
+        self._ensure_repo()
+
+        # Resolve path to absolute for consistency
+        if not Path(path).is_absolute():
+            abs_path = (self._repo_path / path).resolve()
+        else:
+            abs_path = Path(path).resolve()
+
+        # Build command
+        args = ["worktree", "remove"]
+        if force:
+            args.append("--force")
+        args.append(f'"{abs_path}"')
+
+        self._run_git(*args)
+        logger.info(f"GIT_WORKTREE_REMOVE: {abs_path}")
+
+    def worktree_prune(self, dry_run: bool = False) -> list[str]:
+        """Clean up stale worktree metadata.
+
+        Removes worktree information for worktrees that no longer exist
+        on disk (e.g., manually deleted directories).
+
+        Args:
+            dry_run: If True, report what would be pruned without doing it
+
+        Returns:
+            List of pruned worktree paths
+
+        Raises:
+            NotARepositoryError: If not a repository
+        """
+        self._ensure_repo()
+
+        # Build command
+        args = ["worktree", "prune"]
+        if dry_run:
+            args.append("--dry-run")
+        args.append("-v")  # Verbose to see what's pruned
+
+        output = self._run_git(*args)
+
+        # Parse output for pruned paths
+        # Format: "Removing worktrees/path: reason"
+        pruned = []
+        for line in output.split("\n"):
+            if line.startswith("Removing "):
+                # Extract path (up to the colon)
+                path_part = line[9:]
+                if ":" in path_part:
+                    path_part = path_part.split(":")[0]
+                pruned.append(path_part.strip())
+
+        if pruned:
+            logger.info(f"GIT_WORKTREE_PRUNE: {len(pruned)} worktrees pruned")
+
+        return pruned
