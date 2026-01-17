@@ -366,6 +366,21 @@ class TestWriteFile:
         with pytest.raises(PathSecurityError):
             fs.write_file(tmp_path / "outside.txt", "blocked")
 
+    def test_write_to_directory_blocked(self, tmp_path: Path) -> None:
+        """Test write to directory path is blocked with clear error."""
+        fs = FileSystemTools(allowed_roots=[tmp_path])
+
+        # Create a directory
+        subdir = tmp_path / "mydir"
+        subdir.mkdir()
+
+        # Attempting to write to a directory should fail clearly
+        with pytest.raises(FileSystemError) as exc_info:
+            fs.write_file(subdir, "content")
+
+        assert "is a directory" in str(exc_info.value).lower()
+        assert "file path" in str(exc_info.value).lower()
+
 
 class TestWriteFileBytes:
     """Tests for write_file_bytes operation."""

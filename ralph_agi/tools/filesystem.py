@@ -351,6 +351,13 @@ class FileSystemTools:
         """
         resolved = self._validate_path(path)
 
+        # Check if target is an existing directory
+        if resolved.is_dir():
+            raise FileSystemError(
+                f"Cannot write file: '{path}' is a directory. "
+                f"Provide a file path, not a directory path."
+            )
+
         # Create parent directories if needed
         if create_dirs:
             resolved.parent.mkdir(parents=True, exist_ok=True)
