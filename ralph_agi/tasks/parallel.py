@@ -364,9 +364,11 @@ class ParallelExecutor:
             if self._on_progress:
                 self._on_progress(self._progress)
 
+            duration = result.duration_seconds
+            duration_str = f"{duration:.1f}s" if duration is not None else "N/A"
             logger.info(
                 f"TASK_COMPLETE: {task_id} success={result.success} "
-                f"duration={result.duration_seconds:.1f}s"
+                f"duration={duration_str}"
             )
 
         except Exception as e:
