@@ -1,351 +1,367 @@
-# Epic 07: Frontend GUI Architecture (TUI-First Hybrid)
+# Epic 07: Workflow Control Interface
 
 **PRD Reference:** FR-007
-**Priority:** P3 (Low - after core features)
-**Roadmap:** Weeks 13-28 (Phase 1: TUI, Phase 2: Hybrid Web)
-**Status:** Draft
+**Priority:** P0 (Critical - enables "sip coffee" workflow)
+**Roadmap:** Weeks 9-20 (4 phases)
+**Status:** Active
+**Architecture:** [ADR-005](../../../rnd/decisions/2026-01-17_solutioning_frontend-architecture-v3_approved.md)
 
 ---
 
 ## Epic Overview
 
-Implement the RALPH-AGI frontend using a **TUI-first hybrid architecture**. Phase 1 delivers a rich Terminal User Interface built with Textual (Python). Phase 2 extends to a hybrid web UI that embeds the TUI via xterm.js while adding chat (AG-UI), human-in-the-loop approvals, and generative UI capabilities.
+Build a **control-first** interface enabling the autonomous "sip coffee" workflow: drop tickets into a queue, RALPH processes them in parallel via git worktrees, auto-merges based on confidence, and notifies you when PRs are ready.
+
+**Key Insight:** Users need to CONTROL RALPH, not just watch it. Observation (logs, metrics) is secondary to control (task creation, execution triggers, approvals).
 
 ## Business Value
 
-- **Developer-Native Experience:** TUI fits developer workflows naturally
-- **Faster Time-to-Value:** TUI ships in 4 weeks vs 16 for full web UI
-- **No Wasted Effort:** TUI embeds in web UI via xterm.js
-- **Differentiation:** Beautiful TUI (inspired by Relentless) is a major differentiator
-- **Observability:** Real-time visibility into autonomous agent execution
+- **3x Throughput:** Parallel execution via worktrees (3 tickets → 3 PRs in ~11 minutes)
+- **True Autonomy:** Configurable auto-merge based on confidence scoring
+- **"Sip Coffee" UX:** Human becomes ticket creator only, RALPH handles the rest
+- **Immediate Notification:** Know when PRs are ready via Slack/Discord/Telegram
 
-## Technical Context
+## Related Epics
 
-**Architecture Decision:** [ADR-004](../../rnd/decisions/2026-01-12_solutioning_frontend-architecture-v2_approved.md)
-
-| Phase | Duration | Tech Stack | Key Deliverables |
-|-------|----------|------------|------------------|
-| Phase 1 | 4 weeks | Textual (Python) | TUI with real-time streaming |
-| Phase 2A | 4 weeks | FastAPI + xterm.js | Web-embedded TUI |
-| Phase 2B | 4 weeks | React + Vercel AI | Chat, HITL, Generative UI |
-| Phase 2C | 4 weeks | Full Integration | Hybrid Dashboard |
-
-**Design References:**
-- [Frontend Implementation Plan](../../rnd/implementation/frontend-implementation-plan.md)
-- [Frontend Mockups](../../rnd/implementation/frontend-mockups.md)
-- [Relentless TUI](https://github.com/ArvorCo/Relentless)
+- **ralph-agi-001-un6:** Execution Isolation & Parallelization (RalphBlaster)
+- **ralph-agi-001-zow:** Visual Dev Experience (Sizzy/kitze)
 
 ---
 
-## Phase 1: Terminal User Interface (TUI)
+## Phase 1: Control Foundation (Sprint 9-10)
 
-### Story 7.1: TUI Infrastructure & Layout
+### Story 7.1: Task Queue System
 **Priority:** P0 | **Points:** 5
 
 **As a** developer
-**I want** a Textual-based TUI application
-**So that** I can monitor RALPH execution in my terminal
+**I want** to add tasks to a queue via CLI or files
+**So that** RALPH can process them autonomously
 
 **Acceptance Criteria:**
-- [ ] Textual project structure in `ralph_agi/tui/`
-- [ ] Base `RalphApp` class with grid layout
-- [ ] WebSocket client for RalphLoop event streaming
-- [ ] `RalphLoop` adapter emitting TUI-consumable events
-- [ ] pytest-textual snapshot testing setup
-- [ ] Entry point: `ralph tui` command
+- [ ] Task file format: YAML in `.ralph/tasks/`
+- [ ] File watcher for new task files
+- [ ] Task status lifecycle: pending → running → complete/failed
+- [ ] CLI: `ralph queue add "task description"`
+- [ ] CLI: `ralph queue list` (show all tasks with status)
+- [ ] Task validation (required fields, format checking)
 
 **Technical Notes:**
-- Use Textual's built-in async support for real-time updates
-- Events: iteration_start, iteration_end, task_start, task_complete, error
+```yaml
+# .ralph/tasks/001-dark-mode.yaml
+id: dark-mode-toggle
+description: Add dark mode toggle to settings page
+priority: P1
+acceptance_criteria:
+  - Toggle visible in settings
+  - Persists preference to localStorage
+  - System preference detection
+status: pending
+created_at: 2026-01-17T10:00:00Z
+```
 
 ---
 
-### Story 7.2: Core UI Widgets
+### Story 7.2: Git Worktree Manager
 **Priority:** P0 | **Points:** 5
 
 **As a** developer
-**I want** rich UI components showing execution state
-**So that** I can understand what RALPH is doing at a glance
+**I want** each task to run in an isolated git worktree
+**So that** multiple tasks can execute in parallel without conflicts
 
 **Acceptance Criteria:**
-- [ ] `StoryGrid` widget: Task list with status indicators (inspired by Relentless)
-- [ ] `MetricsBar` widget: Iterations, cost, time, tokens, velocity
-- [ ] `AgentViewer` widget: Agent reasoning and output
-- [ ] `LogPanel` widget: Real-time log streaming with auto-scroll
-- [ ] Color-coded status: pending (gray), running (yellow), success (green), failed (red)
+- [ ] Create worktree: `git worktree add ../ralph-<task-id> -b ralph/<task-id>`
+- [ ] Execute task in worktree directory
+- [ ] Cleanup worktree after merge: `git worktree remove`
+- [ ] Handle worktree failures gracefully
+- [ ] Track active worktrees in state file
+- [ ] Configurable worktree directory (default: `../ralph-worktrees/`)
 
 **Technical Notes:**
-- StoryGrid should support scrolling for large task lists
-- LogPanel should support log level filtering (DEBUG, INFO, WARN, ERROR)
+```python
+class WorktreeManager:
+    def create(self, task_id: str) -> Path
+    def execute_in_worktree(self, task_id: str, callback: Callable)
+    def cleanup(self, task_id: str)
+    def list_active(self) -> list[str]
+```
 
 ---
 
-### Story 7.3: Interactive Features
-**Priority:** P1 | **Points:** 5
+### Story 7.3: Parallel Task Executor
+**Priority:** P0 | **Points:** 5
 
 **As a** developer
-**I want** keyboard-driven controls
-**So that** I can interact with RALPH without leaving the terminal
+**I want** to process multiple tasks in parallel
+**So that** I can complete more work in less time
 
 **Acceptance Criteria:**
-- [ ] Command palette (Ctrl+P) with fuzzy search
-- [ ] Keyboard shortcuts: pause (p), stop (s), restart (r), quit (q)
-- [ ] Configuration viewer/editor panel
-- [ ] Progress bar with ETA for current task
-- [ ] Notification system for important events (errors, completions)
+- [ ] Configurable concurrency: `ralph start --parallel=3`
+- [ ] Task scheduling (respects dependencies)
+- [ ] Progress tracking across all parallel tasks
+- [ ] Graceful handling of individual task failures
+- [ ] Resource limits (memory, CPU per worktree)
+- [ ] CLI: `ralph start` (process all pending tasks)
 
 **Technical Notes:**
-- Command palette actions: pause, resume, stop, restart, config, logs, help
-- Support vim-style navigation (j/k for up/down)
+- Use asyncio for concurrent execution
+- Each worktree gets its own RalphLoop instance
+- Shared state via file locks or SQLite
 
 ---
 
-### Story 7.4: TUI Testing & Polish
+### Story 7.4: Confidence Scoring & Auto-Merge
+**Priority:** P0 | **Points:** 5
+
+**As a** developer
+**I want** RALPH to auto-merge PRs when confidence is high
+**So that** I don't have to review every change
+
+**Acceptance Criteria:**
+- [ ] Confidence score from Critic agent (0.0 - 1.0)
+- [ ] Configurable threshold: `ralph config set auto-merge-threshold 0.85`
+- [ ] Auto-merge when confidence >= threshold
+- [ ] Manual review queue for low-confidence PRs
+- [ ] Confidence factors: test pass rate, code review score, file complexity
+- [ ] CLI: `ralph config get auto-merge-threshold`
+
+**Confidence Calculation:**
+```python
+confidence = (
+    0.4 * test_pass_rate +      # All tests pass = 1.0
+    0.3 * critic_score +         # Critic approval = 1.0
+    0.2 * acceptance_score +     # AC evaluator = 1.0
+    0.1 * (1 - complexity_score) # Simple changes = higher
+)
+```
+
+---
+
+### Story 7.5: Notification Webhooks
 **Priority:** P1 | **Points:** 3
 
 **As a** developer
-**I want** a polished, well-tested TUI
-**So that** it works reliably across terminal environments
+**I want** notifications when PRs are ready
+**So that** I can review or celebrate without watching
 
 **Acceptance Criteria:**
-- [ ] Snapshot tests for all widgets
-- [ ] Integration tests for event flow
-- [ ] Keyboard navigation and accessibility
-- [ ] Responsive layout for different terminal sizes
-- [ ] Documentation and usage guide
-- [ ] 90%+ test coverage on TUI module
+- [ ] Configurable webhook endpoints in `ralph.yaml`
+- [ ] Events: task_started, pr_created, pr_merged, pr_needs_review, error
+- [ ] Payload includes: task_id, pr_url, confidence, summary
+- [ ] Retry logic for failed webhooks
+- [ ] CLI: `ralph config set webhook.slack <url>`
 
 ---
 
-## Phase 2A: Backend API & TUI Embedding
+### Story 7.6: Telegram/Slack Integration
+**Priority:** P1 | **Points:** 3
 
-### Story 7.5: FastAPI Backend
-**Priority:** P1 | **Points:** 5
+**As a** developer
+**I want** notifications in Telegram or Slack
+**So that** I get notified on my preferred platform
+
+**Acceptance Criteria:**
+- [ ] Slack incoming webhook support
+- [ ] Telegram bot API support
+- [ ] Discord webhook support
+- [ ] Rich message formatting (PR link, confidence, summary)
+- [ ] Configuration via environment variables or config file
+
+---
+
+## Phase 2: Visual Control (Sprint 11-12)
+
+### Story 7.7: FastAPI Backend
+**Priority:** P0 | **Points:** 5
 
 **As a** web user
-**I want** a REST/WebSocket API
-**So that** web clients can interact with RALPH
+**I want** a REST API for task management
+**So that** web clients can control RALPH
 
 **Acceptance Criteria:**
 - [ ] FastAPI backend in `ralph_agi/api/`
-- [ ] WebSocket endpoint for TUI stream (`/ws/tui`)
-- [ ] REST endpoints: `/status`, `/config`, `/tasks`, `/metrics`
-- [ ] JWT authentication
-- [ ] CORS and security middleware
+- [ ] REST endpoints: `/tasks`, `/tasks/{id}`, `/queue`, `/config`
+- [ ] WebSocket endpoint for real-time updates (`/ws/events`)
+- [ ] Authentication (API key or JWT)
 - [ ] OpenAPI documentation
+- [ ] CORS configuration
 
 ---
 
-### Story 7.6: Web Shell (xterm.js)
+### Story 7.8: Kanban Board UI
+**Priority:** P0 | **Points:** 8
+
+**As a** developer
+**I want** a visual kanban board for task management
+**So that** I can see and control all tasks at a glance
+
+**Acceptance Criteria:**
+- [ ] React + TypeScript + TailwindCSS
+- [ ] Columns: Backlog → Ready → Running → Review → Done
+- [ ] Drag-drop task movement
+- [ ] Real-time status updates via WebSocket
+- [ ] Task cards show: title, priority, confidence, PR link
+- [ ] Click card for details modal
+
+**Mockup:**
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  RALPH-AGI Control Board                    [+ New Task] [⚙ Config] │
+├─────────────────────────────────────────────────────────────────────┤
+│ BACKLOG (3)  │ READY (2)   │ RUNNING (2)  │ REVIEW (1) │ DONE (5)   │
+│──────────────│─────────────│──────────────│────────────│────────────│
+│ ┌──────────┐ │ ┌─────────┐ │ ┌──────────┐ │ ┌────────┐ │ ┌────────┐ │
+│ │ Add auth │ │ │ Dark    │ │ │ Fix bug  │ │ │ Update │ │ │ ✓ Init │ │
+│ │ P1       │ │ │ mode    │ │ │ #234     │ │ │ deps   │ │ │ setup  │ │
+│ └──────────┘ │ │ P2      │ │ │ ██░░ 45% │ │ │ 0.72   │ │ └────────┘ │
+│ ┌──────────┐ │ └─────────┘ │ └──────────┘ │ │ [View] │ │ ┌────────┐ │
+│ │ Add API  │ │ ┌─────────┐ │ ┌──────────┐ │ └────────┘ │ │ ✓ Add  │ │
+│ │ endpoint │ │ │ Refactor│ │ │ Add      │ │            │ │ tests  │ │
+│ │ P2       │ │ │ utils   │ │ │ logging  │ │            │ └────────┘ │
+│ └──────────┘ │ │ P3      │ │ │ ██████░  │ │            │            │
+│              │ └─────────┘ │ │ 78%      │ │            │            │
+│              │             │ └──────────┘ │            │            │
+└──────────────┴─────────────┴──────────────┴────────────┴────────────┘
+│ Running: 2/3 │ Auto-merge: 0.85 │ Cost: $2.34 │ PRs: 3 open, 5 merged │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### Story 7.9: Visual Task Editor
 **Priority:** P1 | **Points:** 5
 
-**As a** web user
-**I want** the TUI embedded in my browser
-**So that** I get the same experience without a local terminal
+**As a** developer
+**I want** to create tasks via a form
+**So that** I don't have to write YAML manually
 
 **Acceptance Criteria:**
-- [ ] React project with Vite, TypeScript, TailwindCSS
-- [ ] xterm.js integration for terminal rendering
-- [ ] WebSocket connection to backend TUI stream
-- [ ] Terminal theme matching web UI
-- [ ] Resize handling (responsive)
-- [ ] Full-screen toggle
+- [ ] Modal/drawer form for new task
+- [ ] Fields: title, description, priority, acceptance criteria
+- [ ] Template dropdown for common task types
+- [ ] Acceptance criteria builder (add/remove items)
+- [ ] Preview of generated task file
+- [ ] Direct submit to queue
 
 ---
 
-### Story 7.7: Chat Interface (AG-UI)
+### Story 7.10: Pinned Commands / Recipes
+**Priority:** P1 | **Points:** 5
+
+**As a** developer
+**I want** saved shortcuts for common workflows
+**So that** I can execute them with one click
+
+**Acceptance Criteria:**
+- [ ] Recipe format in `ralph.yaml` or `.ralph/recipes/`
+- [ ] Quick action buttons in UI header
+- [ ] Keyboard shortcuts (Cmd+1, Cmd+2, etc.)
+- [ ] Built-in recipes: "Run tests", "Deploy staging", "Merge all approved"
+- [ ] Custom recipe creation via UI
+
+---
+
+### Story 7.11: Quick Actions Bar
+**Priority:** P1 | **Points:** 3
+
+**As a** developer
+**I want** global control buttons
+**So that** I can quickly pause, stop, or approve all
+
+**Acceptance Criteria:**
+- [ ] Pause/Resume all tasks
+- [ ] Emergency stop (kill all worktrees)
+- [ ] Merge all approved (confidence >= threshold)
+- [ ] Clear completed tasks
+- [ ] Refresh status
+
+---
+
+## Phase 3: Dashboard & Polish (Sprint 13-14)
+
+### Story 7.12: Unified Dashboard Layout
 **Priority:** P2 | **Points:** 5
 
-**As a** user
-**I want** to interact with RALPH via natural language
-**So that** I can control execution conversationally
-
-**Acceptance Criteria:**
-- [ ] AG-UI protocol integration in backend
-- [ ] Chat sidebar component
-- [ ] Natural language command parsing
-- [ ] Command mapping to RalphLoop actions
-- [ ] Real-time status updates in chat
-- [ ] Chat history persistence
-
-**Technical Notes:**
-- Support commands: "What's the status?", "Pause", "Show me the logs", "Deploy"
-- Use streaming responses for real-time feel
-
----
-
-### Story 7.8: Human-in-the-Loop (HITL)
-**Priority:** P2 | **Points:** 5
-
-**As a** user
-**I want** to approve critical actions
-**So that** RALPH doesn't perform risky operations without my consent
-
-**Acceptance Criteria:**
-- [ ] Approval prompts in chat interface
-- [ ] Configurable approval gates (deploy, git push, file delete)
-- [ ] Timeout with default action (configurable)
-- [ ] Feedback mechanisms for outputs
-- [ ] Notification system for pending approvals
-- [ ] Approval audit log
-
----
-
-## Phase 2B: Advanced Features
-
-### Story 7.9: Generative UI Framework
-**Priority:** P3 | **Points:** 5
-
-**As a** user
-**I want** RALPH to generate custom UI components
-**So that** I get context-aware visualizations
-
-**Acceptance Criteria:**
-- [ ] Vercel AI SDK (streamUI) integration
-- [ ] React Server Components setup
-- [ ] Zod schemas for UI components
-- [ ] Component library: cards, buttons, charts, tables
-- [ ] LLM prompt for UI generation
-
----
-
-### Story 7.10: Core Generative Components
-**Priority:** P3 | **Points:** 5
-
-**As a** user
-**I want** pre-built components RALPH can generate
-**So that** common visualizations work out of the box
-
-**Acceptance Criteria:**
-- [ ] `TestResultsCard`: Pass/fail summary with details
-- [ ] `DeploymentCard`: Deployment status and actions
-- [ ] `MetricsChart`: Cost, time, token trends
-- [ ] `CodeDiffViewer`: Before/after code changes
-- [ ] `SprintProgressCard`: Story completion status
-
----
-
-### Story 7.11: Dynamic Dashboards
-**Priority:** P3 | **Points:** 5
-
-**As a** user
-**I want** RALPH to generate custom dashboards
-**So that** I get insights tailored to my current context
-
-**Acceptance Criteria:**
-- [ ] Dashboard generation based on recent activity
-- [ ] Cost breakdown visualization
-- [ ] Test coverage trends
-- [ ] Sprint velocity charts
-- [ ] Customizable layout (drag-and-drop)
-
----
-
-### Story 7.12: Adaptive Interfaces
-**Priority:** P3 | **Points:** 3
-
-**As a** user
-**I want** the UI to adapt to my context
-**So that** I see relevant information automatically
-
-**Acceptance Criteria:**
-- [ ] Context-aware widget selection
-- [ ] Error state UI (show debugging info)
-- [ ] Success state UI (show summary)
-- [ ] Multi-project overview when applicable
-
----
-
-## Phase 2C: Hybrid Dashboard
-
-### Story 7.13: Dashboard Layout
-**Priority:** P3 | **Points:** 5
-
-**As a** user
-**I want** a unified dashboard combining all features
+**As a** developer
+**I want** a dashboard combining control and observation
 **So that** I have a single view of RALPH's activity
 
 **Acceptance Criteria:**
-- [ ] Sidebar navigation (Dashboard, Chat, TUI, History, Settings)
-- [ ] Main content area with generative UI
-- [ ] Collapsible TUI pane
-- [ ] Responsive design (mobile-friendly)
-- [ ] Dark/light theme support
+- [ ] Kanban board (main area)
+- [ ] Activity feed (right sidebar)
+- [ ] Metrics bar (header)
+- [ ] Collapsible panels
+- [ ] Responsive design
 
 ---
 
-### Story 7.14: Feature Integration
-**Priority:** P3 | **Points:** 5
-
-**As a** user
-**I want** seamless switching between views
-**So that** I can use TUI, chat, and dashboard interchangeably
-
-**Acceptance Criteria:**
-- [ ] Chat sidebar embedded in dashboard
-- [ ] Generative UI in main content area
-- [ ] TUI pane toggle (expand/collapse)
-- [ ] Mode switching (TUI-only, Chat-only, Hybrid)
-- [ ] Visual configuration editor
-
----
-
-### Story 7.15: User Experience Polish
-**Priority:** P3 | **Points:** 3
-
-**As a** user
-**I want** a polished, professional experience
-**So that** RALPH feels like a production-quality tool
-
-**Acceptance Criteria:**
-- [ ] User preferences and settings panel
-- [ ] Onboarding tour for new users
-- [ ] Smooth animations and transitions
-- [ ] Keyboard shortcuts overlay (?)
-- [ ] Multi-project management
-
----
-
-### Story 7.16: Final Testing & Launch
-**Priority:** P3 | **Points:** 5
+### Story 7.13: Observation Panel
+**Priority:** P2 | **Points:** 5
 
 **As a** developer
-**I want** comprehensive testing before launch
-**So that** users have a reliable experience
+**I want** to see logs and agent output
+**So that** I can debug issues when needed
 
 **Acceptance Criteria:**
-- [ ] E2E testing of entire application
-- [ ] Performance audit (Lighthouse)
-- [ ] Security audit
-- [ ] Accessibility audit (WCAG 2.1)
-- [ ] Documentation and deployment guide
-- [ ] Beta launch and feedback collection
+- [ ] Log viewer with level filters (DEBUG, INFO, WARN, ERROR)
+- [ ] Agent reasoning viewer (Builder/Critic output)
+- [ ] Task timeline (events for selected task)
+- [ ] Auto-scroll with pause on hover
+
+---
+
+### Story 7.14: Settings UI
+**Priority:** P2 | **Points:** 3
+
+**As a** developer
+**I want** to configure RALPH via UI
+**So that** I don't have to edit YAML files
+
+**Acceptance Criteria:**
+- [ ] Auto-merge threshold slider
+- [ ] Parallel execution limit
+- [ ] Notification preferences
+- [ ] API key management
+- [ ] Theme (dark/light)
+
+---
+
+### Story 7.15: Testing & Launch
+**Priority:** P2 | **Points:** 5
+
+**As a** developer
+**I want** a polished, well-tested interface
+**So that** it works reliably
+
+**Acceptance Criteria:**
+- [ ] E2E tests for critical workflows
+- [ ] Integration tests for API
+- [ ] Performance audit
+- [ ] Accessibility audit
+- [ ] Documentation
 
 ---
 
 ## Dependencies
 
-- **Epic 01:** Core Execution Loop (events to stream)
-- **Epic 04:** Tool Integration (for commands)
-- **Epic 05:** Evaluation Pipeline (test results to display)
+- **Epic 01:** Core Execution Loop (task execution)
+- **Epic 04:** Tool Integration (git operations)
+- **Epic 05:** Evaluation Pipeline (confidence scoring)
 
 ## Story Point Summary
 
 | Phase | Stories | Points |
 |-------|---------|--------|
-| Phase 1: TUI | 7.1-7.4 | 18 |
-| Phase 2A: Backend & Embed | 7.5-7.8 | 20 |
-| Phase 2B: Advanced Features | 7.9-7.12 | 18 |
-| Phase 2C: Hybrid Dashboard | 7.13-7.16 | 18 |
-| **Total** | **16 stories** | **74 points** |
+| Phase 1: Control Foundation | 7.1-7.6 | 26 |
+| Phase 2: Visual Control | 7.7-7.11 | 26 |
+| Phase 3: Dashboard & Polish | 7.12-7.15 | 18 |
+| **Total** | **15 stories** | **70 points** |
 
 ## Definition of Done
 
-- [ ] TUI accessible via `ralph tui` command
-- [ ] Web UI accessible via `ralph serve` + browser
-- [ ] Chat interface functional with natural language commands
-- [ ] Human-in-the-loop approvals working
-- [ ] Generative UI producing context-aware dashboards
-- [ ] 90%+ test coverage on frontend modules
-- [ ] Documentation complete
-- [ ] Accessibility audit passed
+- [ ] `ralph queue add` and `ralph start --parallel=3` working
+- [ ] Tasks execute in isolated worktrees
+- [ ] Auto-merge works based on confidence threshold
+- [ ] Notifications sent to configured webhooks
+- [ ] Kanban board shows real-time task status
+- [ ] Visual task editor creates valid task files
+- [ ] 90%+ test coverage on new modules
