@@ -20,6 +20,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional
 
+from ralph_agi.tasks.cleanup import CleanupConfig, CleanupResult, WorktreeCleanup
 from ralph_agi.tasks.prd import Feature, PRD, PRDError, load_prd
 from ralph_agi.tasks.selector import TaskSelector
 from ralph_agi.tasks.writer import mark_complete
@@ -127,6 +128,7 @@ class TaskExecutor:
         enable_worktree_isolation: bool = False,
         repo_path: Optional[Path] = None,
         worktree_base: Optional[Path] = None,
+        cleanup_config: Optional[CleanupConfig] = None,
     ):
         """Initialize the executor.
 
@@ -135,6 +137,7 @@ class TaskExecutor:
             enable_worktree_isolation: If True, create isolated worktrees for tasks.
             repo_path: Path to main git repository (required if isolation enabled).
             worktree_base: Base directory for worktrees. Defaults to parent of repo_path.
+            cleanup_config: Configuration for worktree cleanup behavior.
         """
         self.selector = selector or TaskSelector()
         self._current_task: Optional[Feature] = None
@@ -146,6 +149,8 @@ class TaskExecutor:
         self._repo_path = Path(repo_path) if repo_path else None
         self._worktree_base = Path(worktree_base) if worktree_base else None
         self._git_tools: Optional[GitTools] = None
+        self._cleanup_config = cleanup_config or CleanupConfig()
+        self._cleanup_manager: Optional[WorktreeCleanup] = None
 
         if enable_worktree_isolation and not repo_path:
             raise ValueError("repo_path is required when worktree isolation is enabled")
@@ -159,6 +164,27 @@ class TaskExecutor:
     def current_task(self) -> Optional[Feature]:
         """Get the currently executing task, if any."""
         return self._current_task
+
+    @property
+    def cleanup_config(self) -> CleanupConfig:
+        """Get the cleanup configuration."""
+        return self._cleanup_config
+
+    def _get_cleanup_manager(self) -> WorktreeCleanup:
+        """Get or create the cleanup manager.
+
+        Returns:
+            WorktreeCleanup instance.
+        """
+        if self._cleanup_manager is None:
+            if self._git_tools is None:
+                from ralph_agi.tools.git import GitTools
+                self._git_tools = GitTools(repo_path=self._repo_path)
+            self._cleanup_manager = WorktreeCleanup(
+                self._git_tools,
+                self._cleanup_config,
+            )
+        return self._cleanup_manager
 
     def begin_task(self, prd_path: Path | str) -> Optional[ExecutionContext]:
         """Start working on the next available task.
@@ -348,13 +374,13 @@ class TaskExecutor:
             aborted = self._current_task
             ctx = self._current_context
 
-            # Cleanup worktree if requested
+            # Cleanup worktree if requested (respects cleanup config)
             if cleanup_worktree and ctx and ctx.is_isolated:
-                try:
-                    self._cleanup_worktree(ctx.worktree_path)
-                    logger.info(f"Cleaned up worktree: {ctx.worktree_path}")
-                except Exception as e:
-                    logger.warning(f"Failed to cleanup worktree: {e}")
+                result = self._cleanup_worktree(ctx.worktree_path)
+                if result.success:
+                    logger.info(f"Cleaned up worktree via {result.method}: {ctx.worktree_path}")
+                else:
+                    logger.warning(f"Failed to cleanup worktree: {result.error}")
 
             logger.warning(f"Aborted task '{aborted.id}': {reason}")
 
@@ -363,19 +389,97 @@ class TaskExecutor:
 
             return aborted
 
-    def _cleanup_worktree(self, worktree_path: Path) -> None:
-        """Remove a worktree and its branch.
+    def _cleanup_worktree(self, worktree_path: Path) -> CleanupResult:
+        """Remove a worktree using the cleanup manager.
+
+        Uses the cleanup manager for proper cleanup with fallback.
 
         Args:
             worktree_path: Path to worktree to remove.
-        """
-        if self._git_tools is None:
-            return
 
-        try:
-            self._git_tools.worktree_remove(str(worktree_path), force=True)
-        except Exception as e:
-            logger.warning(f"Failed to remove worktree {worktree_path}: {e}")
+        Returns:
+            CleanupResult with cleanup outcome.
+        """
+        cleanup = self._get_cleanup_manager()
+        return cleanup.cleanup_worktree(
+            worktree_path,
+            force=self._cleanup_config.force_cleanup,
+        )
+
+    def cleanup_after_merge(
+        self,
+        ctx: ExecutionContext,
+        merge_successful: bool = True,
+    ) -> Optional[CleanupResult]:
+        """Clean up worktree after merge.
+
+        Should be called after a PR has been merged (or rejected).
+        Respects cleanup configuration for success/failure scenarios.
+
+        Args:
+            ctx: The execution context with worktree info.
+            merge_successful: Whether the merge was successful.
+
+        Returns:
+            CleanupResult if cleanup was performed, None if skipped.
+        """
+        if not ctx.is_isolated:
+            return None
+
+        cleanup = self._get_cleanup_manager()
+
+        # Check if we should cleanup based on config
+        should_cleanup = (
+            (merge_successful and cleanup.should_cleanup_on_success()) or
+            (not merge_successful and cleanup.should_cleanup_on_failure())
+        )
+
+        if not should_cleanup:
+            logger.info(
+                f"Skipping cleanup for {ctx.worktree_path} "
+                f"(merge_successful={merge_successful})"
+            )
+            return CleanupResult(
+                success=True,
+                worktree_path=ctx.worktree_path,
+                method="skipped",
+            )
+
+        logger.info(f"Cleaning up worktree after merge: {ctx.worktree_path}")
+        return cleanup.cleanup_worktree(ctx.worktree_path)
+
+    def cleanup_orphans(self) -> list[CleanupResult]:
+        """Clean up orphan worktrees.
+
+        Finds and removes ralph worktrees that exist on disk
+        but are not tracked by git.
+
+        Returns:
+            List of CleanupResult for each orphan processed.
+        """
+        if not self._enable_worktree_isolation:
+            return []
+
+        cleanup = self._get_cleanup_manager()
+        return cleanup.cleanup_orphans()
+
+    def cleanup_all(self, include_active: bool = False) -> list[CleanupResult]:
+        """Clean up all ralph worktrees.
+
+        Useful for resetting to a clean state.
+
+        Args:
+            include_active: If True, also remove worktrees currently
+                           being tracked by git.
+
+        Returns:
+            List of CleanupResult for each worktree processed.
+        """
+        if not self._enable_worktree_isolation:
+            return []
+
+        cleanup = self._get_cleanup_manager()
+        return cleanup.cleanup_all_ralph_worktrees(include_active=include_active)
 
     def get_status(self) -> dict:
         """Get current executor status.
