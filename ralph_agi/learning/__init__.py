@@ -29,6 +29,14 @@ from ralph_agi.learning.progress import (
     inject_progress,
 )
 
+from ralph_agi.learning.history import (
+    CommitInfo,
+    CommitDiff,
+    FileDiff,
+    GitHistory,
+    inject_git_history,
+)
+
 __all__ = [
     # Layer 1: Patterns
     "CodebasePattern",
@@ -48,4 +56,10 @@ __all__ = [
     "get_progress_path",
     "generate_session_id",
     "inject_progress",
+    # Layer 3: Git History
+    "CommitInfo",
+    "CommitDiff",
+    "FileDiff",
+    "GitHistory",
+    "inject_git_history",
 ]
