@@ -37,6 +37,20 @@ from ralph_agi.learning.history import (
     inject_git_history,
 )
 
+from ralph_agi.learning.logs import (
+    MessageRole,
+    ToolCall,
+    ConversationMessage,
+    ConversationLog,
+    get_logs_path,
+    save_message,
+    load_log,
+    load_recent_logs,
+    compress_old_logs,
+    extract_patterns,
+    inject_conversation_context,
+)
+
 __all__ = [
     # Layer 1: Patterns
     "CodebasePattern",
@@ -62,4 +76,16 @@ __all__ = [
     "FileDiff",
     "GitHistory",
     "inject_git_history",
+    # Layer 4: Conversation Logs
+    "MessageRole",
+    "ToolCall",
+    "ConversationMessage",
+    "ConversationLog",
+    "get_logs_path",
+    "save_message",
+    "load_log",
+    "load_recent_logs",
+    "compress_old_logs",
+    "extract_patterns",
+    "inject_conversation_context",
 ]
