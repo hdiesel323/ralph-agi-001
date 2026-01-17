@@ -18,7 +18,19 @@ from ralph_agi.learning.patterns import (
     inject_patterns,
 )
 
+from ralph_agi.learning.progress import (
+    Outcome,
+    ProgressEntry,
+    ProgressStore,
+    load_progress,
+    save_progress,
+    get_progress_path,
+    generate_session_id,
+    inject_progress,
+)
+
 __all__ = [
+    # Layer 1: Patterns
     "CodebasePattern",
     "CodebasePatterns",
     "PatternCategory",
@@ -27,4 +39,13 @@ __all__ = [
     "get_patterns_path",
     "analyze_codebase",
     "inject_patterns",
+    # Layer 2: Progress
+    "Outcome",
+    "ProgressEntry",
+    "ProgressStore",
+    "load_progress",
+    "save_progress",
+    "get_progress_path",
+    "generate_session_id",
+    "inject_progress",
 ]
