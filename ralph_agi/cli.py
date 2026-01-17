@@ -37,6 +37,8 @@ Examples:
   ralph-agi run --config my-config.yaml Use custom config file
   ralph-agi run -v                     Verbose output
   ralph-agi run -q                     Quiet mode (errors only)
+  ralph-agi run --batch --prd PRD.json Process tasks in parallel
+  ralph-agi run --batch --parallel-limit 5 Use 5 parallel workers
 
 Exit Codes:
   0  Success (loop completed via completion signal)
@@ -108,6 +110,20 @@ Exit Codes:
         "--show-cost",
         action="store_true",
         help="Display token usage and estimated cost after the run",
+    )
+
+    run_parser.add_argument(
+        "--batch",
+        action="store_true",
+        help="Enable batch mode - process multiple tasks in parallel using worktrees",
+    )
+
+    run_parser.add_argument(
+        "--parallel-limit",
+        type=int,
+        default=3,
+        metavar="N",
+        help="Maximum parallel workers in batch mode (default: 3)",
     )
 
     # Daemon command for AFK mode
@@ -283,6 +299,103 @@ def _display_cost_summary(formatter: OutputFormatter, loop: RalphLoop) -> None:
     formatter.message("=" * 40)
 
 
+def run_batch(
+    args: argparse.Namespace,
+    config: RalphConfig,
+    formatter: OutputFormatter,
+) -> int:
+    """Execute batch mode - parallel processing with worktrees.
+
+    Args:
+        args: Parsed command-line arguments.
+        config: Loaded configuration.
+        formatter: Output formatter for display.
+
+    Returns:
+        Exit code.
+    """
+    from ralph_agi.tasks.batch import BatchConfig, BatchExecutor, format_batch_progress
+
+    prd_path = getattr(args, "prd", None)
+    if not prd_path:
+        formatter.error("--batch requires --prd <path> to specify the PRD file")
+        return EXIT_ERROR
+
+    prd_file = Path(prd_path)
+    if not prd_file.exists():
+        formatter.error(f"PRD file not found: {prd_path}")
+        return EXIT_ERROR
+
+    # Create batch config
+    batch_config = BatchConfig(
+        parallel_limit=args.parallel_limit,
+        cleanup_on_complete=True,
+        cleanup_on_failure=False,
+    )
+
+    formatter.message("=" * 60)
+    formatter.message("BATCH MODE - Parallel Task Processing")
+    formatter.message("=" * 60)
+    formatter.message(f"PRD: {prd_path}")
+    formatter.message(f"Parallel limit: {args.parallel_limit}")
+    formatter.message("")
+
+    # Create executor
+    executor = BatchExecutor(
+        prd_path=prd_file,
+        config_path=Path(args.config),
+        batch_config=batch_config,
+    )
+
+    # Progress callback
+    last_output = [""]
+
+    def on_progress(progress):
+        output = format_batch_progress(progress)
+        if output != last_output[0]:
+            # Clear previous output and show new
+            formatter.message("\r" + " " * 80 + "\r", end="")
+            for line in output.split("\n"):
+                formatter.message(line)
+            last_output[0] = output
+
+    try:
+        # Get max iterations from config
+        max_iterations = args.max_iterations or config.max_iterations
+
+        # Run batch
+        progress = executor.run(
+            max_iterations=max_iterations,
+            on_progress=on_progress,
+        )
+
+        formatter.message("")
+        formatter.message("=" * 60)
+        formatter.message("BATCH COMPLETE")
+        formatter.message("=" * 60)
+        formatter.message(f"Total: {progress.total_tasks}")
+        formatter.message(f"Completed: {progress.completed_count}")
+        formatter.message(f"Failed: {progress.failed_count}")
+
+        if progress.failed_count > 0:
+            formatter.message("")
+            formatter.message("Failed tasks:")
+            for worker_id, worker in progress.workers.items():
+                if worker.status.value == "failed":
+                    formatter.message(f"  - {worker.task_id}: {worker.error}")
+
+        return EXIT_SUCCESS if progress.failed_count == 0 else EXIT_ERROR
+
+    except KeyboardInterrupt:
+        formatter.message("")
+        formatter.warning("Batch interrupted by user")
+        return EXIT_ERROR
+
+    except Exception as e:
+        formatter.error("Batch processing failed", exception=e)
+        return EXIT_ERROR
+
+
 def run_loop(args: argparse.Namespace) -> int:
     """Execute the run command.
 
@@ -344,6 +457,10 @@ def run_loop(args: argparse.Namespace) -> int:
             llm_temperature=config.llm_temperature,
             llm_rate_limit_retries=config.llm_rate_limit_retries,
         )
+
+    # Batch mode - parallel processing with worktrees
+    if args.batch:
+        return run_batch(args, config, formatter)
 
     # Dry-run logic - show next task without executing
     if args.dry_run:
