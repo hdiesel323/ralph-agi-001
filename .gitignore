@@ -22,6 +22,7 @@ htmlcov/
 # AI Tool Configs (local only)
 .agent/
 .gemini/
+.specstory/
 _bmad/
 
 # Private research & competitive analysis (keep local only)
