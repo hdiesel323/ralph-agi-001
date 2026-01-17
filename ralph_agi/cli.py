@@ -327,6 +327,77 @@ Exit Codes:
         help="Also clear running tasks",
     )
 
+    # Start command for parallel task processing
+    start_parser = subparsers.add_parser(
+        "start",
+        help="Start processing tasks in parallel",
+        description="Process pending tasks from the queue using parallel worktrees.",
+    )
+    start_parser.add_argument(
+        "--parallel",
+        "-n",
+        type=int,
+        default=3,
+        metavar="N",
+        help="Maximum concurrent tasks (default: 3)",
+    )
+    start_parser.add_argument(
+        "--max-tasks",
+        type=int,
+        metavar="N",
+        help="Maximum total tasks to process (default: all pending)",
+    )
+    start_parser.add_argument(
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Enable verbose output",
+    )
+
+    # Config command for configuration management
+    config_parser = subparsers.add_parser(
+        "config",
+        help="Manage RALPH configuration",
+        description="Get and set RALPH-AGI configuration values.",
+    )
+    config_subparsers = config_parser.add_subparsers(
+        dest="config_command",
+        help="Config action to perform",
+    )
+
+    # config get
+    config_get = config_subparsers.add_parser(
+        "get",
+        help="Get a configuration value",
+    )
+    config_get.add_argument(
+        "key",
+        type=str,
+        help="Configuration key to get (e.g., auto-merge-threshold)",
+    )
+
+    # config set
+    config_set = config_subparsers.add_parser(
+        "set",
+        help="Set a configuration value",
+    )
+    config_set.add_argument(
+        "key",
+        type=str,
+        help="Configuration key to set",
+    )
+    config_set.add_argument(
+        "value",
+        type=str,
+        help="Value to set",
+    )
+
+    # config list
+    config_subparsers.add_parser(
+        "list",
+        help="List all configuration values",
+    )
+
     # TUI command for terminal interface
     tui_parser = subparsers.add_parser(
         "tui",
@@ -1073,6 +1144,163 @@ def run_queue(args: argparse.Namespace) -> int:
     return EXIT_ERROR
 
 
+def run_start(args: argparse.Namespace) -> int:
+    """Execute the start command (parallel task processing).
+
+    Args:
+        args: Parsed command-line arguments.
+
+    Returns:
+        Exit code.
+    """
+    from ralph_agi.tasks.parallel import ParallelExecutor, ExecutionProgress, TaskResult
+
+    verbosity = Verbosity.VERBOSE if args.verbose else Verbosity.NORMAL
+    formatter = OutputFormatter(verbosity=verbosity)
+
+    formatter.message("=" * 60)
+    formatter.message("RALPH-AGI - Parallel Task Processing")
+    formatter.message("=" * 60)
+    formatter.message(f"Max concurrent: {args.parallel}")
+    if args.max_tasks:
+        formatter.message(f"Max tasks: {args.max_tasks}")
+    formatter.message("")
+
+    # Progress callback
+    def on_progress(progress: ExecutionProgress) -> None:
+        formatter.message(
+            f"\rProgress: {progress.completed + progress.failed}/{progress.total_tasks} "
+            f"(running: {progress.running}, success: {progress.completed}, failed: {progress.failed})",
+            end=""
+        )
+
+    def on_task_start(task) -> None:
+        formatter.message(f"\n[START] {task.id}: {task.description[:50]}...")
+
+    def on_task_complete(result: TaskResult) -> None:
+        status = "SUCCESS" if result.success else "FAILED"
+        duration = f"{result.duration_seconds:.1f}s" if result.duration_seconds else "N/A"
+        formatter.message(f"\n[{status}] {result.task_id} ({duration})")
+        if result.error:
+            formatter.message(f"  Error: {result.error}")
+
+    try:
+        executor = ParallelExecutor(
+            max_concurrent=args.parallel,
+            on_progress=on_progress,
+            on_task_start=on_task_start,
+            on_task_complete=on_task_complete,
+        )
+
+        results = executor.run_sync(max_tasks=args.max_tasks)
+
+        formatter.message("")
+        formatter.message("")
+        formatter.message("=" * 60)
+        formatter.message("EXECUTION COMPLETE")
+        formatter.message("=" * 60)
+
+        succeeded = sum(1 for r in results if r.success)
+        failed = sum(1 for r in results if not r.success)
+
+        formatter.message(f"Total: {len(results)}")
+        formatter.message(f"Succeeded: {succeeded}")
+        formatter.message(f"Failed: {failed}")
+
+        if failed > 0:
+            formatter.message("")
+            formatter.message("Failed tasks:")
+            for r in results:
+                if not r.success:
+                    formatter.message(f"  - {r.task_id}: {r.error}")
+
+        return EXIT_SUCCESS if failed == 0 else EXIT_ERROR
+
+    except KeyboardInterrupt:
+        formatter.message("")
+        formatter.warning("Interrupted by user")
+        return EXIT_ERROR
+
+    except Exception as e:
+        formatter.error("Execution failed", exception=e)
+        return EXIT_ERROR
+
+
+def run_config(args: argparse.Namespace) -> int:
+    """Execute the config command.
+
+    Args:
+        args: Parsed command-line arguments.
+
+    Returns:
+        Exit code.
+    """
+    from ralph_agi.tasks.confidence import ConfigManager
+
+    formatter = OutputFormatter(verbosity=Verbosity.NORMAL)
+    config = ConfigManager()
+
+    if args.config_command is None:
+        formatter.error("No config command specified. Use 'ralph-agi config --help'")
+        return EXIT_ERROR
+
+    if args.config_command == "get":
+        key = args.key
+        value = config.get(key)
+
+        if value is None:
+            formatter.message(f"{key}: (not set)")
+        else:
+            formatter.message(f"{key}: {value}")
+
+        return EXIT_SUCCESS
+
+    elif args.config_command == "set":
+        key = args.key
+        value = args.value
+
+        # Try to convert to appropriate type
+        try:
+            # Try float first (for thresholds)
+            if "." in value:
+                value = float(value)
+            # Try int
+            elif value.isdigit() or (value.startswith("-") and value[1:].isdigit()):
+                value = int(value)
+            # Boolean
+            elif value.lower() in ("true", "false"):
+                value = value.lower() == "true"
+            # Keep as string otherwise
+        except ValueError:
+            pass  # Keep as string
+
+        try:
+            config.set(key, value)
+            formatter.message(f"Set {key} = {value}")
+            return EXIT_SUCCESS
+        except ValueError as e:
+            formatter.error(str(e))
+            return EXIT_ERROR
+
+    elif args.config_command == "list":
+        all_config = config.list_all()
+
+        if not all_config:
+            formatter.message("No configuration values set")
+            formatter.message("")
+            formatter.message("Available settings:")
+            formatter.message("  auto-merge-threshold  Confidence threshold for auto-merge (0.0-1.0)")
+            return EXIT_SUCCESS
+
+        formatter.message("Configuration:")
+        for key, value in sorted(all_config.items()):
+            formatter.message(f"  {key}: {value}")
+
+        return EXIT_SUCCESS
+
+    return EXIT_ERROR
+
+
 def run_tui(args: argparse.Namespace) -> int:
     """Execute the tui command (terminal interface).
 
@@ -1151,6 +1379,12 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "queue":
         return run_queue(args)
+
+    if args.command == "start":
+        return run_start(args)
+
+    if args.command == "config":
+        return run_config(args)
 
     if args.command == "tui":
         return run_tui(args)

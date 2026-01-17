@@ -82,6 +82,22 @@ from ralph_agi.tasks.worktree import (
     WorktreeExistsError,
     WorktreeNotFoundError,
 )
+from ralph_agi.tasks.parallel import (
+    ParallelExecutor,
+    TaskResult,
+    ExecutionProgress,
+    ExecutionState,
+    create_executor,
+)
+from ralph_agi.tasks.confidence import (
+    ConfidenceScorer,
+    ConfidenceFactors,
+    ConfidenceResult,
+    MergeDecision,
+    AutoMerger,
+    ReviewQueueItem,
+    ConfigManager,
+)
 
 __all__ = [
     "PRD",
@@ -124,4 +140,18 @@ __all__ = [
     "WorktreeError",
     "WorktreeExistsError",
     "WorktreeNotFoundError",
+    # Parallel Executor (Story 7.3)
+    "ParallelExecutor",
+    "TaskResult",
+    "ExecutionProgress",
+    "ExecutionState",
+    "create_executor",
+    # Confidence & Auto-Merge (Story 7.4)
+    "ConfidenceScorer",
+    "ConfidenceFactors",
+    "ConfidenceResult",
+    "MergeDecision",
+    "AutoMerger",
+    "ReviewQueueItem",
+    "ConfigManager",
 ]
