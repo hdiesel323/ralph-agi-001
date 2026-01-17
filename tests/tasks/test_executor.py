@@ -2,6 +2,7 @@
 
 import json
 import pytest
+import subprocess
 import threading
 import time
 from pathlib import Path
@@ -15,6 +16,7 @@ from ralph_agi.tasks import (
     TaskExecutor,
     analyze_task_size,
 )
+from ralph_agi.tasks.executor import ExecutionContext, _sanitize_branch_name
 
 
 # =============================================================================
@@ -439,3 +441,328 @@ class TestEdgeCases:
             executor.begin_task(prd_file)
 
         assert any("Large task warning" in r.message for r in caplog.records)
+
+
+# =============================================================================
+# Worktree Isolation Fixtures
+# =============================================================================
+
+
+@pytest.fixture
+def git_repo(tmp_path):
+    """Create a git repository for worktree testing."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+
+    # Initialize repo
+    subprocess.run(["git", "init", "-b", "main"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "config", "user.email", "test@example.com"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+    )
+    subprocess.run(
+        ["git", "config", "user.name", "Test User"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+    )
+
+    # Create initial commit
+    (repo / "README.md").write_text("# Test\n")
+    subprocess.run(["git", "add", "README.md"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "Initial commit"],
+        cwd=repo,
+        check=True,
+        capture_output=True,
+    )
+
+    return repo
+
+
+@pytest.fixture
+def git_repo_with_prd(git_repo, sample_prd_data):
+    """Create a git repo with PRD.json file."""
+    prd_file = git_repo / "PRD.json"
+    prd_file.write_text(json.dumps(sample_prd_data, indent=2))
+    subprocess.run(["git", "add", "PRD.json"], cwd=git_repo, check=True, capture_output=True)
+    subprocess.run(
+        ["git", "commit", "-m", "Add PRD.json"],
+        cwd=git_repo,
+        check=True,
+        capture_output=True,
+    )
+    return git_repo, prd_file
+
+
+# =============================================================================
+# Sanitize Branch Name Tests
+# =============================================================================
+
+
+class TestSanitizeBranchName:
+    """Tests for _sanitize_branch_name helper."""
+
+    def test_simple_name_unchanged(self):
+        """Simple names pass through unchanged."""
+        assert _sanitize_branch_name("feature-123") == "feature-123"
+
+    def test_spaces_replaced(self):
+        """Spaces are replaced with hyphens."""
+        assert _sanitize_branch_name("my feature") == "my-feature"
+
+    def test_special_chars_replaced(self):
+        """Special git chars are replaced with hyphens."""
+        assert _sanitize_branch_name("feature~1") == "feature-1"
+        assert _sanitize_branch_name("feature^2") == "feature-2"
+        assert _sanitize_branch_name("feature:name") == "feature-name"
+        assert _sanitize_branch_name("feature?test") == "feature-test"
+        assert _sanitize_branch_name("feature*name") == "feature-name"
+        assert _sanitize_branch_name("feature[0]") == "feature-0"
+
+    def test_consecutive_dots_replaced(self):
+        """Consecutive dots are replaced."""
+        assert _sanitize_branch_name("feature..name") == "feature-name"
+
+    def test_leading_trailing_stripped(self):
+        """Leading/trailing dots, hyphens, slashes stripped."""
+        assert _sanitize_branch_name(".feature") == "feature"
+        assert _sanitize_branch_name("feature.") == "feature"
+        assert _sanitize_branch_name("-feature-") == "feature"
+        assert _sanitize_branch_name("/feature/") == "feature"
+
+    def test_empty_becomes_task(self):
+        """Empty string becomes 'task'."""
+        assert _sanitize_branch_name("") == "task"
+        assert _sanitize_branch_name("...") == "task"
+
+
+# =============================================================================
+# ExecutionContext Worktree Tests
+# =============================================================================
+
+
+class TestExecutionContextWorktree:
+    """Tests for ExecutionContext worktree properties."""
+
+    def test_work_dir_without_worktree(self, sample_prd_file):
+        """work_dir returns PRD parent when no worktree."""
+        from datetime import datetime, timezone
+
+        ctx = ExecutionContext(
+            feature=Feature(id="test", description="Test", passes=False),
+            started_at=datetime.now(timezone.utc),
+            prd_path=sample_prd_file,
+        )
+
+        assert ctx.work_dir == sample_prd_file.parent
+        assert ctx.is_isolated is False
+        assert ctx.worktree_path is None
+
+    def test_work_dir_with_worktree(self, sample_prd_file, tmp_path):
+        """work_dir returns worktree path when set."""
+        from datetime import datetime, timezone
+
+        worktree = tmp_path / "worktree"
+        ctx = ExecutionContext(
+            feature=Feature(id="test", description="Test", passes=False),
+            started_at=datetime.now(timezone.utc),
+            prd_path=sample_prd_file,
+            worktree_path=worktree,
+            branch_name="ralph/test",
+        )
+
+        assert ctx.work_dir == worktree
+        assert ctx.is_isolated is True
+        assert ctx.branch_name == "ralph/test"
+
+
+# =============================================================================
+# TaskExecutor Worktree Isolation Tests
+# =============================================================================
+
+
+class TestTaskExecutorWorktreeIsolation:
+    """Tests for TaskExecutor with worktree isolation."""
+
+    def test_requires_repo_path_when_enabled(self):
+        """Enabling isolation requires repo_path."""
+        with pytest.raises(ValueError) as exc_info:
+            TaskExecutor(enable_worktree_isolation=True)
+
+        assert "repo_path is required" in str(exc_info.value)
+
+    def test_disabled_by_default(self):
+        """Worktree isolation is disabled by default."""
+        executor = TaskExecutor()
+        status = executor.get_status()
+
+        assert status["worktree_isolation"] is False
+
+    def test_status_includes_worktree_info(self, git_repo_with_prd):
+        """Status includes worktree info when enabled."""
+        repo, prd_file = git_repo_with_prd
+        executor = TaskExecutor(
+            enable_worktree_isolation=True,
+            repo_path=repo,
+        )
+
+        ctx = executor.begin_task(prd_file)
+        status = executor.get_status()
+
+        assert status["worktree_isolation"] is True
+        assert status["worktree_path"] is not None
+        assert status["branch_name"] is not None
+        assert "ralph/" in status["branch_name"]
+
+        # Cleanup
+        executor.abort_task(cleanup_worktree=True)
+
+    def test_creates_worktree_on_begin(self, git_repo_with_prd):
+        """begin_task creates worktree when isolation enabled."""
+        repo, prd_file = git_repo_with_prd
+        executor = TaskExecutor(
+            enable_worktree_isolation=True,
+            repo_path=repo,
+        )
+
+        ctx = executor.begin_task(prd_file)
+
+        assert ctx.is_isolated is True
+        assert ctx.worktree_path is not None
+        assert ctx.worktree_path.exists()
+        assert ctx.branch_name.startswith("ralph/")
+
+        # Cleanup
+        executor.abort_task(cleanup_worktree=True)
+
+    def test_worktree_branch_naming(self, git_repo_with_prd):
+        """Worktree branch follows ralph/<task-id> convention."""
+        repo, prd_file = git_repo_with_prd
+        executor = TaskExecutor(
+            enable_worktree_isolation=True,
+            repo_path=repo,
+        )
+
+        ctx = executor.begin_task(prd_file)
+
+        # First task is feature-1 (P0)
+        assert ctx.branch_name == "ralph/feature-1"
+
+        # Cleanup
+        executor.abort_task(cleanup_worktree=True)
+
+    def test_worktree_path_naming(self, git_repo_with_prd):
+        """Worktree path follows ralph-<task-id> convention."""
+        repo, prd_file = git_repo_with_prd
+        executor = TaskExecutor(
+            enable_worktree_isolation=True,
+            repo_path=repo,
+        )
+
+        ctx = executor.begin_task(prd_file)
+
+        # Path should be in parent directory of repo
+        assert ctx.worktree_path.parent == repo.parent
+        assert ctx.worktree_path.name == "ralph-feature-1"
+
+        # Cleanup
+        executor.abort_task(cleanup_worktree=True)
+
+    def test_custom_worktree_base(self, git_repo_with_prd, tmp_path):
+        """Custom worktree_base changes worktree location."""
+        repo, prd_file = git_repo_with_prd
+        worktree_base = tmp_path / "worktrees"
+        worktree_base.mkdir()
+
+        executor = TaskExecutor(
+            enable_worktree_isolation=True,
+            repo_path=repo,
+            worktree_base=worktree_base,
+        )
+
+        ctx = executor.begin_task(prd_file)
+
+        assert ctx.worktree_path.parent == worktree_base
+        assert ctx.worktree_path.exists()
+
+        # Cleanup
+        executor.abort_task(cleanup_worktree=True)
+
+    def test_abort_with_cleanup_removes_worktree(self, git_repo_with_prd):
+        """abort_task with cleanup_worktree removes the worktree."""
+        repo, prd_file = git_repo_with_prd
+        executor = TaskExecutor(
+            enable_worktree_isolation=True,
+            repo_path=repo,
+        )
+
+        ctx = executor.begin_task(prd_file)
+        worktree_path = ctx.worktree_path
+
+        assert worktree_path.exists()
+
+        executor.abort_task(cleanup_worktree=True)
+
+        # Worktree should be removed
+        assert not worktree_path.exists()
+
+    def test_abort_without_cleanup_preserves_worktree(self, git_repo_with_prd):
+        """abort_task without cleanup preserves the worktree."""
+        repo, prd_file = git_repo_with_prd
+        executor = TaskExecutor(
+            enable_worktree_isolation=True,
+            repo_path=repo,
+        )
+
+        ctx = executor.begin_task(prd_file)
+        worktree_path = ctx.worktree_path
+
+        executor.abort_task(cleanup_worktree=False)
+
+        # Worktree should still exist
+        assert worktree_path.exists()
+
+        # Manual cleanup for test
+        from ralph_agi.tools.git import GitTools
+        git = GitTools(repo_path=repo)
+        git.worktree_remove(str(worktree_path), force=True)
+
+    def test_complete_preserves_worktree(self, git_repo_with_prd):
+        """complete_task preserves worktree for later merge."""
+        repo, prd_file = git_repo_with_prd
+        executor = TaskExecutor(
+            enable_worktree_isolation=True,
+            repo_path=repo,
+        )
+
+        ctx = executor.begin_task(prd_file)
+        worktree_path = ctx.worktree_path
+
+        executor.complete_task(ctx)
+
+        # Worktree should still exist (for merge)
+        assert worktree_path.exists()
+
+        # Manual cleanup for test
+        from ralph_agi.tools.git import GitTools
+        git = GitTools(repo_path=repo)
+        git.worktree_remove(str(worktree_path), force=True)
+
+    def test_without_isolation_no_worktree(self, git_repo_with_prd):
+        """Without isolation, no worktree is created."""
+        repo, prd_file = git_repo_with_prd
+        executor = TaskExecutor(
+            enable_worktree_isolation=False,
+            repo_path=repo,
+        )
+
+        ctx = executor.begin_task(prd_file)
+
+        assert ctx.is_isolated is False
+        assert ctx.worktree_path is None
+        assert ctx.work_dir == prd_file.parent
+
+        executor.abort_task()

@@ -61,6 +61,7 @@ class ToolExecutorAdapter:
     """Adapter that bridges LLM tool calls to RALPH tool implementations.
 
     Maps tool names from LLM to our FileSystemTools, ShellTools, and GitTools.
+    Supports dynamic work directory changes for worktree isolation.
     """
 
     def __init__(self, work_dir: Optional[Path] = None):
@@ -70,6 +71,26 @@ class ToolExecutorAdapter:
             work_dir: Working directory for file operations.
         """
         self._work_dir = work_dir or Path.cwd()
+        self._fs_tools = None
+        self._shell_tools = None
+        self._git_tools = None
+
+    @property
+    def work_dir(self) -> Path:
+        """Get the current working directory."""
+        return self._work_dir
+
+    def set_work_dir(self, work_dir: Path) -> None:
+        """Update the working directory and reset tools.
+
+        This is used for worktree isolation, where each task
+        runs in its own isolated directory.
+
+        Args:
+            work_dir: New working directory path.
+        """
+        self._work_dir = work_dir
+        # Clear cached tools so they reinitialize with new work_dir
         self._fs_tools = None
         self._shell_tools = None
         self._git_tools = None
@@ -283,6 +304,7 @@ class RalphLoop:
         self._prd_path = Path(prd_path) if prd_path else None
         self._task_executor = task_executor
         self._orchestrator = orchestrator
+        self._tool_executor_adapter: Optional[ToolExecutorAdapter] = None  # For worktree isolation
         self._tools: list[Any] = []  # LLM Tool schemas
 
         # Set up logging
@@ -312,11 +334,12 @@ class RalphLoop:
         # Create LLM components
         orchestrator = None
         task_executor = None
+        tool_executor_adapter = None
 
         if prd_path:
             prd_file = Path(prd_path)
             work_dir = prd_file.parent if prd_file.exists() else Path.cwd()
-            orchestrator = cls._create_orchestrator(config, work_dir=work_dir)
+            orchestrator, tool_executor_adapter = cls._create_orchestrator(config, work_dir=work_dir)
             from ralph_agi.tasks.executor import TaskExecutor
             task_executor = TaskExecutor()
 
@@ -333,6 +356,9 @@ class RalphLoop:
             orchestrator=orchestrator,
         )
 
+        # Store tool executor for worktree isolation support
+        loop._tool_executor_adapter = tool_executor_adapter
+
         # Build tool schemas for LLM
         if orchestrator:
             loop._tools = cls._build_tool_schemas()
@@ -343,7 +369,7 @@ class RalphLoop:
     def _create_orchestrator(
         config: RalphConfig,
         work_dir: Optional[Path] = None,
-    ) -> LLMOrchestrator:
+    ) -> tuple[LLMOrchestrator, ToolExecutorAdapter]:
         """Create LLM orchestrator from config.
 
         Args:
@@ -351,7 +377,9 @@ class RalphLoop:
             work_dir: Working directory for tool execution.
 
         Returns:
-            Configured LLMOrchestrator.
+            Tuple of (LLMOrchestrator, ToolExecutorAdapter).
+            The ToolExecutorAdapter is returned so it can be updated
+            for worktree isolation.
         """
         from ralph_agi.llm.agents import BuilderAgent, CriticAgent
         from ralph_agi.llm.orchestrator import LLMOrchestrator
@@ -384,12 +412,14 @@ class RalphLoop:
                 max_tokens=config.llm_max_tokens,
             )
 
-        return LLMOrchestrator(
+        orchestrator = LLMOrchestrator(
             builder=builder,
             critic=critic,
             critic_enabled=config.llm_critic_enabled,
             max_rate_limit_retries=config.llm_rate_limit_retries,
         )
+
+        return orchestrator, tool_executor
 
     @staticmethod
     def _create_llm_client(provider: str, model: str) -> Any:
@@ -825,7 +855,14 @@ class RalphLoop:
             "dependencies": list(task.dependencies) if task.dependencies else [],
         }
 
-        self.logger.info(f"Working on task: {task.id} - {task_title}")
+        # Update tool executor work directory (supports worktree isolation)
+        if self._tool_executor_adapter:
+            self._tool_executor_adapter.set_work_dir(ctx.work_dir)
+
+        if ctx.is_isolated:
+            self.logger.info(f"Working on task: {task.id} - {task_title} (worktree: {ctx.worktree_path})")
+        else:
+            self.logger.info(f"Working on task: {task.id} - {task_title}")
 
         # Step 2: Build context
         project_context = self._build_project_context()
