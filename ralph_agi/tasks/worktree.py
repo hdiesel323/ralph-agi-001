@@ -34,6 +34,7 @@ import json
 import logging
 import os
 import shutil
+import threading
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -178,6 +179,9 @@ class WorktreeManager:
         # State file path
         self._state_file = self._repo_path / self.STATE_FILE
 
+        # Thread lock for state file operations
+        self._state_lock = threading.Lock()
+
         # Ensure state directory exists
         self._state_file.parent.mkdir(parents=True, exist_ok=True)
 
@@ -201,8 +205,8 @@ class WorktreeManager:
         """Get worktree path for a task."""
         return self._worktree_dir / task_id
 
-    def _load_state(self) -> dict[str, ActiveWorktree]:
-        """Load active worktree state from file."""
+    def _load_state_unlocked(self) -> dict[str, ActiveWorktree]:
+        """Load state without acquiring lock. Caller must hold _state_lock."""
         if not self._state_file.exists():
             return {}
 
@@ -218,8 +222,8 @@ class WorktreeManager:
             logger.warning(f"Failed to load worktree state: {e}")
             return {}
 
-    def _save_state(self, worktrees: dict[str, ActiveWorktree]) -> None:
-        """Save active worktree state to file."""
+    def _save_state_unlocked(self, worktrees: dict[str, ActiveWorktree]) -> None:
+        """Save state without acquiring lock. Caller must hold _state_lock."""
         data = {
             "worktrees": {k: v.to_dict() for k, v in worktrees.items()},
             "updated_at": datetime.now(timezone.utc).isoformat(),
@@ -235,6 +239,16 @@ class WorktreeManager:
             if temp_path.exists():
                 temp_path.unlink()
             raise WorktreeError(f"Failed to save state: {e}") from e
+
+    def _load_state(self) -> dict[str, ActiveWorktree]:
+        """Load active worktree state from file. Thread-safe."""
+        with self._state_lock:
+            return self._load_state_unlocked()
+
+    def _save_state(self, worktrees: dict[str, ActiveWorktree]) -> None:
+        """Save active worktree state to file. Thread-safe."""
+        with self._state_lock:
+            self._save_state_unlocked(worktrees)
 
     def create(
         self,
@@ -260,44 +274,47 @@ class WorktreeManager:
         branch = self._branch_name(task_id)
         worktree_path = self._worktree_path(task_id)
 
-        # Check if already exists
-        state = self._load_state()
-        if task_id in state:
-            raise WorktreeExistsError(task_id, str(state[task_id].path))
-
         # Ensure worktree directory parent exists
         self._worktree_dir.mkdir(parents=True, exist_ok=True)
 
-        try:
-            # Create worktree with new branch
-            result_path = self._git.worktree_add(
-                path=str(worktree_path),
-                branch=branch,
-                create_branch=True,
-                base_ref=base_ref,
-            )
+        # Hold lock for the entire create-and-record operation
+        with self._state_lock:
+            # Check if already exists
+            state = self._load_state_unlocked()
+            if task_id in state:
+                raise WorktreeExistsError(task_id, str(state[task_id].path))
 
-            # Get current commit
-            worktree_git = GitTools(repo_path=worktree_path)
-            commit = worktree_git._run_git("rev-parse", "HEAD").strip()
+            try:
+                # Create worktree with new branch
+                result_path = self._git.worktree_add(
+                    path=str(worktree_path),
+                    branch=branch,
+                    create_branch=True,
+                    base_ref=base_ref,
+                )
 
-            # Record in state
-            active = ActiveWorktree(
-                task_id=task_id,
-                path=result_path,
-                branch=branch,
-                commit=commit,
-                status="created",
-            )
+                # Get current commit
+                worktree_git = GitTools(repo_path=worktree_path)
+                commit = worktree_git._run_git("rev-parse", "HEAD").strip()
 
-            state[task_id] = active
-            self._save_state(state)
+                # Record in state (reload to get any concurrent changes)
+                state = self._load_state_unlocked()
+                active = ActiveWorktree(
+                    task_id=task_id,
+                    path=result_path,
+                    branch=branch,
+                    commit=commit,
+                    status="created",
+                )
 
-            logger.info(f"WORKTREE_CREATE: {task_id} -> {result_path}")
-            return Path(result_path)
+                state[task_id] = active
+                self._save_state_unlocked(state)
 
-        except GitCommandError as e:
-            raise WorktreeError(f"Failed to create worktree for {task_id}: {e}") from e
+                logger.info(f"WORKTREE_CREATE: {task_id} -> {result_path}")
+                return Path(result_path)
+
+            except GitCommandError as e:
+                raise WorktreeError(f"Failed to create worktree for {task_id}: {e}") from e
 
     def get(self, task_id: str) -> ActiveWorktree:
         """Get worktree info for a task.
@@ -342,16 +359,17 @@ class WorktreeManager:
         Raises:
             WorktreeNotFoundError: If worktree doesn't exist
         """
-        state = self._load_state()
+        with self._state_lock:
+            state = self._load_state_unlocked()
 
-        if task_id not in state:
-            raise WorktreeNotFoundError(task_id)
+            if task_id not in state:
+                raise WorktreeNotFoundError(task_id)
 
-        state[task_id].status = status
-        self._save_state(state)
+            state[task_id].status = status
+            self._save_state_unlocked(state)
 
-        logger.info(f"WORKTREE_STATUS: {task_id} -> {status}")
-        return state[task_id]
+            logger.info(f"WORKTREE_STATUS: {task_id} -> {status}")
+            return state[task_id]
 
     def execute_in_worktree(
         self,
@@ -416,30 +434,34 @@ class WorktreeManager:
             WorktreeNotFoundError: If worktree doesn't exist
             WorktreeError: If cleanup fails
         """
-        state = self._load_state()
+        # Get worktree info under lock, then release for git operations
+        with self._state_lock:
+            state = self._load_state_unlocked()
+            if task_id not in state:
+                raise WorktreeNotFoundError(task_id)
+            worktree = state[task_id]
 
-        if task_id not in state:
-            raise WorktreeNotFoundError(task_id)
-
-        worktree = state[task_id]
         worktree_path = Path(worktree.path)
+        branch = worktree.branch
 
         try:
-            # Remove worktree via git
+            # Remove worktree via git (without holding lock)
             if worktree_path.exists():
                 self._git.worktree_remove(str(worktree_path), force=force)
 
-            # Optionally delete the branch
-            branch = worktree.branch
+            # Delete the branch
             try:
                 self._git.delete_branch(branch, force=True)
             except GitCommandError:
                 # Branch might already be deleted or merged
                 pass
 
-            # Remove from state
-            del state[task_id]
-            self._save_state(state)
+            # Remove from state atomically
+            with self._state_lock:
+                state = self._load_state_unlocked()
+                if task_id in state:
+                    del state[task_id]
+                    self._save_state_unlocked(state)
 
             logger.info(f"WORKTREE_CLEANUP: {task_id}")
             return True
@@ -482,19 +504,20 @@ class WorktreeManager:
         Returns:
             List of pruned task IDs
         """
-        state = self._load_state()
-        pruned = []
+        with self._state_lock:
+            state = self._load_state_unlocked()
+            pruned = []
 
-        for task_id, worktree in list(state.items()):
-            if not Path(worktree.path).exists():
-                del state[task_id]
-                pruned.append(task_id)
-                logger.info(f"WORKTREE_PRUNE: {task_id} (directory missing)")
+            for task_id, worktree in list(state.items()):
+                if not Path(worktree.path).exists():
+                    del state[task_id]
+                    pruned.append(task_id)
+                    logger.info(f"WORKTREE_PRUNE: {task_id} (directory missing)")
 
-        if pruned:
-            self._save_state(state)
+            if pruned:
+                self._save_state_unlocked(state)
 
-        # Also prune git's worktree metadata
+        # Also prune git's worktree metadata (outside lock)
         self._git.worktree_prune()
 
         return pruned
@@ -509,42 +532,44 @@ class WorktreeManager:
         Returns:
             Dict of changes: {task_id: "added" | "removed"}
         """
-        state = self._load_state()
-        changes = {}
-
-        # Get actual git worktrees
+        # Get actual git worktrees first (no lock needed)
         git_worktrees = self._git.worktree_list()
         git_paths = {w.path: w for w in git_worktrees}
 
-        # Remove tracked worktrees that don't exist
-        for task_id, worktree in list(state.items()):
-            if worktree.path not in git_paths:
-                del state[task_id]
-                changes[task_id] = "removed"
+        # Reconcile under lock
+        with self._state_lock:
+            state = self._load_state_unlocked()
+            changes = {}
 
-        # Add git worktrees that match our branch prefix but aren't tracked
-        for path, git_info in git_paths.items():
-            if git_info.is_main:
-                continue  # Skip main worktree
+            # Remove tracked worktrees that don't exist
+            for task_id, worktree in list(state.items()):
+                if worktree.path not in git_paths:
+                    del state[task_id]
+                    changes[task_id] = "removed"
 
-            branch = git_info.branch
-            if not branch.startswith(self.BRANCH_PREFIX):
-                continue  # Not a ralph worktree
+            # Add git worktrees that match our branch prefix but aren't tracked
+            for path, git_info in git_paths.items():
+                if git_info.is_main:
+                    continue  # Skip main worktree
 
-            task_id = branch[len(self.BRANCH_PREFIX):]
-            if task_id not in state:
-                state[task_id] = ActiveWorktree(
-                    task_id=task_id,
-                    path=path,
-                    branch=branch,
-                    commit=git_info.commit,
-                    status="unknown",
-                )
-                changes[task_id] = "added"
+                branch = git_info.branch
+                if not branch.startswith(self.BRANCH_PREFIX):
+                    continue  # Not a ralph worktree
 
-        if changes:
-            self._save_state(state)
-            logger.info(f"WORKTREE_SYNC: {len(changes)} changes")
+                task_id = branch[len(self.BRANCH_PREFIX):]
+                if task_id not in state:
+                    state[task_id] = ActiveWorktree(
+                        task_id=task_id,
+                        path=path,
+                        branch=branch,
+                        commit=git_info.commit,
+                        status="unknown",
+                    )
+                    changes[task_id] = "added"
+
+            if changes:
+                self._save_state_unlocked(state)
+                logger.info(f"WORKTREE_SYNC: {len(changes)} changes")
 
         return changes
 

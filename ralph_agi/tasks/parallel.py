@@ -349,7 +349,7 @@ class ParallelExecutor:
                 self._queue.update_status(
                     task_id,
                     "failed",
-                    error_message=result.error,
+                    error=result.error,
                 )
                 self._progress.failed += 1
 

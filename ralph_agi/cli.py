@@ -1168,11 +1168,8 @@ def run_start(args: argparse.Namespace) -> int:
 
     # Progress callback
     def on_progress(progress: ExecutionProgress) -> None:
-        formatter.message(
-            f"\rProgress: {progress.completed + progress.failed}/{progress.total_tasks} "
-            f"(running: {progress.running}, success: {progress.completed}, failed: {progress.failed})",
-            end=""
-        )
+        # Simple progress update (OutputFormatter doesn't support end parameter)
+        pass  # Progress shown via task start/complete callbacks
 
     def on_task_start(task) -> None:
         formatter.message(f"\n[START] {task.id}: {task.description[:50]}...")
