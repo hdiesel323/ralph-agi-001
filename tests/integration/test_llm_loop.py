@@ -201,7 +201,7 @@ class TestRalphLoopLLMIntegration:
         config = RalphConfig()
 
         with patch.object(RalphLoop, "_create_orchestrator") as mock_orch:
-            mock_orch.return_value = MagicMock()
+            mock_orch.return_value = (MagicMock(), MagicMock())
             loop = RalphLoop.from_config(config, prd_path=str(sample_prd))
 
             assert loop._prd_path == sample_prd
