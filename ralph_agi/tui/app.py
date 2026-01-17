@@ -13,6 +13,7 @@ from textual.widgets import Footer, Header, ProgressBar, Static
 from ralph_agi import __version__
 from ralph_agi.tui.widgets import AgentViewer, LogPanel, MetricsBar, StoryGrid
 from ralph_agi.tui.widgets.story_grid import TaskInfo, TaskStatus
+from ralph_agi.tui.events import Event, EventBus, EventType
 
 
 class ProgressFooter(Horizontal):
@@ -145,8 +146,172 @@ class RalphTUI(App[None]):
         else:
             self._initialize_from_prd()
 
+        # Subscribe to events from RalphLoop
+        self._subscribe_to_events()
+
         # Start time refresh timer
         self.set_interval(1.0, self._refresh_time)
+
+    def _subscribe_to_events(self) -> None:
+        """Subscribe to RalphLoop events for live updates."""
+        bus = EventBus.get_instance()
+
+        # Loop lifecycle
+        bus.subscribe(EventType.LOOP_STARTED, self._on_loop_started)
+        bus.subscribe(EventType.LOOP_STOPPED, self._on_loop_stopped)
+
+        # Iteration events
+        bus.subscribe(EventType.ITERATION_STARTED, self._on_iteration_started)
+        bus.subscribe(EventType.ITERATION_COMPLETED, self._on_iteration_completed)
+
+        # Task events
+        bus.subscribe(EventType.TASK_SELECTED, self._on_task_selected)
+        bus.subscribe(EventType.TASK_COMPLETED, self._on_task_completed)
+
+        # Agent events
+        bus.subscribe(EventType.AGENT_THINKING, self._on_agent_thinking)
+        bus.subscribe(EventType.AGENT_ACTION, self._on_agent_action)
+        bus.subscribe(EventType.TOOL_CALLED, self._on_tool_called)
+        bus.subscribe(EventType.TOOL_RESULT, self._on_tool_result)
+
+        # Metrics events
+        bus.subscribe(EventType.TOKENS_USED, self._on_tokens_used)
+        bus.subscribe(EventType.COST_UPDATED, self._on_cost_updated)
+
+        # Log events
+        bus.subscribe(EventType.LOG_MESSAGE, self._on_log_message)
+        bus.subscribe(EventType.LOG_ERROR, self._on_log_error)
+
+        # Progress events
+        bus.subscribe(EventType.PROGRESS_UPDATED, self._on_progress_updated)
+
+    def _on_loop_started(self, event: Event) -> None:
+        """Handle loop started event."""
+        total = event.data.get("total_iterations", 0)
+        self._running = True
+        self.log_info(f"RALPH-AGI loop started (max {total} iterations)")
+        self.notify("Loop started", severity="information")
+
+    def _on_loop_stopped(self, event: Event) -> None:
+        """Handle loop stopped event."""
+        reason = event.data.get("reason", "unknown")
+        self._running = False
+        self.log_info(f"Loop stopped: {reason}")
+        self.notify(f"Loop stopped: {reason}", severity="warning")
+
+    def _on_iteration_started(self, event: Event) -> None:
+        """Handle iteration started event."""
+        iteration = event.data.get("iteration", 0)
+        task_id = event.data.get("task_id", "")
+        self.log_info(f"Starting iteration {iteration}...")
+
+        # Update story grid if task is specified
+        if task_id:
+            story_grid = self.query_one("#story-grid", StoryGrid)
+            story_grid.update_task(task_id, TaskStatus.RUNNING)
+
+    def _on_iteration_completed(self, event: Event) -> None:
+        """Handle iteration completed event."""
+        iteration = event.data.get("iteration", 0)
+        success = event.data.get("success", False)
+        duration = event.data.get("duration_seconds", 0)
+        tokens = event.data.get("tokens_used", 0)
+
+        # Update metrics
+        metrics_bar = self.query_one("#metrics-bar", MetricsBar)
+        metrics_bar.update_iteration(iteration, iteration)  # TODO: get max from config
+
+        status = "✓" if success else "✗"
+        self.log_info(f"Iteration {iteration} {status} ({duration:.1f}s, {tokens} tokens)")
+
+    def _on_task_selected(self, event: Event) -> None:
+        """Handle task selected event."""
+        task_id = event.data.get("task_id", "")
+        task_name = event.data.get("task_name", "")
+        self.log_info(f"Selected task: {task_id} - {task_name}")
+
+        # Update agent viewer
+        agent_viewer = self.query_one("#agent-viewer", AgentViewer)
+        agent_viewer.show_iteration(0, task_name)
+
+    def _on_task_completed(self, event: Event) -> None:
+        """Handle task completed event."""
+        task_id = event.data.get("task_id", "")
+        success = event.data.get("success", False)
+
+        story_grid = self.query_one("#story-grid", StoryGrid)
+        status = TaskStatus.DONE if success else TaskStatus.FAILED
+        story_grid.update_task(task_id, status)
+
+        emoji = "✅" if success else "❌"
+        self.log_info(f"Task {task_id} {emoji}")
+
+    def _on_agent_thinking(self, event: Event) -> None:
+        """Handle agent thinking event."""
+        thought = event.data.get("thought", "")
+        agent_viewer = self.query_one("#agent-viewer", AgentViewer)
+        agent_viewer.show_thought(thought)
+
+    def _on_agent_action(self, event: Event) -> None:
+        """Handle agent action event."""
+        action = event.data.get("action", "")
+        agent_viewer = self.query_one("#agent-viewer", AgentViewer)
+        agent_viewer.show_action(action)
+
+    def _on_tool_called(self, event: Event) -> None:
+        """Handle tool called event."""
+        tool_name = event.data.get("tool_name", "")
+        self.log_debug(f"Tool: {tool_name}")
+
+    def _on_tool_result(self, event: Event) -> None:
+        """Handle tool result event."""
+        tool_name = event.data.get("tool_name", "")
+        success = event.data.get("success", False)
+        result = event.data.get("result", "")[:100]
+
+        agent_viewer = self.query_one("#agent-viewer", AgentViewer)
+        agent_viewer.show_result(f"{tool_name}: {result}")
+
+    def _on_tokens_used(self, event: Event) -> None:
+        """Handle tokens used event."""
+        prompt = event.data.get("prompt_tokens", 0)
+        completion = event.data.get("completion_tokens", 0)
+
+        metrics_bar = self.query_one("#metrics-bar", MetricsBar)
+        metrics_bar.update_tokens(prompt, completion)
+
+    def _on_cost_updated(self, event: Event) -> None:
+        """Handle cost updated event."""
+        cost = event.data.get("total_cost", 0.0)
+
+        metrics_bar = self.query_one("#metrics-bar", MetricsBar)
+        metrics_bar.update_cost(cost)
+
+    def _on_log_message(self, event: Event) -> None:
+        """Handle log message event."""
+        level = event.data.get("level", "info")
+        message = event.data.get("message", "")
+
+        if level == "debug":
+            self.log_debug(message)
+        elif level == "warning":
+            self.log_warning(message)
+        else:
+            self.log_info(message)
+
+    def _on_log_error(self, event: Event) -> None:
+        """Handle log error event."""
+        message = event.data.get("message", "")
+        self.log_error(message)
+
+    def _on_progress_updated(self, event: Event) -> None:
+        """Handle progress updated event."""
+        task_name = event.data.get("task_name", "")
+        progress = event.data.get("progress", 0.0)
+        eta = event.data.get("eta", "")
+
+        progress_footer = self.query_one(ProgressFooter)
+        progress_footer.update_progress(task_name, progress, eta)
 
     def _initialize_from_prd(self) -> None:
         """Initialize display from PRD file."""
