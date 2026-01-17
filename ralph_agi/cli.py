@@ -240,6 +240,93 @@ Exit Codes:
         help="Also generate a sample PRD.json file",
     )
 
+    # Queue command for task queue management
+    queue_parser = subparsers.add_parser(
+        "queue",
+        help="Manage the task queue for autonomous processing",
+        description="Add, list, and manage tasks in the autonomous processing queue.",
+    )
+
+    queue_subparsers = queue_parser.add_subparsers(
+        dest="queue_command",
+        help="Queue action to perform",
+    )
+
+    # queue add
+    queue_add = queue_subparsers.add_parser(
+        "add",
+        help="Add a task to the queue",
+    )
+    queue_add.add_argument(
+        "description",
+        type=str,
+        help="Task description (what should be accomplished)",
+    )
+    queue_add.add_argument(
+        "--priority",
+        "-p",
+        type=str,
+        default="P2",
+        help="Task priority (P0-P4, default: P2)",
+    )
+    queue_add.add_argument(
+        "--criteria",
+        "-c",
+        type=str,
+        action="append",
+        help="Acceptance criteria (can be repeated)",
+    )
+    queue_add.add_argument(
+        "--depends",
+        "-d",
+        type=str,
+        action="append",
+        help="Dependency task ID (can be repeated)",
+    )
+
+    # queue list
+    queue_list = queue_subparsers.add_parser(
+        "list",
+        help="List tasks in the queue",
+    )
+    queue_list.add_argument(
+        "--status",
+        "-s",
+        type=str,
+        choices=["pending", "running", "complete", "failed", "all"],
+        default="pending",
+        help="Filter by status (default: pending)",
+    )
+    queue_list.add_argument(
+        "--priority",
+        "-p",
+        type=str,
+        help="Filter by priority (P0-P4)",
+    )
+
+    # queue next
+    queue_subparsers.add_parser(
+        "next",
+        help="Show the next task to be processed",
+    )
+
+    # queue stats
+    queue_subparsers.add_parser(
+        "stats",
+        help="Show queue statistics",
+    )
+
+    # queue clear
+    queue_clear = queue_subparsers.add_parser(
+        "clear",
+        help="Clear completed/failed tasks from the queue",
+    )
+    queue_clear.add_argument(
+        "--include-running",
+        action="store_true",
+        help="Also clear running tasks",
+    )
+
     # TUI command for terminal interface
     tui_parser = subparsers.add_parser(
         "tui",
@@ -842,6 +929,150 @@ def run_init(args: argparse.Namespace) -> int:
         return EXIT_ERROR
 
 
+def run_queue(args: argparse.Namespace) -> int:
+    """Execute queue commands.
+
+    Args:
+        args: Parsed command-line arguments.
+
+    Returns:
+        Exit code.
+    """
+    from ralph_agi.tasks.queue import TaskQueue, TaskStatus
+
+    formatter = OutputFormatter(verbosity=Verbosity.NORMAL)
+
+    if args.queue_command is None:
+        formatter.error("No queue command specified. Use 'ralph-agi queue --help'")
+        return EXIT_ERROR
+
+    # Initialize queue
+    queue = TaskQueue()
+
+    if args.queue_command == "add":
+        try:
+            task = queue.add(
+                description=args.description,
+                priority=args.priority,
+                acceptance_criteria=args.criteria or [],
+                dependencies=args.depends or [],
+            )
+
+            formatter.message(f"Task created: {task.id}")
+            formatter.message(f"  Description: {task.description}")
+            formatter.message(f"  Priority: P{task.priority.value}")
+            formatter.message(f"  Status: {task.status.value}")
+
+            if task.acceptance_criteria:
+                formatter.message("  Criteria:")
+                for criterion in task.acceptance_criteria:
+                    formatter.message(f"    - {criterion}")
+
+            if task.dependencies:
+                formatter.message(f"  Dependencies: {', '.join(task.dependencies)}")
+
+            return EXIT_SUCCESS
+
+        except Exception as e:
+            formatter.error(f"Failed to add task: {e}")
+            return EXIT_ERROR
+
+    elif args.queue_command == "list":
+        # Determine status filter
+        if args.status == "all":
+            tasks = queue.list(include_terminal=True)
+        else:
+            tasks = queue.list(status=args.status, include_terminal=(args.status in ["complete", "failed"]))
+
+        # Apply priority filter
+        if args.priority:
+            from ralph_agi.tasks.queue import TaskPriority
+            priority = TaskPriority.from_string(args.priority)
+            tasks = [t for t in tasks if t.priority == priority]
+
+        if not tasks:
+            formatter.message("No tasks found")
+            return EXIT_SUCCESS
+
+        # Display tasks
+        formatter.message(f"Tasks ({len(tasks)}):")
+        formatter.message("")
+
+        for task in tasks:
+            # Status indicator
+            status_icons = {
+                TaskStatus.PENDING: " ",
+                TaskStatus.READY: "*",
+                TaskStatus.RUNNING: ">",
+                TaskStatus.COMPLETE: "✓",
+                TaskStatus.FAILED: "✗",
+                TaskStatus.CANCELLED: "-",
+            }
+            icon = status_icons.get(task.status, "?")
+
+            # Format line
+            line = f"[{icon}] [{task.priority.name}] {task.id}"
+            formatter.message(line)
+            formatter.message(f"    {task.description[:60]}{'...' if len(task.description) > 60 else ''}")
+
+            if task.pr_url:
+                formatter.message(f"    PR: {task.pr_url}")
+            if task.confidence is not None:
+                formatter.message(f"    Confidence: {task.confidence:.2f}")
+            if task.error:
+                formatter.message(f"    Error: {task.error}")
+
+            formatter.message("")
+
+        return EXIT_SUCCESS
+
+    elif args.queue_command == "next":
+        next_task = queue.next()
+
+        if next_task is None:
+            formatter.message("No tasks ready to process")
+            formatter.message("(All tasks may be blocked by dependencies)")
+            return EXIT_SUCCESS
+
+        formatter.message("Next task to process:")
+        formatter.message("")
+        formatter.message(f"  ID: {next_task.id}")
+        formatter.message(f"  Description: {next_task.description}")
+        formatter.message(f"  Priority: P{next_task.priority.value}")
+
+        if next_task.acceptance_criteria:
+            formatter.message("  Acceptance Criteria:")
+            for criterion in next_task.acceptance_criteria:
+                formatter.message(f"    - {criterion}")
+
+        if next_task.dependencies:
+            formatter.message(f"  Dependencies: {', '.join(next_task.dependencies)}")
+
+        return EXIT_SUCCESS
+
+    elif args.queue_command == "stats":
+        stats = queue.stats()
+
+        formatter.message("Queue Statistics:")
+        formatter.message("")
+        formatter.message(f"  Total:     {stats['total']}")
+        formatter.message(f"  Pending:   {stats.get('pending', 0)}")
+        formatter.message(f"  Ready:     {stats.get('ready', 0)}")
+        formatter.message(f"  Running:   {stats.get('running', 0)}")
+        formatter.message(f"  Complete:  {stats.get('complete', 0)}")
+        formatter.message(f"  Failed:    {stats.get('failed', 0)}")
+        formatter.message(f"  Cancelled: {stats.get('cancelled', 0)}")
+
+        return EXIT_SUCCESS
+
+    elif args.queue_command == "clear":
+        removed = queue.clear(include_running=args.include_running)
+        formatter.message(f"Cleared {removed} tasks from queue")
+        return EXIT_SUCCESS
+
+    return EXIT_ERROR
+
+
 def run_tui(args: argparse.Namespace) -> int:
     """Execute the tui command (terminal interface).
 
@@ -917,6 +1148,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "init":
         return run_init(args)
+
+    if args.command == "queue":
+        return run_queue(args)
 
     if args.command == "tui":
         return run_tui(args)

@@ -1,7 +1,8 @@
 """Task management for RALPH-AGI.
 
 This module provides task management capabilities using PRD.json as the
-single source of truth for project requirements.
+single source of truth for project requirements, plus a file-based task
+queue for autonomous "sip coffee" workflow.
 
 Key Components:
 - PRD: Project requirements document container
@@ -19,6 +20,14 @@ Key Components:
 - TaskAnalysis: Task size analysis results
 - DependencyGraph: Graph-based dependency analysis
 - DependencyNode: Node in the dependency graph
+
+Task Queue (new in ADR-005):
+- TaskQueue: File-based task queue for autonomous processing
+- QueuedTask: Task definition with lifecycle management
+- TaskStatus: Task lifecycle states (pending, running, complete, failed)
+- TaskPriority: Priority levels (P0-P4)
+- WorktreeManager: Git worktree isolation for parallel execution
+- ActiveWorktree: Info about an active worktree
 """
 
 from ralph_agi.tasks.executor import (
@@ -56,6 +65,23 @@ from ralph_agi.tasks.writer import (
     validate_prd_changes,
     write_prd,
 )
+from ralph_agi.tasks.queue import (
+    TaskQueue,
+    QueuedTask,
+    TaskStatus,
+    TaskPriority,
+    QueueError,
+    TaskNotFoundError,
+    TaskValidationError,
+    generate_task_id,
+)
+from ralph_agi.tasks.worktree import (
+    WorktreeManager,
+    ActiveWorktree,
+    WorktreeError,
+    WorktreeExistsError,
+    WorktreeNotFoundError,
+)
 
 __all__ = [
     "PRD",
@@ -83,4 +109,19 @@ __all__ = [
     "DependencyError",
     "CircularDependencyError",
     "MissingDependencyError",
+    # Task Queue (ADR-005)
+    "TaskQueue",
+    "QueuedTask",
+    "TaskStatus",
+    "TaskPriority",
+    "QueueError",
+    "TaskNotFoundError",
+    "TaskValidationError",
+    "generate_task_id",
+    # Worktree Manager (ADR-005)
+    "WorktreeManager",
+    "ActiveWorktree",
+    "WorktreeError",
+    "WorktreeExistsError",
+    "WorktreeNotFoundError",
 ]
