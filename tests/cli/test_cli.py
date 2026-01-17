@@ -100,12 +100,23 @@ class TestCreateParser:
 class TestMainFunction:
     """Tests for main() entry point."""
 
-    def test_main_no_command_shows_help(self, capsys):
-        """Test main with no command shows help."""
+    @patch("ralph_agi.interactive.run_interactive")
+    def test_main_no_command_launches_interactive(self, mock_interactive, capsys):
+        """Test main with no command launches interactive mode."""
+        mock_interactive.return_value = 0  # User quit
         result = main([])
         assert result == EXIT_SUCCESS
-        captured = capsys.readouterr()
-        assert "ralph-agi" in captured.out or "usage" in captured.out.lower()
+        mock_interactive.assert_called_once()
+
+    @patch("ralph_agi.interactive.run_interactive")
+    @patch("ralph_agi.cli.run_loop")
+    def test_main_interactive_run_prd(self, mock_run_loop, mock_interactive):
+        """Test interactive mode can trigger run with PRD."""
+        mock_interactive.return_value = ("run", "/path/to/prd.json")
+        mock_run_loop.return_value = EXIT_SUCCESS
+        result = main([])
+        mock_run_loop.assert_called_once()
+        assert result == EXIT_SUCCESS
 
     def test_main_help_flag(self):
         """Test main with --help flag."""

@@ -773,7 +773,23 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     if args.command is None:
-        parser.print_help()
+        # No command specified - launch interactive mode
+        from ralph_agi.interactive import run_interactive
+
+        result = run_interactive()
+
+        # Handle interactive mode results
+        if isinstance(result, tuple):
+            if result[0] == "run":
+                # User selected a PRD to run
+                prd_path = result[1]
+                args = parser.parse_args(["run", "--prd", prd_path])
+                return run_loop(args)
+            elif result[0] == "init":
+                # User wants to run setup wizard
+                args = parser.parse_args(["init"])
+                return run_init(args)
+
         return EXIT_SUCCESS
 
     if args.command == "run":
