@@ -117,9 +117,10 @@ async def start_execution(
         except Exception as e:
             # Log error but don't crash
             import logging
-            logging.getLogger(__name__).error(f"Execution error: {e}")
+            logging.getLogger(__name__).error(f"Execution error: {e}", exc_info=True)
 
-    background_tasks.add_task(asyncio.create_task, run_executor())
+    # Schedule the async task - using create_task to run it in the event loop
+    asyncio.create_task(run_executor())
 
     return {
         "status": "started",
