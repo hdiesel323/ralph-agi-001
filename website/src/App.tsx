@@ -10,11 +10,13 @@ import Architecture from "./pages/Architecture";
 import GettingStarted from "./pages/GettingStarted";
 import UseCases from "./pages/UseCases";
 import Enterprise from "./pages/Enterprise";
+import Dashboard from "./pages/Dashboard";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/dashboard" component={Dashboard} />
       <Route path="/prd" component={PRD} />
       <Route path="/architecture" component={Architecture} />
       <Route path="/getting-started" component={GettingStarted} />

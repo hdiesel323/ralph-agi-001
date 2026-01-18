@@ -425,6 +425,32 @@ Exit Codes:
         help="Show demo data for testing the interface",
     )
 
+    # Serve command for API server
+    serve_parser = subparsers.add_parser(
+        "serve",
+        help="Start the API server for Visual Control Interface",
+        description="Start the FastAPI server that provides REST API and WebSocket endpoints for the Kanban board UI.",
+    )
+    serve_parser.add_argument(
+        "--host",
+        type=str,
+        default="0.0.0.0",
+        metavar="HOST",
+        help="Host to bind to (default: 0.0.0.0)",
+    )
+    serve_parser.add_argument(
+        "--port",
+        type=int,
+        default=8000,
+        metavar="PORT",
+        help="Port to bind to (default: 8000)",
+    )
+    serve_parser.add_argument(
+        "--reload",
+        action="store_true",
+        help="Enable auto-reload for development",
+    )
+
     return parser
 
 
@@ -1326,6 +1352,63 @@ def run_tui(args: argparse.Namespace) -> int:
         return EXIT_ERROR
 
 
+def run_serve(args: argparse.Namespace) -> int:
+    """Execute the serve command (API server).
+
+    Args:
+        args: Parsed command-line arguments.
+
+    Returns:
+        Exit code.
+    """
+    formatter = OutputFormatter(verbosity=Verbosity.NORMAL)
+
+    try:
+        # Check if fastapi and uvicorn are available
+        try:
+            import fastapi
+            import uvicorn
+        except ImportError:
+            formatter.error(
+                "FastAPI dependencies not installed. "
+                "Install with: pip install ralph-agi[api]"
+            )
+            return EXIT_ERROR
+
+        from ralph_agi.api.app import run_server
+
+        formatter.message("=" * 60)
+        formatter.message("RALPH-AGI API Server")
+        formatter.message("=" * 60)
+        formatter.message(f"Host: {args.host}")
+        formatter.message(f"Port: {args.port}")
+        formatter.message(f"Reload: {args.reload}")
+        formatter.message("")
+        formatter.message(f"API Docs: http://{args.host}:{args.port}/api/docs")
+        formatter.message(f"WebSocket: ws://{args.host}:{args.port}/ws")
+        formatter.message("")
+        formatter.message("Press Ctrl+C to stop")
+        formatter.message("=" * 60)
+        formatter.message("")
+
+        run_server(
+            host=args.host,
+            port=args.port,
+            project_root=Path.cwd(),
+            reload=args.reload,
+        )
+        return EXIT_SUCCESS
+
+    except KeyboardInterrupt:
+        formatter.message("")
+        formatter.message("Server stopped")
+        return EXIT_SUCCESS
+
+    except Exception as e:
+        formatter.error("Server error", exception=e)
+        return EXIT_ERROR
+
+
 def main(argv: list[str] | None = None) -> int:
     """Main entry point for ralph-agi CLI.
 
@@ -1385,6 +1468,9 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.command == "tui":
         return run_tui(args)
+
+    if args.command == "serve":
+        return run_serve(args)
 
     # Unknown command (shouldn't happen with subparsers)
     parser.print_help()
