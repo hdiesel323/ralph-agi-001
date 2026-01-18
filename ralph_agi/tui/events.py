@@ -46,6 +46,7 @@ class EventType(Enum):
     # Metrics events
     TOKENS_USED = "tokens_used"
     COST_UPDATED = "cost_updated"
+    METRICS_UPDATED = "metrics_updated"
 
     # Log events
     LOG_MESSAGE = "log_message"
@@ -379,5 +380,19 @@ def emit_progress(task_name: str, progress: float, eta: str = "") -> None:
         Event(
             type=EventType.PROGRESS_UPDATED,
             data={"task_name": task_name, "progress": progress, "eta": eta},
+        )
+    )
+
+
+def emit_metrics_updated(metrics: dict[str, Any]) -> None:
+    """Emit full metrics updated event.
+
+    Args:
+        metrics: Dictionary containing all current metrics.
+    """
+    EventBus.get_instance().emit(
+        Event(
+            type=EventType.METRICS_UPDATED,
+            data=metrics,
         )
     )

@@ -246,6 +246,26 @@ class ConfigUpdate(BaseModel):
     require_approval: Optional[bool] = None
 
 
+# Metrics schemas
+
+
+class MetricsResponse(BaseModel):
+    """Response model for execution metrics."""
+
+    iteration: int = Field(0, description="Current iteration number")
+    max_iterations: int = Field(100, description="Maximum iterations allowed")
+    cost: float = Field(0.0, description="Estimated cost in USD")
+    input_tokens: int = Field(0, description="Total input tokens used")
+    output_tokens: int = Field(0, description="Total output tokens used")
+    total_tokens: int = Field(0, description="Combined token count")
+    elapsed_seconds: float = Field(0.0, description="Elapsed time in seconds")
+    elapsed_formatted: str = Field("00:00:00", description="Human-readable elapsed time")
+    errors: int = Field(0, description="Number of errors encountered")
+    tasks_completed: int = Field(0, description="Tasks completed this session")
+    tasks_running: int = Field(0, description="Tasks currently running")
+    current_task: Optional[str] = Field(None, description="Current task description")
+
+
 # Conversion helpers
 
 

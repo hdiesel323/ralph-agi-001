@@ -10,6 +10,7 @@ import { TaskDetailDrawer } from '@/components/dashboard/TaskDetailDrawer';
 import { SettingsPanel } from '@/components/dashboard/SettingsPanel';
 import { QuickActionsBar } from '@/components/dashboard/QuickActionsBar';
 import { ExecutionStatus } from '@/components/dashboard/ExecutionStatus';
+import { MetricsPanel } from '@/components/dashboard/MetricsPanel';
 import { useTasks } from '@/hooks/useTasks';
 import { useExecution } from '@/hooks/useExecution';
 import { useConfig } from '@/hooks/useConfig';
@@ -255,8 +256,9 @@ export function Dashboard() {
           />
         </div>
 
-        {/* Sidebar - Execution Status */}
+        {/* Sidebar - Metrics & Execution Status */}
         <div className="w-80 border-l p-4 overflow-auto bg-muted/10">
+          <MetricsPanel pollingInterval={2000} />
           <ExecutionStatus status={executionStatus} results={executionResults} />
         </div>
       </div>

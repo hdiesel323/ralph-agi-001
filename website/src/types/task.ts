@@ -258,3 +258,21 @@ export interface ConfigUpdate {
   default_priority?: TaskPriority;
   require_approval?: boolean;
 }
+
+/**
+ * Execution metrics response from API
+ */
+export interface Metrics {
+  iteration: number;
+  max_iterations: number;
+  cost: number;
+  input_tokens: number;
+  output_tokens: number;
+  total_tokens: number;
+  elapsed_seconds: number;
+  elapsed_formatted: string;
+  errors: number;
+  tasks_completed: number;
+  tasks_running: number;
+  current_task: string | null;
+}
