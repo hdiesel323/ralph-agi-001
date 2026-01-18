@@ -5,6 +5,8 @@ Provides endpoints for queue statistics and next task selection.
 
 from __future__ import annotations
 
+from typing import Optional
+
 from fastapi import APIRouter, Depends
 
 from ralph_agi.api.dependencies import get_task_queue
@@ -32,18 +34,20 @@ async def get_queue_stats(
     return QueueStatsResponse(
         total=stats.get("total", 0),
         pending=stats.get("pending", 0),
+        pending_approval=stats.get("pending_approval", 0),
         ready=stats.get("ready", 0),
         running=stats.get("running", 0),
+        pending_merge=stats.get("pending_merge", 0),
         complete=stats.get("complete", 0),
         failed=stats.get("failed", 0),
         cancelled=stats.get("cancelled", 0),
     )
 
 
-@router.get("/next", response_model=TaskResponse | None)
+@router.get("/next", response_model=Optional[TaskResponse])
 async def get_next_task(
     queue: TaskQueue = Depends(get_task_queue),
-) -> TaskResponse | None:
+) -> Optional[TaskResponse]:
     """Get the next task to process.
 
     Returns the highest priority pending task whose dependencies

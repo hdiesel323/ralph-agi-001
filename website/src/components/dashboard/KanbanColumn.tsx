@@ -14,6 +14,9 @@ interface KanbanColumnProps {
   onEditTask?: (task: Task) => void;
   onDeleteTask?: (taskId: string) => void;
   onStatusChange?: (taskId: string, status: string) => void;
+  onTaskClick?: (task: Task) => void;
+  onApproveTask?: (taskId: string) => void;
+  onApproveMerge?: (taskId: string) => void;
 }
 
 export function KanbanColumn({
@@ -22,6 +25,9 @@ export function KanbanColumn({
   onEditTask,
   onDeleteTask,
   onStatusChange,
+  onTaskClick,
+  onApproveTask,
+  onApproveMerge,
 }: KanbanColumnProps) {
   // Filter tasks for this column
   const columnTasks = tasks.filter((task) => {
@@ -41,11 +47,13 @@ export function KanbanColumn({
     switch (column.id) {
       case 'backlog':
         return 'bg-gray-100 dark:bg-gray-800';
+      case 'needs-approval':
+        return 'bg-orange-50 dark:bg-orange-950';
       case 'ready':
         return 'bg-blue-50 dark:bg-blue-950';
       case 'running':
         return 'bg-yellow-50 dark:bg-yellow-950';
-      case 'review':
+      case 'needs-review':
         return 'bg-purple-50 dark:bg-purple-950';
       case 'done':
         return 'bg-green-50 dark:bg-green-950';
@@ -81,6 +89,9 @@ export function KanbanColumn({
                 onEdit={onEditTask}
                 onDelete={onDeleteTask}
                 onStatusChange={onStatusChange}
+                onClick={onTaskClick}
+                onApprove={onApproveTask}
+                onApproveMerge={onApproveMerge}
               />
             ))
           )}

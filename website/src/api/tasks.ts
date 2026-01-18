@@ -130,3 +130,19 @@ export async function cleanupWorktrees(force = false): Promise<{ cleaned: number
   });
   return response.data;
 }
+
+/**
+ * Approve a task for execution (pending_approval → ready)
+ */
+export async function approveTask(taskId: string): Promise<Task> {
+  const response = await apiClient.post<Task>(`/api/tasks/${taskId}/approve`);
+  return response.data;
+}
+
+/**
+ * Approve a PR for merge (pending_merge → complete)
+ */
+export async function approveMerge(taskId: string): Promise<Task> {
+  const response = await apiClient.post<Task>(`/api/tasks/${taskId}/approve-merge`);
+  return response.data;
+}

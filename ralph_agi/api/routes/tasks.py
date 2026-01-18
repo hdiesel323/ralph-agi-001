@@ -217,3 +217,85 @@ async def delete_task(
     """
     if not queue.remove(task_id):
         raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
+
+
+@router.post("/{task_id}/approve", response_model=TaskResponse)
+async def approve_task(
+    task_id: str,
+    queue: TaskQueue = Depends(get_task_queue),
+) -> TaskResponse:
+    """Approve a task for execution.
+
+    Transitions task from pending_approval → ready.
+
+    Args:
+        task_id: Task identifier.
+        queue: TaskQueue dependency.
+
+    Returns:
+        The updated task.
+
+    Raises:
+        HTTPException: If task not found or not in pending_approval status.
+    """
+    try:
+        task = queue.get(task_id)
+
+        # Check current status
+        if task.status.value not in ("pending", "pending_approval"):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Task cannot be approved: current status is {task.status.value}",
+            )
+
+        # Transition to ready
+        task = queue.update_status(task_id, "ready")
+        return task_to_response(task)
+
+    except TaskNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to approve task: {e}")
+
+
+@router.post("/{task_id}/approve-merge", response_model=TaskResponse)
+async def approve_merge(
+    task_id: str,
+    queue: TaskQueue = Depends(get_task_queue),
+) -> TaskResponse:
+    """Approve a PR for merge.
+
+    Transitions task from pending_merge → complete.
+
+    Args:
+        task_id: Task identifier.
+        queue: TaskQueue dependency.
+
+    Returns:
+        The updated task.
+
+    Raises:
+        HTTPException: If task not found or not in pending_merge status.
+    """
+    try:
+        task = queue.get(task_id)
+
+        # Check current status
+        if task.status.value != "pending_merge":
+            raise HTTPException(
+                status_code=400,
+                detail=f"Task cannot be merged: current status is {task.status.value}",
+            )
+
+        # Transition to complete
+        task = queue.update_status(task_id, "complete")
+        return task_to_response(task)
+
+    except TaskNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to approve merge: {e}")

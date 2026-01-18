@@ -6,19 +6,27 @@
 import { useState, useCallback } from 'react';
 import { KanbanBoard } from '@/components/dashboard/KanbanBoard';
 import { TaskEditor } from '@/components/dashboard/TaskEditor';
+import { TaskDetailDrawer } from '@/components/dashboard/TaskDetailDrawer';
+import { SettingsPanel } from '@/components/dashboard/SettingsPanel';
 import { QuickActionsBar } from '@/components/dashboard/QuickActionsBar';
 import { ExecutionStatus } from '@/components/dashboard/ExecutionStatus';
 import { useTasks } from '@/hooks/useTasks';
 import { useExecution } from '@/hooks/useExecution';
+import { useConfig } from '@/hooks/useConfig';
 import { useWebSocket } from '@/hooks/useWebSocket';
+import { approveTask, approveMerge } from '@/api/tasks';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { AlertCircle, Wifi, WifiOff } from 'lucide-react';
-import type { Task, TaskCreate, TaskUpdate } from '@/types/task';
+import { AlertCircle, Wifi, WifiOff, Settings } from 'lucide-react';
+import type { Task, TaskCreate, TaskUpdate, ConfigUpdate } from '@/types/task';
 
 export function Dashboard() {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [isDetailDrawerOpen, setIsDetailDrawerOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   // Data hooks
   const {
@@ -42,6 +50,13 @@ export function Dashboard() {
     stop: stopExecution,
     refresh: refreshExecution,
   } = useExecution({ pollingInterval: 2000 });
+
+  const {
+    config,
+    repo: repoContext,
+    loading: configLoading,
+    updateSettings,
+  } = useConfig();
 
   // WebSocket for real-time updates
   const { status: wsStatus, lastEvent } = useWebSocket({
@@ -117,6 +132,36 @@ export function Dashboard() {
     await Promise.all([refreshTasks(), refreshExecution()]);
   }, [refreshTasks, refreshExecution]);
 
+  const handleTaskClick = useCallback((task: Task) => {
+    setSelectedTask(task);
+    setIsDetailDrawerOpen(true);
+  }, []);
+
+  const handleApproveTask = useCallback(
+    async (taskId: string) => {
+      await approveTask(taskId);
+      await refreshTasks();
+      setIsDetailDrawerOpen(false);
+    },
+    [refreshTasks]
+  );
+
+  const handleApproveMerge = useCallback(
+    async (taskId: string) => {
+      await approveMerge(taskId);
+      await refreshTasks();
+      setIsDetailDrawerOpen(false);
+    },
+    [refreshTasks]
+  );
+
+  const handleUpdateSettings = useCallback(
+    async (updates: ConfigUpdate) => {
+      await updateSettings(updates);
+    },
+    [updateSettings]
+  );
+
   // Loading state
   if (tasksLoading && executionLoading) {
     return (
@@ -155,6 +200,11 @@ export function Dashboard() {
       <header className="border-b px-4 py-3 flex items-center justify-between bg-background">
         <div className="flex items-center gap-4">
           <h1 className="text-xl font-bold">RALPH-AGI Control</h1>
+          {repoContext && (
+            <span className="text-sm text-muted-foreground font-mono">
+              {repoContext.name}
+            </span>
+          )}
           <div className="flex items-center gap-1 text-sm text-muted-foreground">
             {wsStatus === 'connected' ? (
               <>
@@ -174,6 +224,9 @@ export function Dashboard() {
             )}
           </div>
         </div>
+        <Button variant="ghost" size="icon" onClick={() => setIsSettingsOpen(true)}>
+          <Settings className="h-5 w-5" />
+        </Button>
       </header>
 
       {/* Quick Actions Bar */}
@@ -196,6 +249,9 @@ export function Dashboard() {
             onEditTask={handleEditTask}
             onDeleteTask={handleDeleteTask}
             onStatusChange={handleStatusChange}
+            onTaskClick={handleTaskClick}
+            onApproveTask={handleApproveTask}
+            onApproveMerge={handleApproveMerge}
           />
         </div>
 
@@ -212,6 +268,28 @@ export function Dashboard() {
         task={editingTask}
         onSubmit={handleSubmitTask}
         availableTasks={tasks}
+      />
+
+      {/* Task Detail Drawer */}
+      <TaskDetailDrawer
+        task={selectedTask}
+        open={isDetailDrawerOpen}
+        onOpenChange={setIsDetailDrawerOpen}
+        repoContext={repoContext}
+        onApprove={handleApproveTask}
+        onApproveMerge={handleApproveMerge}
+        onEdit={(task) => {
+          setIsDetailDrawerOpen(false);
+          handleEditTask(task);
+        }}
+      />
+
+      {/* Settings Panel */}
+      <SettingsPanel
+        config={config}
+        open={isSettingsOpen}
+        onOpenChange={setIsSettingsOpen}
+        onUpdateSettings={handleUpdateSettings}
       />
     </div>
   );

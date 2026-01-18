@@ -13,6 +13,9 @@ interface KanbanBoardProps {
   onEditTask?: (task: Task) => void;
   onDeleteTask?: (taskId: string) => void;
   onStatusChange?: (taskId: string, status: string) => void;
+  onTaskClick?: (task: Task) => void;
+  onApproveTask?: (taskId: string) => void;
+  onApproveMerge?: (taskId: string) => void;
 }
 
 export function KanbanBoard({
@@ -20,6 +23,9 @@ export function KanbanBoard({
   onEditTask,
   onDeleteTask,
   onStatusChange,
+  onTaskClick,
+  onApproveTask,
+  onApproveMerge,
 }: KanbanBoardProps) {
   return (
     <ScrollArea className="w-full">
@@ -32,6 +38,9 @@ export function KanbanBoard({
             onEditTask={onEditTask}
             onDeleteTask={onDeleteTask}
             onStatusChange={onStatusChange}
+            onTaskClick={onTaskClick}
+            onApproveTask={onApproveTask}
+            onApproveMerge={onApproveMerge}
           />
         ))}
       </div>

@@ -230,37 +230,39 @@ class ParallelExecutor:
         self._max_concurrent = value
 
     def _get_ready_tasks(self) -> list[QueuedTask]:
-        """Get tasks ready for execution (no blocking dependencies).
+        """Get tasks ready for execution (status=ready, dependencies met).
 
         Returns:
             List of tasks ready to execute, sorted by priority
         """
-        pending = self._queue.list(status="pending")
-        ready = []
+        # Only pick up tasks with status "ready" (approved by human)
+        ready_tasks = self._queue.list(status="ready")
+        result = []
 
-        for task in pending:
+        for task in ready_tasks:
             if not task.dependencies:
-                ready.append(task)
+                result.append(task)
                 continue
 
-            # Check if all dependencies are complete
-            all_deps_complete = True
+            # Check if all dependencies are complete or pending_merge
+            all_deps_done = True
             for dep_id in task.dependencies:
                 try:
                     dep = self._queue.get(dep_id)
-                    if dep.status != TaskStatus.COMPLETE:
-                        all_deps_complete = False
+                    # Dependencies are satisfied if complete or pending_merge
+                    if dep.status not in (TaskStatus.COMPLETE, TaskStatus.PENDING_MERGE):
+                        all_deps_done = False
                         break
                 except TaskNotFoundError:
                     # Dependency doesn't exist - treat as satisfied
                     pass
 
-            if all_deps_complete:
-                ready.append(task)
+            if all_deps_done:
+                result.append(task)
 
         # Sort by priority (P0 first)
-        ready.sort(key=lambda t: t.priority.value)
-        return ready
+        result.sort(key=lambda t: t.priority.value)
+        return result
 
     def _execute_task(self, task: QueuedTask) -> TaskResult:
         """Execute a single task in a worktree.
@@ -338,9 +340,10 @@ class ParallelExecutor:
 
             # Update queue status
             if result.success:
+                # Use pending_merge instead of complete - requires human approval
                 self._queue.update_status(
                     task_id,
-                    "complete",
+                    "pending_merge",
                     confidence=result.confidence,
                     pr_url=result.pr_url,
                 )

@@ -17,8 +17,10 @@ class TaskStatus(str, Enum):
     """Task lifecycle status."""
 
     PENDING = "pending"
+    PENDING_APPROVAL = "pending_approval"
     READY = "ready"
     RUNNING = "running"
+    PENDING_MERGE = "pending_merge"
     COMPLETE = "complete"
     FAILED = "failed"
     CANCELLED = "cancelled"
@@ -126,8 +128,10 @@ class QueueStatsResponse(BaseModel):
 
     total: int
     pending: int
+    pending_approval: int = 0
     ready: int
     running: int
+    pending_merge: int = 0
     complete: int
     failed: int
     cancelled: int
@@ -194,6 +198,52 @@ class ErrorResponse(BaseModel):
 
     detail: str
     code: Optional[str] = None
+
+
+# Config schemas
+
+
+class RepoContext(BaseModel):
+    """Repository context information (auto-detected from .git)."""
+
+    name: str = Field(..., description="Repository name")
+    origin_url: Optional[str] = Field(None, description="Remote origin URL")
+    current_branch: str = Field(..., description="Current branch name")
+    project_root: str = Field(..., description="Project root path")
+
+
+class RuntimeSettings(BaseModel):
+    """Runtime settings that can be changed."""
+
+    auto_merge_threshold: float = Field(
+        0.9,
+        ge=0.0,
+        le=1.0,
+        description="Confidence threshold for auto-merge (0.0-1.0)",
+    )
+    default_priority: TaskPriority = Field(
+        TaskPriority.P2,
+        description="Default priority for new tasks",
+    )
+    require_approval: bool = Field(
+        True,
+        description="Require human approval before task execution",
+    )
+
+
+class ConfigResponse(BaseModel):
+    """Response model for configuration endpoint."""
+
+    repo: RepoContext
+    settings: RuntimeSettings
+
+
+class ConfigUpdate(BaseModel):
+    """Request body for updating configuration."""
+
+    auto_merge_threshold: Optional[float] = Field(None, ge=0.0, le=1.0)
+    default_priority: Optional[TaskPriority] = None
+    require_approval: Optional[bool] = None
 
 
 # Conversion helpers

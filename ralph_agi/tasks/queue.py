@@ -48,8 +48,10 @@ class TaskStatus(Enum):
     """Task lifecycle status."""
 
     PENDING = "pending"
+    PENDING_APPROVAL = "pending_approval"  # Awaiting human approval to start
     READY = "ready"  # Ready to run (dependencies met)
     RUNNING = "running"
+    PENDING_MERGE = "pending_merge"  # Awaiting human approval to merge
     COMPLETE = "complete"
     FAILED = "failed"
     CANCELLED = "cancelled"
@@ -230,7 +232,7 @@ class QueuedTask:
     @property
     def is_actionable(self) -> bool:
         """Check if task can be picked up for execution."""
-        return self.status in (TaskStatus.PENDING, TaskStatus.READY)
+        return self.status == TaskStatus.READY
 
     @property
     def is_terminal(self) -> bool:

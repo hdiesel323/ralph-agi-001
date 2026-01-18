@@ -17,7 +17,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 
 from ralph_agi.api.dependencies import set_project_root
-from ralph_agi.api.routes import tasks_router, queue_router, execution_router
+from ralph_agi.api.routes import tasks_router, queue_router, execution_router, config_router
 from ralph_agi.tui.events import Event, EventBus, EventType
 
 logger = logging.getLogger(__name__)
@@ -138,6 +138,7 @@ def create_app(
     app.include_router(tasks_router, prefix="/api")
     app.include_router(queue_router, prefix="/api")
     app.include_router(execution_router, prefix="/api")
+    app.include_router(config_router, prefix="/api")
 
     # WebSocket endpoint
     @app.websocket("/ws")

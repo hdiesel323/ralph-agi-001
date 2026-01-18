@@ -3,7 +3,15 @@
  * These mirror the Pydantic schemas in ralph_agi/api/schemas.py
  */
 
-export type TaskStatus = 'pending' | 'ready' | 'running' | 'complete' | 'failed' | 'cancelled';
+export type TaskStatus =
+  | 'pending'
+  | 'pending_approval'
+  | 'ready'
+  | 'running'
+  | 'pending_merge'
+  | 'complete'
+  | 'failed'
+  | 'cancelled';
 export type TaskPriority = 'P0' | 'P1' | 'P2' | 'P3' | 'P4';
 export type ExecutionState = 'idle' | 'running' | 'stopping' | 'stopped';
 
@@ -73,8 +81,10 @@ export interface TaskListResponse {
 export interface QueueStats {
   total: number;
   pending: number;
+  pending_approval: number;
   ready: number;
   running: number;
+  pending_merge: number;
   complete: number;
   failed: number;
   cancelled: number;
@@ -150,6 +160,8 @@ export interface KanbanColumn {
 
 /**
  * Default Kanban columns configuration
+ *
+ * Flow: Backlog → Needs Approval → Ready → Running → Needs Review → Done
  */
 export const KANBAN_COLUMNS: KanbanColumn[] = [
   {
@@ -159,10 +171,15 @@ export const KANBAN_COLUMNS: KanbanColumn[] = [
     filter: (task) => task.priority === 'P3' || task.priority === 'P4',
   },
   {
+    id: 'needs-approval',
+    title: 'Needs Approval',
+    statuses: ['pending', 'pending_approval'],
+    filter: (task) => task.priority === 'P0' || task.priority === 'P1' || task.priority === 'P2',
+  },
+  {
     id: 'ready',
     title: 'Ready',
-    statuses: ['pending', 'ready'],
-    filter: (task) => task.priority === 'P0' || task.priority === 'P1' || task.priority === 'P2',
+    statuses: ['ready'],
   },
   {
     id: 'running',
@@ -170,16 +187,14 @@ export const KANBAN_COLUMNS: KanbanColumn[] = [
     statuses: ['running'],
   },
   {
-    id: 'review',
-    title: 'Review',
-    statuses: ['complete'],
-    filter: (task) => task.pr_url !== null && task.confidence !== null && task.confidence < 0.9,
+    id: 'needs-review',
+    title: 'Needs Review',
+    statuses: ['pending_merge'],
   },
   {
     id: 'done',
     title: 'Done',
     statuses: ['complete'],
-    filter: (task) => task.pr_url === null || (task.confidence !== null && task.confidence >= 0.9),
   },
 ];
 
@@ -199,9 +214,47 @@ export const PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: strin
  */
 export const STATUS_CONFIG: Record<TaskStatus, { label: string; icon: string; color: string }> = {
   pending: { label: 'Pending', icon: '⏳', color: 'text-gray-500' },
+  pending_approval: { label: 'Needs Approval', icon: '👁️', color: 'text-orange-500' },
   ready: { label: 'Ready', icon: '✨', color: 'text-blue-500' },
   running: { label: 'Running', icon: '🔄', color: 'text-yellow-500' },
+  pending_merge: { label: 'Needs Review', icon: '📋', color: 'text-purple-500' },
   complete: { label: 'Complete', icon: '✅', color: 'text-green-500' },
   failed: { label: 'Failed', icon: '❌', color: 'text-red-500' },
   cancelled: { label: 'Cancelled', icon: '🚫', color: 'text-gray-400' },
 };
+
+/**
+ * Repository context information
+ */
+export interface RepoContext {
+  name: string;
+  origin_url: string | null;
+  current_branch: string;
+  project_root: string;
+}
+
+/**
+ * Runtime settings
+ */
+export interface RuntimeSettings {
+  auto_merge_threshold: number;
+  default_priority: TaskPriority;
+  require_approval: boolean;
+}
+
+/**
+ * Config response from API
+ */
+export interface ConfigResponse {
+  repo: RepoContext;
+  settings: RuntimeSettings;
+}
+
+/**
+ * Config update request
+ */
+export interface ConfigUpdate {
+  auto_merge_threshold?: number;
+  default_priority?: TaskPriority;
+  require_approval?: boolean;
+}

@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreVertical, ExternalLink, GitBranch, Clock, Trash2, Edit } from 'lucide-react';
+import { MoreVertical, ExternalLink, GitBranch, Clock, Trash2, Edit, Play, Merge } from 'lucide-react';
 import type { Task, TaskPriority } from '@/types/task';
 import { PRIORITY_CONFIG, STATUS_CONFIG } from '@/types/task';
 
@@ -23,6 +23,9 @@ interface TaskCardProps {
   onEdit?: (task: Task) => void;
   onDelete?: (taskId: string) => void;
   onStatusChange?: (taskId: string, status: string) => void;
+  onClick?: (task: Task) => void;
+  onApprove?: (taskId: string) => void;
+  onApproveMerge?: (taskId: string) => void;
   isDragging?: boolean;
 }
 
@@ -43,16 +46,30 @@ function formatDuration(started: string | null, completed: string | null): strin
   return `${Math.floor(seconds / 3600)}h ${Math.floor((seconds % 3600) / 60)}m`;
 }
 
-export function TaskCard({ task, onEdit, onDelete, onStatusChange, isDragging }: TaskCardProps) {
+export function TaskCard({ task, onEdit, onDelete, onStatusChange, onClick, onApprove, onApproveMerge, isDragging }: TaskCardProps) {
   const priorityConfig = PRIORITY_CONFIG[task.priority];
   const statusConfig = STATUS_CONFIG[task.status];
   const duration = formatDuration(task.started_at, task.completed_at);
+
+  const canApprove = (task.status === 'pending' || task.status === 'pending_approval') && onApprove;
+  const canMerge = task.status === 'pending_merge' && onApproveMerge;
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't trigger onClick if clicking a button or dropdown
+    if ((e.target as HTMLElement).closest('button, [role="menuitem"], a')) {
+      return;
+    }
+    onClick?.(task);
+  };
 
   return (
     <Card
       className={`mb-3 cursor-pointer transition-all hover:shadow-md ${
         isDragging ? 'opacity-50 shadow-lg' : ''
-      } ${task.status === 'running' ? 'border-yellow-500 border-2' : ''}`}
+      } ${task.status === 'running' ? 'border-yellow-500 border-2' : ''}
+      ${task.status === 'pending_approval' ? 'border-orange-500 border-2' : ''}
+      ${task.status === 'pending_merge' ? 'border-purple-500 border-2' : ''}`}
+      onClick={handleCardClick}
     >
       <CardHeader className="pb-2">
         <div className="flex items-start justify-between gap-2">
@@ -82,14 +99,14 @@ export function TaskCard({ task, onEdit, onDelete, onStatusChange, isDragging }:
                   Edit
                 </DropdownMenuItem>
               )}
-              {task.status === 'pending' && onStatusChange && (
+              {task.status === 'ready' && onStatusChange && (
                 <DropdownMenuItem onClick={() => onStatusChange(task.id, 'running')}>
                   Start Task
                 </DropdownMenuItem>
               )}
               {task.status === 'running' && onStatusChange && (
                 <>
-                  <DropdownMenuItem onClick={() => onStatusChange(task.id, 'complete')}>
+                  <DropdownMenuItem onClick={() => onStatusChange(task.id, 'pending_merge')}>
                     Mark Complete
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => onStatusChange(task.id, 'failed')}>
@@ -148,6 +165,23 @@ export function TaskCard({ task, onEdit, onDelete, onStatusChange, isDragging }:
           )}
         </div>
 
+        {/* PR Link - Prominent display when available */}
+        {task.pr_url && (
+          <div className="mt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs w-full"
+              asChild
+            >
+              <a href={task.pr_url} target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="mr-1 h-3 w-3" />
+                View PR #{task.pr_number || ''}
+              </a>
+            </Button>
+          </div>
+        )}
+
         {task.confidence !== null && (
           <div className="mt-3">
             <div className="flex items-center justify-between text-xs mb-1">
@@ -172,6 +206,39 @@ export function TaskCard({ task, onEdit, onDelete, onStatusChange, isDragging }:
         {task.acceptance_criteria.length > 0 && (
           <div className="mt-2 text-xs text-muted-foreground">
             {task.acceptance_criteria.length} acceptance criteria
+          </div>
+        )}
+
+        {/* Approval Buttons */}
+        {canApprove && (
+          <div className="mt-3">
+            <Button
+              size="sm"
+              className="h-7 text-xs w-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                onApprove!(task.id);
+              }}
+            >
+              <Play className="mr-1 h-3 w-3" />
+              Approve
+            </Button>
+          </div>
+        )}
+
+        {canMerge && (
+          <div className="mt-3">
+            <Button
+              size="sm"
+              className="h-7 text-xs w-full"
+              onClick={(e) => {
+                e.stopPropagation();
+                onApproveMerge!(task.id);
+              }}
+            >
+              <Merge className="mr-1 h-3 w-3" />
+              Approve Merge
+            </Button>
           </div>
         )}
       </CardContent>
