@@ -134,21 +134,26 @@ export function TaskEditor({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
+          {/* Task Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Description *</Label>
+            <Label htmlFor="description">What needs to be done? *</Label>
             <Textarea
               id="description"
-              placeholder="What should this task accomplish?"
+              placeholder="e.g., Add dark mode toggle to settings page"
               {...register('description')}
               className={errors.description ? 'border-destructive' : ''}
             />
+            <p className="text-xs text-muted-foreground">
+              Describe the task clearly. The AI agent will work on this autonomously.
+            </p>
             {errors.description && (
               <p className="text-sm text-destructive">{errors.description.message}</p>
             )}
           </div>
 
+          {/* Priority Selection */}
           <div className="space-y-2">
-            <Label htmlFor="priority">Priority</Label>
+            <Label htmlFor="priority">How urgent is this?</Label>
             <Select
               value={watch('priority')}
               onValueChange={(value) => setValue('priority', value as TaskPriority)}
@@ -164,36 +169,67 @@ export function TaskEditor({
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">
+              P0-P2 appear in "Ready", P3-P4 go to "Backlog"
+            </p>
           </div>
 
+          {/* Acceptance Criteria */}
           <div className="space-y-2">
-            <Label htmlFor="acceptance_criteria">Acceptance Criteria</Label>
+            <Label htmlFor="acceptance_criteria">How will we know it's done?</Label>
             <Textarea
               id="acceptance_criteria"
-              placeholder="One criterion per line..."
+              placeholder={"e.g.,\nToggle switch appears in settings\nPreference saves to localStorage\nTheme changes immediately on toggle"}
               {...register('acceptance_criteria')}
               rows={3}
             />
             <p className="text-xs text-muted-foreground">
-              Enter each acceptance criterion on a new line
+              List checkable requirements, one per line. Leave blank if obvious.
             </p>
           </div>
 
+          {/* Dependencies */}
           <div className="space-y-2">
-            <Label htmlFor="dependencies">Dependencies</Label>
-            <Input
-              id="dependencies"
-              placeholder="task-id-1, task-id-2"
-              {...register('dependencies')}
-            />
-            <p className="text-xs text-muted-foreground">
-              Comma-separated list of task IDs that must complete first
-            </p>
-            {availableTasks.length > 0 && (
-              <div className="text-xs text-muted-foreground mt-1">
-                Available: {availableTasks.map((t) => t.id).join(', ')}
-              </div>
+            <Label htmlFor="dependencies">Does this depend on other tasks?</Label>
+            {availableTasks.length > 0 ? (
+              <>
+                <div className="flex flex-wrap gap-1.5 p-2 border rounded-md bg-muted/30 max-h-24 overflow-auto">
+                  {availableTasks.map((t) => {
+                    const currentDeps = watch('dependencies')?.split(',').map(d => d.trim()).filter(Boolean) || [];
+                    const isSelected = currentDeps.includes(t.id);
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => {
+                          if (isSelected) {
+                            setValue('dependencies', currentDeps.filter(d => d !== t.id).join(', '));
+                          } else {
+                            setValue('dependencies', [...currentDeps, t.id].join(', '));
+                          }
+                        }}
+                        className={`text-xs px-2 py-1 rounded-full transition-colors ${
+                          isSelected
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                        }`}
+                        title={t.id}
+                      >
+                        {t.description.length > 30 ? t.description.slice(0, 30) + '...' : t.description}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Click tasks that must finish before this one can start
+                </p>
+              </>
+            ) : (
+              <p className="text-xs text-muted-foreground italic">
+                No other tasks available to depend on
+              </p>
             )}
+            <input type="hidden" {...register('dependencies')} />
           </div>
 
           <DialogFooter>
