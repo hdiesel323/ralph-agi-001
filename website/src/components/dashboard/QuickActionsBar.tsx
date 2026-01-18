@@ -136,38 +136,50 @@ export function QuickActionsBar({
 
         {/* Start/Stop Execution */}
         {!isRunning ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="default"
-                size="sm"
-                disabled={isStarting || (queueStats?.pending === 0 && queueStats?.ready === 0)}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                {isStarting ? (
-                  <Spinner className="mr-1 h-4 w-4" />
-                ) : (
-                  <Play className="mr-1 h-4 w-4" />
-                )}
-                Start
-                <ChevronDown className="ml-1 h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleStart(1)}>
-                Start (1 worker)
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleStart(2)}>
-                Start (2 workers)
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleStart(3)}>
-                Start (3 workers)
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleStart(5)}>
-                Start (5 workers)
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex">
+            {/* Main Start button - starts with 3 workers */}
+            <Button
+              variant="default"
+              size="sm"
+              disabled={isStarting || (queueStats?.pending === 0 && queueStats?.ready === 0)}
+              className="bg-green-600 hover:bg-green-700 rounded-r-none"
+              onClick={() => handleStart(3)}
+            >
+              {isStarting ? (
+                <Spinner className="mr-1 h-4 w-4" />
+              ) : (
+                <Play className="mr-1 h-4 w-4" />
+              )}
+              Start
+            </Button>
+            {/* Dropdown for worker count options */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="default"
+                  size="sm"
+                  disabled={isStarting || (queueStats?.pending === 0 && queueStats?.ready === 0)}
+                  className="bg-green-600 hover:bg-green-700 rounded-l-none border-l border-green-700 px-2"
+                >
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleStart(1)}>
+                  Start with 1 worker
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleStart(2)}>
+                  Start with 2 workers
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleStart(3)}>
+                  Start with 3 workers
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleStart(5)}>
+                  Start with 5 workers
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         ) : (
           <Button
             variant="destructive"
