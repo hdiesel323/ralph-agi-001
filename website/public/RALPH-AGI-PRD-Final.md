@@ -40,11 +40,11 @@ The overarching vision for RALPH-AGI centers on three primary goals. The first g
 
 The development of RALPH-AGI will proceed through four quarterly milestones, as outlined in the table below.
 
-| Quarter | Objective | Key Deliverables |
-|---------|-----------|------------------|
-| Q1 2026 | MVP Development | Core loop engine, basic PRD management, Git integration, single-tool execution |
-| Q2 2026 | Memory System | Full three-tier memory implementation, 50% reduction in task re-work on similar tasks |
-| Q3 2026 | Quality Assurance | Cascaded evaluation pipeline, 95% pass rate on internal quality checks |
+| Quarter | Objective         | Key Deliverables                                                                       |
+| ------- | ----------------- | -------------------------------------------------------------------------------------- |
+| Q1 2026 | MVP Development   | Core loop engine, basic PRD management, Git integration, single-tool execution         |
+| Q2 2026 | Memory System     | Full three-tier memory implementation, 50% reduction in task re-work on similar tasks  |
+| Q3 2026 | Quality Assurance | Cascaded evaluation pipeline, 95% pass rate on internal quality checks                 |
 | Q4 2026 | Advanced Features | Evolutionary research mode, SOTA Hunter integration, multi-agent collaboration preview |
 
 ---
@@ -87,13 +87,13 @@ The loop operates on a single task at a time, preventing the agent from "biting 
 
 The system supports two operational modes. **AFK Mode** (Away From Keyboard) runs fully autonomously, with optional notifications via webhook when complete. **Human-in-the-Loop Mode** pauses at configurable checkpoints for user approval, which is useful for difficult features or when the user wants to steer the agent's decisions.
 
-| Requirement ID | Description | Priority |
-|----------------|-------------|----------|
-| FR-001.1 | Configurable maximum iteration count | P0 |
-| FR-001.2 | Completion promise detection (`<promise>COMPLETE</promise>`) | P0 |
-| FR-001.3 | AFK mode with webhook notifications | P0 |
-| FR-001.4 | Human-in-the-Loop mode with approval gates | P1 |
-| FR-001.5 | Atomic iterations leaving clean, committable state | P0 |
+| Requirement ID | Description                                                  | Priority |
+| -------------- | ------------------------------------------------------------ | -------- |
+| FR-001.1       | Configurable maximum iteration count                         | P0       |
+| FR-001.2       | Completion promise detection (`<promise>COMPLETE</promise>`) | P0       |
+| FR-001.3       | AFK mode with webhook notifications                          | P0       |
+| FR-001.4       | Human-in-the-Loop mode with approval gates                   | P1       |
+| FR-001.5       | Atomic iterations leaving clean, committable state           | P0       |
 
 ### 4.2 Task Management and Planning (FR-002)
 
@@ -103,13 +103,13 @@ All tasks are defined in a `PRD.json` file, which serves as the single source of
 
 The system uses strongly-worded instructions to prevent the agent from modifying the PRD inappropriately. As Anthropic recommends: "It is unacceptable to remove or edit tests because this could lead to missing or buggy functionality." The agent may only change the `passes` field from `false` to `true` after successful verification.
 
-| Requirement ID | Description | Priority |
-|----------------|-------------|----------|
-| FR-002.1 | PRD.json as single source of truth | P0 |
-| FR-002.2 | Feature `passes` flag for completion tracking | P0 |
-| FR-002.3 | Dependency graph for task ordering | P1 |
-| FR-002.4 | Single-feature-per-iteration constraint | P0 |
-| FR-002.5 | Strongly-worded constraints against PRD modification | P0 |
+| Requirement ID | Description                                          | Priority |
+| -------------- | ---------------------------------------------------- | -------- |
+| FR-002.1       | PRD.json as single source of truth                   | P0       |
+| FR-002.2       | Feature `passes` flag for completion tracking        | P0       |
+| FR-002.3       | Dependency graph for task ordering                   | P1       |
+| FR-002.4       | Single-feature-per-iteration constraint              | P0       |
+| FR-002.5       | Strongly-worded constraints against PRD modification | P0       |
 
 ### 4.3 Multi-Layered Memory System (FR-003)
 
@@ -121,14 +121,14 @@ The Memory System is what enables RALPH-AGI to achieve true long-horizon autonom
 
 **Long-Term Memory** implements a persistent store based on the `claude-mem` project. This includes a SQLite database for structured data (sessions, observations, summaries) and a Chroma vector database for semantic search. The system uses lifecycle hooks to automatically capture observations at key points (session start, after tool use, session end) and employs AI-powered summarization to compress old observations while retaining key insights.
 
-| Requirement ID | Description | Priority |
-|----------------|-------------|----------|
-| FR-003.1 | Append-only progress.txt file | P0 |
-| FR-003.2 | Git commit per successful iteration | P0 |
-| FR-003.3 | SQLite database for session/observation storage | P1 |
-| FR-003.4 | Chroma vector database for semantic search | P1 |
-| FR-003.5 | Lifecycle hooks for automatic observation capture | P2 |
-| FR-003.6 | AI-powered memory summarization | P2 |
+| Requirement ID | Description                                       | Priority |
+| -------------- | ------------------------------------------------- | -------- |
+| FR-003.1       | Append-only progress.txt file                     | P0       |
+| FR-003.2       | Git commit per successful iteration               | P0       |
+| FR-003.3       | SQLite database for session/observation storage   | P1       |
+| FR-003.4       | Chroma vector database for semantic search        | P1       |
+| FR-003.5       | Lifecycle hooks for automatic observation capture | P2       |
+| FR-003.6       | AI-powered memory summarization                   | P2       |
 
 ### 4.4 Dynamic Tool Integration (FR-004)
 
@@ -138,14 +138,14 @@ The agent's workflow for tool use follows a three-step pattern. First, it discov
 
 The system provides foundational tools for common operations: browser automation (via Playwright MCP), file system operations (read, write, search), shell command execution, and Git operations. Additional tools can be added by configuring MCP servers in the system configuration.
 
-| Requirement ID | Description | Priority |
-|----------------|-------------|----------|
-| FR-004.1 | MCP CLI integration for dynamic discovery | P0 |
-| FR-004.2 | Three-step tool workflow (discover, inspect, execute) | P0 |
-| FR-004.3 | Browser automation via Playwright MCP | P1 |
-| FR-004.4 | File system operations | P0 |
-| FR-004.5 | Shell command execution | P0 |
-| FR-004.6 | Git operations | P0 |
+| Requirement ID | Description                                           | Priority |
+| -------------- | ----------------------------------------------------- | -------- |
+| FR-004.1       | MCP CLI integration for dynamic discovery             | P0       |
+| FR-004.2       | Three-step tool workflow (discover, inspect, execute) | P0       |
+| FR-004.3       | Browser automation via Playwright MCP                 | P1       |
+| FR-004.4       | File system operations                                | P0       |
+| FR-004.5       | Shell command execution                               | P0       |
+| FR-004.6       | Git operations                                        | P0       |
 
 ### 4.5 Cascaded Evaluation Pipeline (FR-005)
 
@@ -155,13 +155,13 @@ The pipeline consists of five stages. **Stage 1 (Static Analysis)** runs syntax 
 
 A stage only runs if the preceding stage passes. A failure at any stage halts the commit and triggers a debugging sub-loop, where the agent attempts to diagnose and fix the issue before retrying.
 
-| Stage | Time | Cost | Purpose |
-|-------|------|------|---------|
-| Static Analysis | ~1s | $0.00 | Syntax, linting, type checking |
-| Unit Tests | ~10s | $0.00 | Function-level verification |
+| Stage             | Time | Cost  | Purpose                            |
+| ----------------- | ---- | ----- | ---------------------------------- |
+| Static Analysis   | ~1s  | $0.00 | Syntax, linting, type checking     |
+| Unit Tests        | ~10s | $0.00 | Function-level verification        |
 | Integration Tests | ~30s | $0.01 | Component interaction verification |
-| End-to-End Tests | ~60s | $0.05 | User-facing functionality |
-| LLM-as-Judge | ~30s | $0.10 | Qualitative code review |
+| End-to-End Tests  | ~60s | $0.05 | User-facing functionality          |
+| LLM-as-Judge      | ~30s | $0.10 | Qualitative code review            |
 
 ---
 
@@ -247,18 +247,18 @@ Several areas are identified for future development beyond the initial release.
 
 ## 10. Glossary
 
-| Term | Definition |
-|------|------------|
-| **AGI** | Artificial General Intelligence; a hypothetical type of intelligent agent that can understand or learn any intellectual task that a human being can. |
-| **Agentic System** | An AI system that can perceive its environment, make decisions, and take actions to achieve specific goals. |
-| **Long-Horizon Task** | A complex task that requires multiple steps and context persistence over an extended period (hours or days). |
-| **Ralph Wiggum Technique** | A simple, iterative loop-based approach to agent orchestration, where the agent works on one small task at a time until a larger goal is complete. |
-| **MCP** | Model Context Protocol; a standard for dynamically discovering and using tools (APIs, functions) with AI models. |
-| **Harness** | The infrastructure and prompting framework that guides and constrains an AI agent, providing it with memory, tools, and feedback loops. |
-| **Cascaded Evaluation** | A multi-stage testing pipeline that proceeds from fast, cheap checks to slow, expensive ones, failing fast to save resources. |
-| **PRD** | Product Requirements Document; a structured file defining all features and their completion status. |
-| **Context Window** | The maximum amount of text (measured in tokens) that an LLM can process in a single session. |
-| **Compaction** | A technique for summarizing and compressing context to fit within the context window while retaining essential information. |
+| Term                       | Definition                                                                                                                                           |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **AGI**                    | Artificial General Intelligence; a hypothetical type of intelligent agent that can understand or learn any intellectual task that a human being can. |
+| **Agentic System**         | An AI system that can perceive its environment, make decisions, and take actions to achieve specific goals.                                          |
+| **Long-Horizon Task**      | A complex task that requires multiple steps and context persistence over an extended period (hours or days).                                         |
+| **Ralph Wiggum Technique** | A simple, iterative loop-based approach to agent orchestration, where the agent works on one small task at a time until a larger goal is complete.   |
+| **MCP**                    | Model Context Protocol; a standard for dynamically discovering and using tools (APIs, functions) with AI models.                                     |
+| **Harness**                | The infrastructure and prompting framework that guides and constrains an AI agent, providing it with memory, tools, and feedback loops.              |
+| **Cascaded Evaluation**    | A multi-stage testing pipeline that proceeds from fast, cheap checks to slow, expensive ones, failing fast to save resources.                        |
+| **PRD**                    | Product Requirements Document; a structured file defining all features and their completion status.                                                  |
+| **Context Window**         | The maximum amount of text (measured in tokens) that an LLM can process in a single session.                                                         |
+| **Compaction**             | A technique for summarizing and compressing context to fit within the context window while retaining essential information.                          |
 
 ---
 
@@ -284,12 +284,18 @@ Several areas are identified for future development beyond the initial release.
         "type": "object",
         "properties": {
           "id": { "type": "string" },
-          "category": { 
+          "category": {
             "type": "string",
-            "enum": ["functional", "ui", "performance", "security", "integration"]
+            "enum": [
+              "functional",
+              "ui",
+              "performance",
+              "security",
+              "integration"
+            ]
           },
           "description": { "type": "string" },
-          "priority": { 
+          "priority": {
             "type": "integer",
             "minimum": 0,
             "maximum": 4
@@ -337,25 +343,25 @@ for ((i=1; i<=MAX_ITERATIONS; i++)); do
     echo "=========================================="
     echo "RALPH ITERATION $i of $MAX_ITERATIONS"
     echo "=========================================="
-    
+
     OUTPUT=$(claude-code \
         --file plans/prd.json \
         --file progress.txt \
         --prompt "
         You are working through a product backlog. Follow these steps:
-        
+
         1. Find the highest priority feature to work on (not necessarily first in list)
         2. Check that the types check via 'pnpm type-check' and tests pass via 'pnpm test'
         3. Update the PRD with the work done (mark passes: true)
         4. APPEND your progress to progress.txt (leave notes for next iteration)
         5. Make a git commit of that feature
         6. Only work on a SINGLE feature per iteration
-        
+
         If the PRD is complete, output: <promise>COMPLETE</promise>
         ")
-    
+
     echo "$OUTPUT"
-    
+
     if echo "$OUTPUT" | grep -q "<promise>COMPLETE</promise>"; then
         echo "=========================================="
         echo "PRD COMPLETE! Exiting after $i iterations."
@@ -405,12 +411,12 @@ memory:
     sqlite_path: "~/.ralph-agi/memory.db"
     vector_db: "chroma"
     embedding_model: "text-embedding-3-small"
-    
+
 tools:
   discovery: "mcp_cli"
   config_path: "~/.config/mcp/mcp_servers.json"
   dynamic_loading: true
-  
+
 evaluation:
   cascade: true
   stages:

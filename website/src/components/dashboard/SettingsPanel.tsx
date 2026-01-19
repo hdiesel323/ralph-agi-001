@@ -2,12 +2,12 @@
  * SettingsPanel component - Shows repo context and runtime settings.
  */
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import {
   Sheet,
   SheetContent,
@@ -15,23 +15,45 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet';
+} from "@/components/ui/sheet";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { FolderGit2, GitBranch, ExternalLink, Settings, Loader2 } from 'lucide-react';
-import type { ConfigResponse, ConfigUpdate, TaskPriority } from '@/types/task';
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  FolderGit2,
+  GitBranch,
+  ExternalLink,
+  Settings,
+  Loader2,
+  Trash2,
+  Moon,
+  Sun,
+} from "lucide-react";
+import type { ConfigResponse, ConfigUpdate, TaskPriority } from "@/types/task";
+import { useTheme } from "@/contexts/ThemeContext";
 
 interface SettingsPanelProps {
   config: ConfigResponse | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onUpdateSettings: (updates: ConfigUpdate) => Promise<void>;
+  onClearTasks?: (includeRunning?: boolean) => Promise<void>;
 }
 
 export function SettingsPanel({
@@ -39,16 +61,21 @@ export function SettingsPanel({
   open,
   onOpenChange,
   onUpdateSettings,
+  onClearTasks,
 }: SettingsPanelProps) {
+  const { theme, toggleTheme } = useTheme();
   const [saving, setSaving] = useState(false);
   const [localSettings, setLocalSettings] = useState({
     auto_merge_threshold: config?.settings.auto_merge_threshold ?? 0.9,
-    default_priority: config?.settings.default_priority ?? 'P2',
+    default_priority: config?.settings.default_priority ?? "P2",
     require_approval: config?.settings.require_approval ?? true,
   });
 
   // Reset local state when config changes
-  if (config && localSettings.auto_merge_threshold !== config.settings.auto_merge_threshold) {
+  if (
+    config &&
+    localSettings.auto_merge_threshold !== config.settings.auto_merge_threshold
+  ) {
     setLocalSettings({
       auto_merge_threshold: config.settings.auto_merge_threshold,
       default_priority: config.settings.default_priority,
@@ -62,27 +89,30 @@ export function SettingsPanel({
       await onUpdateSettings(localSettings);
       onOpenChange(false);
     } catch (error) {
-      console.error('Failed to save settings:', error);
+      console.error("Failed to save settings:", error);
     } finally {
       setSaving(false);
     }
   };
 
   const formatRepoUrl = (url: string | null): string => {
-    if (!url) return '-';
+    if (!url) return "-";
     // Convert SSH URL to HTTPS for display
-    if (url.startsWith('git@')) {
-      return url.replace('git@github.com:', 'github.com/').replace('.git', '');
+    if (url.startsWith("git@")) {
+      return url.replace("git@github.com:", "github.com/").replace(".git", "");
     }
-    return url.replace('.git', '');
+    return url.replace(".git", "");
   };
 
   const getGitHubUrl = (url: string | null): string | null => {
     if (!url) return null;
-    if (url.startsWith('git@')) {
-      return 'https://' + url.replace('git@github.com:', 'github.com/').replace('.git', '');
+    if (url.startsWith("git@")) {
+      return (
+        "https://" +
+        url.replace("git@github.com:", "github.com/").replace(".git", "")
+      );
     }
-    return url.replace('.git', '');
+    return url.replace(".git", "");
   };
 
   return (
@@ -109,7 +139,7 @@ export function SettingsPanel({
               <div className="flex justify-between items-center">
                 <span className="text-muted-foreground">Name</span>
                 <Badge variant="outline" className="font-mono">
-                  {config?.repo.name ?? '-'}
+                  {config?.repo.name ?? "-"}
                 </Badge>
               </div>
               <div className="flex justify-between items-start">
@@ -136,14 +166,41 @@ export function SettingsPanel({
                   Branch
                 </span>
                 <span className="font-mono text-xs">
-                  {config?.repo.current_branch ?? '-'}
+                  {config?.repo.current_branch ?? "-"}
                 </span>
               </div>
               <div className="flex justify-between items-start">
                 <span className="text-muted-foreground">Root</span>
-                <span className="font-mono text-xs max-w-[180px] truncate" title={config?.repo.project_root}>
-                  {config?.repo.project_root ?? '-'}
+                <span
+                  className="font-mono text-xs max-w-[180px] truncate"
+                  title={config?.repo.project_root}
+                >
+                  {config?.repo.project_root ?? "-"}
                 </span>
+              </div>
+            </div>
+          </div>
+
+          <Separator />
+
+          {/* Appearance */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium">Appearance</h4>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="theme-toggle">Dark Mode</Label>
+                <p className="text-xs text-muted-foreground">
+                  Toggle between light and dark themes
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Sun className="h-4 w-4 text-muted-foreground" />
+                <Switch
+                  id="theme-toggle"
+                  checked={theme === "dark"}
+                  onCheckedChange={toggleTheme}
+                />
+                <Moon className="h-4 w-4 text-muted-foreground" />
               </div>
             </div>
           </div>
@@ -165,8 +222,11 @@ export function SettingsPanel({
               <Switch
                 id="require-approval"
                 checked={localSettings.require_approval}
-                onCheckedChange={(checked) =>
-                  setLocalSettings((prev) => ({ ...prev, require_approval: checked }))
+                onCheckedChange={checked =>
+                  setLocalSettings(prev => ({
+                    ...prev,
+                    require_approval: checked,
+                  }))
                 }
               />
             </div>
@@ -176,8 +236,8 @@ export function SettingsPanel({
               <Label htmlFor="default-priority">Default Priority</Label>
               <Select
                 value={localSettings.default_priority}
-                onValueChange={(value) =>
-                  setLocalSettings((prev) => ({
+                onValueChange={value =>
+                  setLocalSettings(prev => ({
                     ...prev,
                     default_priority: value as TaskPriority,
                   }))
@@ -210,8 +270,8 @@ export function SettingsPanel({
                   max="1"
                   step="0.05"
                   value={localSettings.auto_merge_threshold}
-                  onChange={(e) =>
-                    setLocalSettings((prev) => ({
+                  onChange={e =>
+                    setLocalSettings(prev => ({
                       ...prev,
                       auto_merge_threshold: parseFloat(e.target.value) || 0,
                     }))
@@ -227,6 +287,81 @@ export function SettingsPanel({
               </p>
             </div>
           </div>
+
+          {/* Danger Zone */}
+          {onClearTasks && (
+            <>
+              <Separator />
+              <div className="space-y-4">
+                <h4 className="text-sm font-medium text-red-600 dark:text-red-400">
+                  Danger Zone
+                </h4>
+
+                <div className="space-y-3">
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-muted-foreground hover:text-foreground"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Clear Completed Tasks
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          Clear completed tasks?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will remove all completed and failed tasks from
+                          the queue. This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => onClearTasks(false)}>
+                          Clear Completed
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Clear All Tasks
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Clear ALL tasks?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This will remove ALL tasks including running ones.
+                          This action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => onClearTasks(true)}
+                          className="bg-destructive hover:bg-destructive/90"
+                        >
+                          Clear All
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </div>
+            </>
+          )}
         </div>
 
         <SheetFooter>

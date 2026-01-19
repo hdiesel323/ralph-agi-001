@@ -1,5 +1,5 @@
 ---
-description: 'Review test quality, coverage, and identify gaps in game testing'
+description: "Review test quality, coverage, and identify gaps in game testing"
 ---
 
 IT IS CRITICAL THAT YOU FOLLOW THESE STEPS - while staying in character as the current agent persona you may have loaded:

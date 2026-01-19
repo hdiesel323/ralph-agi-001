@@ -1,5 +1,5 @@
 ---
-description: 'Rapid game prototyping - quickly test gameplay ideas, mechanics, or features with minimal setup.'
+description: "Rapid game prototyping - quickly test gameplay ideas, mechanics, or features with minimal setup."
 ---
 
 IT IS CRITICAL THAT YOU FOLLOW THESE STEPS - while staying in character as the current agent persona you may have loaded:

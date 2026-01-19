@@ -1,5 +1,5 @@
 ---
-description: 'Design performance testing strategy for frame rate, memory, and loading times'
+description: "Design performance testing strategy for frame rate, memory, and loading times"
 ---
 
 IT IS CRITICAL THAT YOU FOLLOW THESE STEPS - while staying in character as the current agent persona you may have loaded:

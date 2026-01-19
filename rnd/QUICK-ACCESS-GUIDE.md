@@ -99,14 +99,14 @@ git push origin main
 
 ## 📁 Quick Navigation
 
-| Command | Destination |
-| :--- | :--- |
-| `rnd` | Main R&D workspace |
-| `rnd-questions` | Questions folder |
-| `rnd-planning` | Planning folder |
-| `rnd-decisions` | Decisions folder |
-| `cd ~/ralph-agi-001/rnd/research` | Research folder |
-| `cd ~/ralph-agi-001/rnd/meeting-notes` | Meeting notes |
+| Command                                 | Destination               |
+| :-------------------------------------- | :------------------------ |
+| `rnd`                                   | Main R&D workspace        |
+| `rnd-questions`                         | Questions folder          |
+| `rnd-planning`                          | Planning folder           |
+| `rnd-decisions`                         | Decisions folder          |
+| `cd ~/ralph-agi-001/rnd/research`       | Research folder           |
+| `cd ~/ralph-agi-001/rnd/meeting-notes`  | Meeting notes             |
 | `cd ~/ralph-agi-001/rnd/implementation` | Implementation checklists |
 
 ---

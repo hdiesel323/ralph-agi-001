@@ -106,8 +106,10 @@ frames = git_mem.get_memory_by_commit("HEAD")
 ### File List
 
 **Created:**
+
 - `ralph_agi/memory/git.py` - GitMemory class, GitCommit dataclass, GitError
 - `tests/memory/test_git.py` - 48 unit tests
 
 **Modified:**
+
 - `ralph_agi/memory/__init__.py` - Export GitMemory, GitCommit, GitError

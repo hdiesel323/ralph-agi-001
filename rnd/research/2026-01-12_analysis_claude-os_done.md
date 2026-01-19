@@ -21,6 +21,7 @@
 This is the killer feature. Users can simply say `"remember this..."` and Claude OS saves the information to a knowledge base. No commands to memorize.
 
 **How it works:**
+
 - **Redis Pub/Sub:** Real-time capture of conversations.
 - **Memory MCP:** A dedicated service for saving and retrieving memories.
 - **SQLite + sqlite-vec:** The semantic knowledge base.
@@ -41,6 +42,7 @@ Claude OS uses a two-phase indexing system inspired by Aider:
 Claude OS has a library of 36+ installable skills, including templates for Rails, React, testing workflows, and more.
 
 **How it works:**
+
 - `/claude-os-skills install <skill>`
 - Skills are sourced from Anthropic Official and Superpowers.
 - Users can create and share their own custom skills.
@@ -52,6 +54,7 @@ Claude OS has a library of 36+ installable skills, including templates for Rails
 Claude OS has a beautiful web UI with a real-time Kanban board that visualizes spec implementation progress.
 
 **How it works:**
+
 - **File Watching:** Monitors `agent-os/specs/` for changes.
 - **Auto-Sync:** Parses `tasks.md`, updates SQLite, and refreshes the Kanban board.
 
@@ -67,15 +70,15 @@ Claude OS can parse past Claude Code sessions (`.jsonl` files) and automatically
 
 ## Architecture Comparison
 
-| Feature | claude-os | RALPH-AGI |
-| :--- | :--- | :--- |
-| **Language** | Python | Python |
-| **Memory** | SQLite + sqlite-vec | Memvid |
-| **Indexing** | Hybrid (tree-sitter + semantic) | TBD |
-| **UI** | Web UI + CLI | TUI + Web UI (planned) |
-| **Skills** | Skills Library | Beads |
-| **Multi-Agent** | Agent-OS (optional) | Builder + Critic (planned) |
-| **Planning** | Manual PRD | YAML-based |
+| Feature         | claude-os                       | RALPH-AGI                  |
+| :-------------- | :------------------------------ | :------------------------- |
+| **Language**    | Python                          | Python                     |
+| **Memory**      | SQLite + sqlite-vec             | Memvid                     |
+| **Indexing**    | Hybrid (tree-sitter + semantic) | TBD                        |
+| **UI**          | Web UI + CLI                    | TUI + Web UI (planned)     |
+| **Skills**      | Skills Library                  | Beads                      |
+| **Multi-Agent** | Agent-OS (optional)             | Builder + Critic (planned) |
+| **Planning**    | Manual PRD                      | YAML-based                 |
 
 ---
 
@@ -84,26 +87,26 @@ Claude OS can parse past Claude Code sessions (`.jsonl` files) and automatically
 ### **Immediate (Sprint 3-4):**
 
 1.  **Adopt Hybrid Indexing:**
-    -   Implement a two-phase indexing system using `tree-sitter` for structural analysis and selective embedding for semantic search.
-    -   This will dramatically improve performance on large codebases.
+    - Implement a two-phase indexing system using `tree-sitter` for structural analysis and selective embedding for semantic search.
+    - This will dramatically improve performance on large codebases.
 
 2.  **Add Natural Language Memory:**
-    -   Create a hook that listens for `"remember this..."` and automatically saves to `Memvid`.
-    -   This will make the memory system much more intuitive.
+    - Create a hook that listens for `"remember this..."` and automatically saves to `Memvid`.
+    - This will make the memory system much more intuitive.
 
 3.  **Build a Skills Library:**
-    -   Create a centralized, installable skills library for `Beads`.
-    -   This will improve the user experience and encourage community contributions.
+    - Create a centralized, installable skills library for `Beads`.
+    - This will improve the user experience and encourage community contributions.
 
 ### **Medium-Term (Sprint 5-6):**
 
 1.  **Implement Real-Time Kanban:**
-    -   Add a real-time Kanban board to the TUI and web UI.
-    -   This will provide a powerful project management tool.
+    - Add a real-time Kanban board to the TUI and web UI.
+    - This will provide a powerful project management tool.
 
 2.  **Build Session Insights:**
-    -   Create a feature that analyzes `Memvid` frames to extract insights.
-    -   This will enable automatic learning and pattern recognition.
+    - Create a feature that analyzes `Memvid` frames to extract insights.
+    - This will enable automatic learning and pattern recognition.
 
 ---
 

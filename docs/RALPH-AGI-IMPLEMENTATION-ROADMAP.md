@@ -292,16 +292,16 @@ ralph-agi/
 
 ## Summary Table
 
-| Phase | Duration | Key Deliverables | Estimated Effort |
-| :--- | :--- | :--- | :--- |
-| Phase 0 | Week 0 | Planning, documentation, launch | 1 week |
-| Phase 1 | Week 1 | Proof of concept | 1 week |
-| Phase 2 | Weeks 2-3 | Two-agent architecture, Beads | 2 weeks |
-| Phase 3 | Weeks 4-5 | Memory layer | 2 weeks |
-| Phase 4 | Weeks 6-7 | Agent specialization | 2 weeks |
-| Phase 5 | Week 8 | Safety and verification | 1 week |
-| Phase 6 | Weeks 9-12 | Scale and optimize | 4 weeks |
-| **Total** | **12 weeks** | **Full RALPH-AGI system** | **12 weeks** |
+| Phase     | Duration     | Key Deliverables                | Estimated Effort |
+| :-------- | :----------- | :------------------------------ | :--------------- |
+| Phase 0   | Week 0       | Planning, documentation, launch | 1 week           |
+| Phase 1   | Week 1       | Proof of concept                | 1 week           |
+| Phase 2   | Weeks 2-3    | Two-agent architecture, Beads   | 2 weeks          |
+| Phase 3   | Weeks 4-5    | Memory layer                    | 2 weeks          |
+| Phase 4   | Weeks 6-7    | Agent specialization            | 2 weeks          |
+| Phase 5   | Week 8       | Safety and verification         | 1 week           |
+| Phase 6   | Weeks 9-12   | Scale and optimize              | 4 weeks          |
+| **Total** | **12 weeks** | **Full RALPH-AGI system**       | **12 weeks**     |
 
 ---
 

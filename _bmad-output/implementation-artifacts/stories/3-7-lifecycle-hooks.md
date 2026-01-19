@@ -120,8 +120,10 @@ hooks.register_handler(HookEvent.ITERATION_END, my_handler)
 ### File List
 
 **Created:**
+
 - `ralph_agi/memory/hooks.py` - LifecycleHooks, HookConfig, HookContext, etc.
 - `tests/memory/test_hooks.py` - 49 unit tests
 
 **Modified:**
+
 - `ralph_agi/memory/__init__.py` - Export LifecycleHooks, HookConfig, etc.

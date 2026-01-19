@@ -11,7 +11,7 @@ Add a `scheduler` section to your `config.yaml`:
 ```yaml
 scheduler:
   enabled: true
-  cron: "0 */4 * * *"  # Every 4 hours
+  cron: "0 */4 * * *" # Every 4 hours
   prd_path: "PRD.json"
   wake_hooks:
     - resume_checkpoint
@@ -51,21 +51,21 @@ scheduler:
 
   # Cron expression for wake schedule
   # Format: minute hour day month weekday
-  cron: "0 */4 * * *"  # Every 4 hours
+  cron: "0 */4 * * *" # Every 4 hours
 
   # Auto-sleep after N minutes of no progress
   idle_timeout: 30
 
   # Hooks to run on each scheduled wake
   wake_hooks:
-    - resume_checkpoint    # Load last checkpoint
-    - check_progress       # Check task completion
-    - run_tests           # Run test suite
-    - commit_if_ready     # Auto-commit if tests pass
-    - send_status         # Log status notification
+    - resume_checkpoint # Load last checkpoint
+    - check_progress # Check task completion
+    - run_tests # Run test suite
+    - commit_if_ready # Auto-commit if tests pass
+    - send_status # Log status notification
 
   # Daemon configuration
-  daemon_mode: apscheduler  # apscheduler, launchd, or systemd
+  daemon_mode: apscheduler # apscheduler, launchd, or systemd
   pid_file: ".ralph.pid"
   log_file: ".ralph-daemon.log"
 
@@ -81,17 +81,17 @@ scheduler:
 
 ### Cron Expression Examples
 
-| Expression | Description |
-|------------|-------------|
-| `* * * * *` | Every minute |
-| `*/15 * * * *` | Every 15 minutes |
-| `0 * * * *` | Every hour |
-| `0 */2 * * *` | Every 2 hours |
-| `0 */4 * * *` | Every 4 hours |
-| `0 9 * * *` | Daily at 9:00 AM |
-| `0 9 * * 1-5` | Weekdays at 9:00 AM |
+| Expression     | Description            |
+| -------------- | ---------------------- |
+| `* * * * *`    | Every minute           |
+| `*/15 * * * *` | Every 15 minutes       |
+| `0 * * * *`    | Every hour             |
+| `0 */2 * * *`  | Every 2 hours          |
+| `0 */4 * * *`  | Every 4 hours          |
+| `0 9 * * *`    | Daily at 9:00 AM       |
+| `0 9 * * 1-5`  | Weekdays at 9:00 AM    |
 | `0 9,18 * * *` | At 9:00 AM and 6:00 PM |
-| `0 0 * * 0` | Weekly on Sunday |
+| `0 0 * * 0`    | Weekly on Sunday       |
 
 ## Daemon Modes
 
@@ -144,13 +144,13 @@ Wake hooks run at each scheduled wake before the main loop executes.
 
 ### Built-in Hooks
 
-| Hook | Description |
-|------|-------------|
+| Hook                | Description                           |
+| ------------------- | ------------------------------------- |
 | `resume_checkpoint` | Load last checkpoint for continuation |
-| `check_progress` | Check task completion status in PRD |
-| `run_tests` | Run pytest suite |
-| `commit_if_ready` | Auto-commit if there are changes |
-| `send_status` | Log a status notification |
+| `check_progress`    | Check task completion status in PRD   |
+| `run_tests`         | Run pytest suite                      |
+| `commit_if_ready`   | Auto-commit if there are changes      |
+| `send_status`       | Log a status notification             |
 
 ### Hook Execution Order
 
@@ -194,6 +194,7 @@ ralph-agi daemon status
 ```
 
 Output includes:
+
 - Running/stopped status
 - Process ID (if running)
 - Next scheduled run time
@@ -207,7 +208,7 @@ Begin with a longer interval (every 4-6 hours) and decrease as you gain confiden
 
 ```yaml
 scheduler:
-  cron: "0 */6 * * *"  # Every 6 hours initially
+  cron: "0 */6 * * *" # Every 6 hours initially
 ```
 
 ### 2. Use Checkpoints
@@ -216,7 +217,7 @@ Ensure checkpointing is enabled so RALPH can resume from where it left off:
 
 ```yaml
 checkpoint_path: ".ralph-checkpoint.json"
-checkpoint_interval: 1  # Save after every iteration
+checkpoint_interval: 1 # Save after every iteration
 ```
 
 ### 3. Enable Test Hooks
@@ -227,7 +228,7 @@ Run tests on each wake to catch regressions early:
 wake_hooks:
   - resume_checkpoint
   - check_progress
-  - run_tests  # Catch issues early
+  - run_tests # Catch issues early
 ```
 
 ### 4. Monitor Failures
@@ -245,7 +246,7 @@ Configure idle timeout to avoid wasting resources:
 
 ```yaml
 scheduler:
-  idle_timeout: 30  # Sleep after 30 minutes of no progress
+  idle_timeout: 30 # Sleep after 30 minutes of no progress
 ```
 
 ## Troubleshooting
@@ -253,11 +254,13 @@ scheduler:
 ### Daemon Won't Start
 
 1. Check if already running:
+
    ```bash
    ralph-agi daemon status
    ```
 
 2. Check for stale PID file:
+
    ```bash
    rm .ralph.pid
    ralph-agi daemon start
@@ -271,6 +274,7 @@ scheduler:
 ### Daemon Stops Unexpectedly
 
 1. Check the log file for errors:
+
    ```bash
    tail -100 .ralph-daemon.log
    ```
@@ -290,12 +294,14 @@ scheduler:
 ### System Service Not Working
 
 **macOS (launchd):**
+
 ```bash
 launchctl list | grep ralph
 launchctl error com.ralph-agi.scheduler
 ```
 
 **Linux (systemd):**
+
 ```bash
 systemctl --user status ralph-agi-scheduler.timer
 journalctl --user -u ralph-agi-scheduler -n 50

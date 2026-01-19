@@ -64,7 +64,7 @@ from typing import Optional
 @dataclass
 class CritiqueResult:
     """Result of a code review by the Critic agent.
-    
+
     Attributes:
         approved: Whether the code passes the review.
         score: Overall quality score (1-5).
@@ -79,14 +79,14 @@ class CritiqueResult:
 
 class Critic:
     """The Critic Agent - reviews code for quality and correctness.
-    
+
     The Critic uses a different LLM than the Builder to catch blind spots
     and provide diverse perspectives on code quality.
     """
-    
+
     def __init__(self, llm_provider: str = "openai", model: str = "gpt-4.1"):
         """Initialize the Critic agent.
-        
+
         Args:
             llm_provider: LLM provider (e.g., "openai", "anthropic").
             model: Model name (e.g., "gpt-4.1", "claude-sonnet-4").
@@ -94,30 +94,30 @@ class Critic:
         self.llm_provider = llm_provider
         self.model = model
         # TODO: Initialize LLM client
-    
+
     def review(self, code: str, criteria: Optional[dict] = None) -> CritiqueResult:
         """Review code against quality criteria.
-        
+
         Args:
             code: The code to review.
             criteria: Optional quality criteria (defaults to standard criteria).
-        
+
         Returns:
             CritiqueResult with approval status and feedback.
         """
         if criteria is None:
             criteria = self._default_criteria()
-        
+
         # TODO: Implement LLM-based review
         # For now, placeholder logic
-        
+
         return CritiqueResult(
             approved=True,
             score=4,
             feedback="Code looks good overall.",
             issues=[]
         )
-    
+
     def _default_criteria(self) -> dict:
         """Default quality criteria for code review."""
         return {
@@ -150,7 +150,7 @@ class CriticConfig:
 class RalphConfig:
     """Configuration for RALPH-AGI."""
     # ... existing fields ...
-    
+
     critic: CriticConfig = field(default_factory=CriticConfig)
 ```
 
@@ -166,7 +166,7 @@ from ralph_agi.core.critic import Critic, CritiqueResult
 class RalphLoop:
     def __init__(self, config: RalphConfig, ...):
         # ... existing initialization ...
-        
+
         # Initialize critic if enabled
         if config.critic.enabled:
             self.critic = Critic(
@@ -175,25 +175,25 @@ class RalphLoop:
             )
         else:
             self.critic = None
-    
+
     def _execute_task_with_review(self, task: Task) -> IterationResult:
         """Execute a task with optional critic review."""
-        
+
         # Builder implements the task
         code = self._builder_implement(task)
-        
+
         # If critic is enabled, review the code
         if self.critic:
             critique = self.critic.review(code)
-            
+
             if not critique.approved or critique.score < self.config.critic.min_score:
                 # Add feedback and retry
                 task.add_feedback(critique.feedback)
                 self.logger.warning(f"Critic rejected code (score: {critique.score}). Retrying...")
                 return self._execute_task_with_review(task)
-            
+
             self.logger.info(f"Critic approved code (score: {critique.score})")
-        
+
         return IterationResult(success=True, output=code)
 ```
 
@@ -210,10 +210,10 @@ llm:
     model: "claude-sonnet-4"
 
   critic:
-    enabled: false  # Set to true for quality-critical tasks
+    enabled: false # Set to true for quality-critical tasks
     provider: "openai"
     model: "gpt-4.1"
-    min_score: 3  # Minimum acceptable score (1-5)
+    min_score: 3 # Minimum acceptable score (1-5)
 ```
 
 ---
@@ -252,16 +252,19 @@ def test_critic_review_rejection():
 ## Testing Strategy
 
 ### Unit Tests
+
 - Test `Critic` class initialization
 - Test `review()` method with mock LLM
 - Test `CritiqueResult` dataclass
 
 ### Integration Tests
+
 - Test `RalphLoop` with critic enabled
 - Test retry logic when critic rejects code
 - Test that critic is skipped when disabled
 
 ### End-to-End Tests
+
 - Run a full task with critic enabled
 - Verify that code quality improves with critic
 - Measure cost increase (should be ~2x)
@@ -270,11 +273,11 @@ def test_critic_review_rejection():
 
 ## Cost Analysis
 
-| Configuration | LLM Calls per Task | Estimated Cost per Task |
-| :--- | :--- | :--- |
-| Single Agent (Builder only) | 1 | $0.10 |
-| Builder + Critic (1 retry) | 2 | $0.20 |
-| Builder + Critic (2 retries) | 3 | $0.30 |
+| Configuration                | LLM Calls per Task | Estimated Cost per Task |
+| :--------------------------- | :----------------- | :---------------------- |
+| Single Agent (Builder only)  | 1                  | $0.10                   |
+| Builder + Critic (1 retry)   | 2                  | $0.20                   |
+| Builder + Critic (2 retries) | 3                  | $0.30                   |
 
 **Recommendation:** Enable critic only for quality-critical tasks (e.g., production code, security-sensitive code).
 
@@ -283,6 +286,7 @@ def test_critic_review_rejection():
 ## Configuration Examples
 
 ### Example 1: Default (No Critic)
+
 ```yaml
 llm:
   critic:
@@ -290,35 +294,37 @@ llm:
 ```
 
 ### Example 2: Quality-Critical Task
+
 ```yaml
 llm:
   critic:
     enabled: true
     provider: "openai"
     model: "gpt-4.1"
-    min_score: 4  # Higher bar for quality
+    min_score: 4 # Higher bar for quality
 ```
 
 ### Example 3: Security Audit
+
 ```yaml
 llm:
   critic:
     enabled: true
     provider: "anthropic"
-    model: "claude-opus-4"  # Use most capable model
-    min_score: 5  # Highest bar
+    model: "claude-opus-4" # Use most capable model
+    min_score: 5 # Highest bar
 ```
 
 ---
 
 ## Success Metrics
 
-| Metric | Target | How to Measure |
-| :--- | :--- | :--- |
-| **Code Quality Improvement** | +20% | Compare test coverage, bug density |
-| **Blind Spot Detection** | 80%+ | Track issues caught by critic |
-| **Cost Increase** | <2.5x | Monitor LLM API costs |
-| **Retry Rate** | <30% | Track how often critic rejects code |
+| Metric                       | Target | How to Measure                      |
+| :--------------------------- | :----- | :---------------------------------- |
+| **Code Quality Improvement** | +20%   | Compare test coverage, bug density  |
+| **Blind Spot Detection**     | 80%+   | Track issues caught by critic       |
+| **Cost Increase**            | <2.5x  | Monitor LLM API costs               |
+| **Retry Rate**               | <30%   | Track how often critic rejects code |
 
 ---
 

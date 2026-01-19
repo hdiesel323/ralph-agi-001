@@ -2,11 +2,11 @@
  * React hook for WebSocket connection to RALPH-AGI backend.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { WS_URL } from '@/api/client';
-import type { WebSocketEvent } from '@/types/task';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { WS_URL } from "@/api/client";
+import type { WebSocketEvent } from "@/types/task";
 
-type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
+type ConnectionStatus = "connecting" | "connected" | "disconnected" | "error";
 
 interface UseWebSocketOptions {
   autoConnect?: boolean;
@@ -26,7 +26,9 @@ interface UseWebSocketReturn {
 /**
  * Hook for WebSocket connection with auto-reconnect
  */
-export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketReturn {
+export function useWebSocket(
+  options: UseWebSocketOptions = {}
+): UseWebSocketReturn {
   const {
     autoConnect = true,
     reconnectInterval = 3000,
@@ -34,12 +36,14 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
     onEvent,
   } = options;
 
-  const [status, setStatus] = useState<ConnectionStatus>('disconnected');
+  const [status, setStatus] = useState<ConnectionStatus>("disconnected");
   const [lastEvent, setLastEvent] = useState<WebSocketEvent | null>(null);
 
   const wsRef = useRef<WebSocket | null>(null);
   const reconnectAttemptsRef = useRef(0);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
   const pingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const isConnectingRef = useRef(false);
   const isMountedRef = useRef(true);
@@ -66,21 +70,23 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
       wsRef.current.close();
       wsRef.current = null;
     }
-    setStatus('disconnected');
+    setStatus("disconnected");
   }, [cleanup]);
 
   const connect = useCallback(() => {
     // Don't connect if already connected, connecting, or unmounted
-    if (wsRef.current?.readyState === WebSocket.OPEN ||
-        wsRef.current?.readyState === WebSocket.CONNECTING ||
-        isConnectingRef.current ||
-        !isMountedRef.current) {
+    if (
+      wsRef.current?.readyState === WebSocket.OPEN ||
+      wsRef.current?.readyState === WebSocket.CONNECTING ||
+      isConnectingRef.current ||
+      !isMountedRef.current
+    ) {
       return;
     }
 
     cleanup();
     isConnectingRef.current = true;
-    setStatus('connecting');
+    setStatus("connecting");
 
     try {
       const ws = new WebSocket(WS_URL);
@@ -92,30 +98,30 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
           return;
         }
         isConnectingRef.current = false;
-        setStatus('connected');
+        setStatus("connected");
         reconnectAttemptsRef.current = 0;
 
         // Start ping interval
         pingIntervalRef.current = setInterval(() => {
           if (ws.readyState === WebSocket.OPEN) {
-            ws.send(JSON.stringify({ type: 'ping' }));
+            ws.send(JSON.stringify({ type: "ping" }));
           }
         }, 25000);
       };
 
-      ws.onmessage = (event) => {
+      ws.onmessage = event => {
         try {
           const data = JSON.parse(event.data) as WebSocketEvent;
 
           // Ignore pong messages
-          if (data.type === 'pong' || data.type === 'ping') {
+          if (data.type === "pong" || data.type === "ping") {
             return;
           }
 
           setLastEvent(data);
           onEventRef.current?.(data);
         } catch (err) {
-          console.error('Failed to parse WebSocket message:', err);
+          console.error("Failed to parse WebSocket message:", err);
         }
       };
 
@@ -126,17 +132,21 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
 
         if (!isMountedRef.current) return;
 
-        setStatus('disconnected');
+        setStatus("disconnected");
 
         // Auto-reconnect with exponential backoff
         if (reconnectAttemptsRef.current < maxReconnectAttempts) {
-          const backoff = reconnectInterval * Math.pow(1.5, reconnectAttemptsRef.current);
+          const backoff =
+            reconnectInterval * Math.pow(1.5, reconnectAttemptsRef.current);
           reconnectAttemptsRef.current++;
-          reconnectTimeoutRef.current = setTimeout(() => {
-            if (isMountedRef.current) {
-              connect();
-            }
-          }, Math.min(backoff, 30000));
+          reconnectTimeoutRef.current = setTimeout(
+            () => {
+              if (isMountedRef.current) {
+                connect();
+              }
+            },
+            Math.min(backoff, 30000)
+          );
         }
       };
 
@@ -144,13 +154,13 @@ export function useWebSocket(options: UseWebSocketOptions = {}): UseWebSocketRet
         // Error will be followed by close event
         isConnectingRef.current = false;
         if (isMountedRef.current) {
-          setStatus('error');
+          setStatus("error");
         }
       };
     } catch (err) {
-      console.error('Failed to create WebSocket:', err);
+      console.error("Failed to create WebSocket:", err);
       isConnectingRef.current = false;
-      setStatus('error');
+      setStatus("error");
     }
   }, [cleanup, reconnectInterval, maxReconnectAttempts]);
 

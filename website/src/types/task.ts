@@ -4,16 +4,16 @@
  */
 
 export type TaskStatus =
-  | 'pending'
-  | 'pending_approval'
-  | 'ready'
-  | 'running'
-  | 'pending_merge'
-  | 'complete'
-  | 'failed'
-  | 'cancelled';
-export type TaskPriority = 'P0' | 'P1' | 'P2' | 'P3' | 'P4';
-export type ExecutionState = 'idle' | 'running' | 'stopping' | 'stopped';
+  | "pending"
+  | "pending_approval"
+  | "ready"
+  | "running"
+  | "pending_merge"
+  | "complete"
+  | "failed"
+  | "cancelled";
+export type TaskPriority = "P0" | "P1" | "P2" | "P3" | "P4";
+export type ExecutionState = "idle" | "running" | "stopping" | "stopped";
 
 /**
  * Task entity from the API
@@ -159,68 +159,70 @@ export interface KanbanColumn {
 }
 
 /**
- * Default Kanban columns configuration
+ * Default Kanban columns configuration (simplified 4-column layout)
  *
- * Flow: Backlog → Needs Approval → Ready → Running → Needs Review → Done
+ * Flow: Backlog → Ready → In Progress → Done
  */
 export const KANBAN_COLUMNS: KanbanColumn[] = [
   {
-    id: 'backlog',
-    title: 'Backlog',
-    statuses: ['pending'],
-    filter: (task) => task.priority === 'P3' || task.priority === 'P4',
+    id: "backlog",
+    title: "Backlog",
+    statuses: ["pending", "pending_approval"],
   },
   {
-    id: 'needs-approval',
-    title: 'Needs Approval',
-    statuses: ['pending', 'pending_approval'],
-    filter: (task) => task.priority === 'P0' || task.priority === 'P1' || task.priority === 'P2',
+    id: "ready",
+    title: "Ready",
+    statuses: ["ready"],
   },
   {
-    id: 'ready',
-    title: 'Ready',
-    statuses: ['ready'],
+    id: "in-progress",
+    title: "In Progress",
+    statuses: ["running"],
   },
   {
-    id: 'running',
-    title: 'Running',
-    statuses: ['running'],
-  },
-  {
-    id: 'needs-review',
-    title: 'Needs Review',
-    statuses: ['pending_merge'],
-  },
-  {
-    id: 'done',
-    title: 'Done',
-    statuses: ['complete'],
+    id: "done",
+    title: "Done",
+    statuses: ["complete", "pending_merge", "failed", "cancelled"],
   },
 ];
 
 /**
  * Priority display configuration
  */
-export const PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: string }> = {
-  P0: { label: 'Critical', color: 'bg-red-500' },
-  P1: { label: 'High', color: 'bg-orange-500' },
-  P2: { label: 'Medium', color: 'bg-yellow-500' },
-  P3: { label: 'Low', color: 'bg-blue-500' },
-  P4: { label: 'Backlog', color: 'bg-gray-500' },
+export const PRIORITY_CONFIG: Record<
+  TaskPriority,
+  { label: string; color: string }
+> = {
+  P0: { label: "Critical", color: "bg-red-500" },
+  P1: { label: "High", color: "bg-orange-500" },
+  P2: { label: "Medium", color: "bg-yellow-500" },
+  P3: { label: "Low", color: "bg-blue-500" },
+  P4: { label: "Backlog", color: "bg-gray-500" },
 };
 
 /**
  * Status display configuration
  */
-export const STATUS_CONFIG: Record<TaskStatus, { label: string; icon: string; color: string }> = {
-  pending: { label: 'Pending', icon: '⏳', color: 'text-gray-500' },
-  pending_approval: { label: 'Needs Approval', icon: '👁️', color: 'text-orange-500' },
-  ready: { label: 'Ready', icon: '✨', color: 'text-blue-500' },
-  running: { label: 'Running', icon: '🔄', color: 'text-yellow-500' },
-  pending_merge: { label: 'Needs Review', icon: '📋', color: 'text-purple-500' },
-  complete: { label: 'Complete', icon: '✅', color: 'text-green-500' },
-  failed: { label: 'Failed', icon: '❌', color: 'text-red-500' },
-  cancelled: { label: 'Cancelled', icon: '🚫', color: 'text-gray-400' },
+export const STATUS_CONFIG: Record<
+  TaskStatus,
+  { label: string; icon: string; color: string }
+> = {
+  pending: { label: "Pending", icon: "⏳", color: "text-gray-500" },
+  pending_approval: {
+    label: "Needs Approval",
+    icon: "👁️",
+    color: "text-orange-500",
+  },
+  ready: { label: "Ready", icon: "✨", color: "text-blue-500" },
+  running: { label: "Running", icon: "🔄", color: "text-yellow-500" },
+  pending_merge: {
+    label: "Needs Review",
+    icon: "📋",
+    color: "text-purple-500",
+  },
+  complete: { label: "Complete", icon: "✅", color: "text-green-500" },
+  failed: { label: "Failed", icon: "❌", color: "text-red-500" },
+  cancelled: { label: "Cancelled", icon: "🚫", color: "text-gray-400" },
 };
 
 /**

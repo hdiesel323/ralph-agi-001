@@ -1,5 +1,5 @@
 ---
-description: 'Generate automated game tests for Unity, Unreal, or Godot based on test design scenarios'
+description: "Generate automated game tests for Unity, Unreal, or Godot based on test design scenarios"
 ---
 
 IT IS CRITICAL THAT YOU FOLLOW THESE STEPS - while staying in character as the current agent persona you may have loaded:

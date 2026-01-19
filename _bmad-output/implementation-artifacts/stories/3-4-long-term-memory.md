@@ -46,7 +46,7 @@ so that **knowledge persists across sessions**.
 - [x] Task 2: Create Observation dataclass (AC: 2)
   - [x] Fields: content, observation_type, source, confidence
   - [x] Optional: related_ids, tags, metadata
-  - [x] Computed importance from type * confidence
+  - [x] Computed importance from type \* confidence
 
 - [x] Task 3: Create KnowledgeStore class (AC: 3, 4, 5)
   - [x] `record()` stores observation with tags
@@ -100,8 +100,10 @@ critical = ks.get_high_importance(min_importance=7)
 ### File List
 
 **Created:**
+
 - `ralph_agi/memory/knowledge.py` - KnowledgeStore, Observation, ObservationType
 - `tests/memory/test_knowledge.py` - 38 unit tests
 
 **Modified:**
+
 - `ralph_agi/memory/__init__.py` - Export KnowledgeStore, Observation, etc.

@@ -25,6 +25,7 @@ User asked about having different LLMs cross-checking each other's work - one bu
 ## Decision: Phased Implementation
 
 ### Phase 1: Builder + Critic (Sprint 5)
+
 - Builder (Claude Sonnet) implements code
 - Critic (GPT-4.1) reviews for quality, security, correctness
 - If rejected → feedback added → Builder retries
@@ -32,12 +33,14 @@ User asked about having different LLMs cross-checking each other's work - one bu
 - ~2x cost per iteration
 
 ### Phase 2: Architect + Parallel Builders (Post-MVP)
+
 - Human + RALPH architect creates specs
 - 3-4 parallel RALPH instances execute stories
 - Architect reviews PRs against spec
 - ~5x productivity gain (based on Kadous research)
 
 ### Phase 3: Full Adversarial Network (Future)
+
 - Specialized agents: Security, Performance, UX
 - Consensus voting on critical decisions
 - Model diversity requirement
@@ -51,6 +54,7 @@ User asked about having different LLMs cross-checking each other's work - one bu
 ## Implementation Location
 
 Phase 1 will be implemented in **Sprint 5** as part of **Epic 05 (Evaluation Pipeline)**:
+
 - Add `critic` configuration to `config.yaml`
 - Implement `CriticAgent` class
 - Add retry loop to `RalphLoop.execute_task()`

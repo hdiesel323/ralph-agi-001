@@ -33,9 +33,10 @@ Implement an interactive CLI setup wizard using **Typer + Rich + Questionary**, 
 ## Acceptance Criteria
 
 ### Global Setup (~/.ralph/)
+
 - [ ] Auto-detect missing global config on first run
 - [ ] Prompt for Anthropic API key (or detect from env)
-- [ ] Validate API key format (sk-ant-* prefix)
+- [ ] Validate API key format (sk-ant-\* prefix)
 - [ ] Offer model selection with recommendations
 - [ ] Set max iterations with safety default (10)
 - [ ] Create `~/.ralph/config.yaml` for global defaults
@@ -43,6 +44,7 @@ Implement an interactive CLI setup wizard using **Typer + Rich + Questionary**, 
 - [ ] Create `~/.ralph/memory/` directory
 
 ### Per-Project Setup (.ralph/)
+
 - [ ] `ralph init` in project creates `.ralph/` directory
 - [ ] Optional project-specific config overrides
 - [ ] Create checkpoint directory
@@ -50,6 +52,7 @@ Implement an interactive CLI setup wizard using **Typer + Rich + Questionary**, 
 - [ ] Detect existing config and prompt before overwriting
 
 ### CLI Flags
+
 - [ ] `ralph init` - auto-detect, run both if needed
 - [ ] `ralph init --global` - only global setup
 - [ ] `ralph init --project` - only per-project
@@ -96,11 +99,11 @@ $ ralph init
 
 ### Library Stack
 
-| Library | Purpose | Version |
-|---------|---------|---------|
-| **Typer** | CLI framework (built on Click) | >=0.9.0 |
-| **Rich** | Terminal formatting (panels, spinners) | >=13.0.0 |
-| **Questionary** | Interactive prompts | >=2.0.0 |
+| Library         | Purpose                                | Version  |
+| --------------- | -------------------------------------- | -------- |
+| **Typer**       | CLI framework (built on Click)         | >=0.9.0  |
+| **Rich**        | Terminal formatting (panels, spinners) | >=13.0.0 |
+| **Questionary** | Interactive prompts                    | >=2.0.0  |
 
 ### Config Precedence (highest to lowest)
 

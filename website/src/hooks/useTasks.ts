@@ -2,8 +2,14 @@
  * React hooks for task data management.
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import type { Task, TaskListResponse, TaskCreate, TaskUpdate, QueueStats } from '@/types/task';
+import { useState, useEffect, useCallback } from "react";
+import type {
+  Task,
+  TaskListResponse,
+  TaskCreate,
+  TaskUpdate,
+  QueueStats,
+} from "@/types/task";
 import {
   getTasks,
   getTask,
@@ -12,7 +18,7 @@ import {
   deleteTask,
   getQueueStats,
   clearQueue,
-} from '@/api/tasks';
+} from "@/api/tasks";
 
 interface UseTasksOptions {
   includeTerminal?: boolean;
@@ -52,7 +58,7 @@ export function useTasks(options: UseTasksOptions = {}): UseTasksReturn {
       setStats(statsResponse);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch tasks'));
+      setError(err instanceof Error ? err : new Error("Failed to fetch tasks"));
     } finally {
       setLoading(false);
     }
@@ -73,26 +79,32 @@ export function useTasks(options: UseTasksOptions = {}): UseTasksReturn {
 
   const addTask = useCallback(async (task: TaskCreate): Promise<Task> => {
     const newTask = await createTask(task);
-    setTasks((prev) => [...prev, newTask]);
+    setTasks(prev => [...prev, newTask]);
     return newTask;
   }, []);
 
-  const editTask = useCallback(async (id: string, updates: TaskUpdate): Promise<Task> => {
-    const updatedTask = await updateTask(id, updates);
-    setTasks((prev) => prev.map((t) => (t.id === id ? updatedTask : t)));
-    return updatedTask;
-  }, []);
+  const editTask = useCallback(
+    async (id: string, updates: TaskUpdate): Promise<Task> => {
+      const updatedTask = await updateTask(id, updates);
+      setTasks(prev => prev.map(t => (t.id === id ? updatedTask : t)));
+      return updatedTask;
+    },
+    []
+  );
 
   const removeTask = useCallback(async (id: string): Promise<void> => {
     await deleteTask(id);
-    setTasks((prev) => prev.filter((t) => t.id !== id));
+    setTasks(prev => prev.filter(t => t.id !== id));
   }, []);
 
-  const clearCompleted = useCallback(async (includeRunning = false): Promise<number> => {
-    const result = await clearQueue(includeRunning);
-    await refresh();
-    return result.removed;
-  }, [refresh]);
+  const clearCompleted = useCallback(
+    async (includeRunning = false): Promise<number> => {
+      const result = await clearQueue(includeRunning);
+      await refresh();
+      return result.removed;
+    },
+    [refresh]
+  );
 
   return {
     tasks,
@@ -130,7 +142,7 @@ export function useTask(taskId: string): UseTaskReturn {
       setTask(data);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch task'));
+      setError(err instanceof Error ? err : new Error("Failed to fetch task"));
     } finally {
       setLoading(false);
     }

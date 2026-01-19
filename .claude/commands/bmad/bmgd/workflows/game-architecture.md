@@ -1,5 +1,5 @@
 ---
-description: 'Collaborative game architecture workflow for AI-agent consistency. Intelligent, adaptive conversation that produces a decision-focused game architecture document covering engine, systems, networking, and technical design optimized for game development.'
+description: "Collaborative game architecture workflow for AI-agent consistency. Intelligent, adaptive conversation that produces a decision-focused game architecture document covering engine, systems, networking, and technical design optimized for game development."
 ---
 
 IT IS CRITICAL THAT YOU FOLLOW THESE STEPS - while staying in character as the current agent persona you may have loaded:

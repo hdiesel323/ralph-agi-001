@@ -7,6 +7,7 @@
 ```
 
 This will:
+
 - Create a Python virtual environment
 - Install all dependencies (including anthropic)
 - Prompt for your API key
@@ -103,21 +104,21 @@ bd sync
 
 ## Issue Types
 
-| Type | Use For |
-|------|---------|
-| `task` | General work items |
-| `bug` | Bug fixes |
-| `feature` | New features |
+| Type      | Use For            |
+| --------- | ------------------ |
+| `task`    | General work items |
+| `bug`     | Bug fixes          |
+| `feature` | New features       |
 
 ## Priority Levels
 
-| Priority | Meaning |
-|----------|---------|
-| 0 (P0) | Critical - drop everything |
-| 1 (P1) | High - do soon |
-| 2 (P2) | Medium - normal priority |
-| 3 (P3) | Low - when time permits |
-| 4 (P4) | Backlog - someday |
+| Priority | Meaning                    |
+| -------- | -------------------------- |
+| 0 (P0)   | Critical - drop everything |
+| 1 (P1)   | High - do soon             |
+| 2 (P2)   | Medium - normal priority   |
+| 3 (P3)   | Low - when time permits    |
+| 4 (P4)   | Backlog - someday          |
 
 ## Dependencies
 
@@ -167,14 +168,18 @@ _bmad/
 ## Key Concepts
 
 ### Agents
+
 Pre-defined AI personas with specific expertise:
+
 - `bmad-master` - Main orchestrator
 - `dev` - Developer agent
 - `architect` - System design
 - `pm` - Product management
 
 ### Workflows
+
 Step-by-step processes for common tasks:
+
 - `create-prd` - Create product requirements
 - `create-architecture` - Design system architecture
 - `dev-story` - Implement a user story

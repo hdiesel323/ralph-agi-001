@@ -21,6 +21,7 @@ When context windows fill up during long-running tasks, we need intelligent prio
 Implement context compacting inspired by Clawdbot's approach:
 
 1. **Compaction Strategy**
+
    ```
    Recent (last N iterations)  → Full detail
    Medium (N to 2N iterations) → Summarized
@@ -28,6 +29,7 @@ Implement context compacting inspired by Clawdbot's approach:
    ```
 
 2. **Compaction Pipeline**
+
    ```python
    def compact_context(frames, threshold):
        recent = frames[-threshold:]  # Keep full
@@ -49,8 +51,8 @@ Implement context compacting inspired by Clawdbot's approach:
      compaction:
        enabled: true
        threshold_frames: 50
-       summary_model: "haiku"  # Use cheap model for summaries
-       preserve_errors: true   # Always keep full error context
+       summary_model: "haiku" # Use cheap model for summaries
+       preserve_errors: true # Always keep full error context
        preserve_decisions: true # Keep architectural decisions full
    ```
 

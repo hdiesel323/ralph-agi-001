@@ -22,10 +22,12 @@ We will adopt a **TUI-first** strategy for our initial frontend, and then build 
 **Goal:** Provide a rich, real-time, developer-native experience.
 
 **Architecture:**
+
 - **Framework:** Textual (Python)
 - **Real-Time:** Built-in async support
 
 **Features (inspired by Relentless):**
+
 - Real-time logs and progress bars
 - Story grid with task status
 - Agent output viewer
@@ -37,12 +39,14 @@ We will adopt a **TUI-first** strategy for our initial frontend, and then build 
 **Goal:** Combine the power of the TUI with the accessibility of a web UI.
 
 **Architecture:**
+
 - **Frontend:** React + TypeScript + TailwindCSS
 - **Backend API:** FastAPI (Python)
 - **TUI in Web:** xterm.js to embed the Textual TUI directly in the web UI
 - **Real-Time:** WebSocket (Socket.io)
 
 **Features:**
+
 - All features from the TUI, plus:
 - Chat interface (AG-UI)
 - Generative UI components
@@ -53,10 +57,10 @@ We will adopt a **TUI-first** strategy for our initial frontend, and then build 
 
 ## Updated Implementation Plan
 
-| Phase | Duration | Complexity | Estimated Hours |
-| :--- | :--- | :--- | :--- |
-| Phase 1: TUI | 4 weeks | Medium | 80-120 hours |
-| Phase 2: Hybrid Web UI | 12 weeks | Very High | 320-440 hours |
+| Phase                  | Duration | Complexity | Estimated Hours |
+| :--------------------- | :------- | :--------- | :-------------- |
+| Phase 1: TUI           | 4 weeks  | Medium     | 80-120 hours    |
+| Phase 2: Hybrid Web UI | 12 weeks | Very High  | 320-440 hours   |
 
 **Total:** 16 weeks, 400-560 hours (same total, different phases)
 
@@ -75,12 +79,12 @@ We will adopt a **TUI-first** strategy for our initial frontend, and then build 
 ## Consequences
 
 - **Positive:**
-    - Faster time-to-market for a GUI.
-    - Better initial user experience for our core developer audience.
-    - Reduced initial complexity.
+  - Faster time-to-market for a GUI.
+  - Better initial user experience for our core developer audience.
+  - Reduced initial complexity.
 - **Negative:**
-    - The web UI is delayed.
-    - Requires expertise in Textual.
+  - The web UI is delayed.
+  - Requires expertise in Textual.
 
 ---
 

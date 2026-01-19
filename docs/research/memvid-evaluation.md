@@ -17,12 +17,14 @@ Memvid is a portable, serverless memory layer for AI agents that packages data, 
 ## Key Features
 
 ### 1. Single-File Architecture
+
 - Everything in one portable `.mv2` file
 - No external database servers required
 - Easy backup, transfer, and version control
 - Write-ahead logging built-in (1-64MB)
 
 ### 2. Append-Only Frames
+
 - Inspired by video encoding
 - Immutable "Smart Frames" containing:
   - Content
@@ -33,13 +35,15 @@ Memvid is a portable, serverless memory layer for AI agents that packages data, 
 - Perfect for AFK mode reliability
 
 ### 3. Built-in Search Capabilities
-| Search Type | Algorithm | Use Case |
-|-------------|-----------|----------|
-| Full-text | BM25 | Keyword queries |
-| Vector | HNSW | Semantic similarity |
-| Temporal | Native | "What did I know at time X?" |
+
+| Search Type | Algorithm | Use Case                     |
+| ----------- | --------- | ---------------------------- |
+| Full-text   | BM25      | Keyword queries              |
+| Vector      | HNSW      | Semantic similarity          |
+| Temporal    | Native    | "What did I know at time X?" |
 
 ### 4. Multi-Modal Support
+
 - Text embeddings
 - CLIP visual embeddings
 - Audio transcription
@@ -49,15 +53,15 @@ Memvid is a portable, serverless memory layer for AI agents that packages data, 
 
 ## Comparison: Memvid vs. Original Plan
 
-| Requirement | Original Plan | With Memvid |
-|-------------|---------------|-------------|
-| Structured storage | SQLite | Built-in |
-| Vector search | ChromaDB | Built-in HNSW |
-| Full-text search | Manual | Built-in BM25 |
-| Crash safety | Manual WAL | Append-only frames |
-| Temporal queries | Manual | Native support |
-| Deployment | 2+ services | Single file |
-| Dependencies | sqlite3, chromadb | memvid |
+| Requirement        | Original Plan     | With Memvid        |
+| ------------------ | ----------------- | ------------------ |
+| Structured storage | SQLite            | Built-in           |
+| Vector search      | ChromaDB          | Built-in HNSW      |
+| Full-text search   | Manual            | Built-in BM25      |
+| Crash safety       | Manual WAL        | Append-only frames |
+| Temporal queries   | Manual            | Native support     |
+| Deployment         | 2+ services       | Single file        |
+| Dependencies       | sqlite3, chromadb | memvid             |
 
 **Complexity Reduction:** ~60% fewer components to manage
 
@@ -66,6 +70,7 @@ Memvid is a portable, serverless memory layer for AI agents that packages data, 
 ## Architecture Fit
 
 ### Short-Term Memory (Session Context)
+
 ```python
 # Store iteration results as frames
 memory.append(
@@ -79,6 +84,7 @@ memory.append(
 ```
 
 ### Medium-Term Memory (Git-Linked)
+
 ```python
 # Link frames to git commits
 memory.append(
@@ -91,6 +97,7 @@ memory.append(
 ```
 
 ### Long-Term Memory (Persistent Knowledge)
+
 ```python
 # Store learnings with temporal context
 memory.append(
@@ -111,17 +118,21 @@ results = memory.search("import errors", type="learning")
 ## Scaling Strategy
 
 ### Phase 1: Memvid-Only (Sprint 2-3)
+
 - Single `.mv2` file for all memory tiers
 - Suitable for: thousands of frames, single agent
 - Performance: sub-millisecond queries
 
 ### Phase 2: Hybrid (If Needed)
+
 If we hit scale limits (millions of vectors, multi-agent):
+
 - Keep Memvid for session/short-term memory
 - Add Qdrant/Pinecone for massive vector search
 - Use Memvid's export capabilities for sync
 
 **Trigger for Phase 2:**
+
 - Query latency > 100ms
 - File size > 1GB
 - Multi-agent coordination needed
@@ -130,12 +141,12 @@ If we hit scale limits (millions of vectors, multi-agent):
 
 ## SDK Options
 
-| Language | Package | Status |
-|----------|---------|--------|
-| Python | `memvid` | Primary choice |
-| Rust | `memvid` | Available |
-| Node.js | `memvid` | Available |
-| CLI | `memvid-cli` | Available |
+| Language | Package      | Status         |
+| -------- | ------------ | -------------- |
+| Python   | `memvid`     | Primary choice |
+| Rust     | `memvid`     | Available      |
+| Node.js  | `memvid`     | Available      |
+| CLI      | `memvid-cli` | Available      |
 
 ---
 
@@ -161,6 +172,7 @@ If we hit scale limits (millions of vectors, multi-agent):
    - Hybrid retrieval (vector + BM25)
 
 ### Dependencies
+
 ```toml
 # pyproject.toml
 [project.dependencies]
@@ -172,12 +184,12 @@ sentence-transformers = "^2.2.0"  # For embeddings
 
 ## Risks & Mitigations
 
-| Risk | Impact | Mitigation |
-|------|--------|------------|
-| New/young project | Medium | Monitor GitHub issues, have fallback plan |
-| Python SDK maturity | Low | Rust core is stable, Python wraps it |
-| Embedding model size | Medium | Use lightweight model (all-MiniLM-L6-v2) |
-| File corruption | Low | Append-only design, regular backups |
+| Risk                 | Impact | Mitigation                                |
+| -------------------- | ------ | ----------------------------------------- |
+| New/young project    | Medium | Monitor GitHub issues, have fallback plan |
+| Python SDK maturity  | Low    | Rust core is stable, Python wraps it      |
+| Embedding model size | Medium | Use lightweight model (all-MiniLM-L6-v2)  |
+| File corruption      | Low    | Append-only design, regular backups       |
 
 ---
 
@@ -186,6 +198,7 @@ sentence-transformers = "^2.2.0"  # For embeddings
 **Approved:** Use Memvid as primary memory backend for RALPH-AGI.
 
 **Rationale:**
+
 1. Dramatically simplifies architecture (1 file vs. 2+ services)
 2. Append-only design aligns perfectly with AFK mode reliability needs
 3. Built-in temporal queries enable "knowledge evolution" tracking

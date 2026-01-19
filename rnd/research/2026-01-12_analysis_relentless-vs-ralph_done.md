@@ -21,6 +21,7 @@ This document provides a comprehensive analysis of two popular open-source imple
 **Core Idea:** A universal AI agent orchestrator with a focus on structured planning, multi-agent support, and a beautiful terminal UI (TUI).
 
 **Key Features:**
+
 - **Beautiful TUI:** Real-time terminal interface with progress bars, story grid, and agent output.
 - **Intelligent Agent Fallback:** Automatically switches agents (Claude, GPT, etc.) when rate limits are hit.
 - **Hierarchical Planning:** 4-phase structure (Setup → Foundation → Stories → Polish) with dependency ordering.
@@ -31,6 +32,7 @@ This document provides a comprehensive analysis of two popular open-source imple
 - **GitHub Issues Generation:** Convert user stories directly to GitHub issues.
 
 **Architecture:**
+
 - **Language:** TypeScript
 - **Runtime:** Bun (recommended) or Node.js
 - **Memory:** Git history, `progress.txt`, `prd.json`
@@ -38,12 +40,14 @@ This document provides a comprehensive analysis of two popular open-source imple
 - **Skills:** Specialized skills for Claude/Amp (`prd`, `tasks`, `checklist`, `clarify`)
 
 **Strengths:**
+
 - **Sophisticated Planning:** The hierarchical planning and dependency management are best-in-class.
 - **Excellent UX:** The TUI provides a great user experience for monitoring progress.
 - **Multi-Agent Support:** The agent fallback and auto-recovery are powerful features.
 - **Extensible:** The skills system allows for adding new capabilities.
 
 **Weaknesses:**
+
 - **Complexity:** The multi-step workflow (`specify` → `plan` → `tasks` → `convert` → `run`) can be cumbersome.
 - **Agent-Specific:** The best features are designed for Claude Code and Amp.
 - **Node.js Ecosystem:** Relies on Node.js/Bun, which may not be ideal for all projects.
@@ -57,6 +61,7 @@ This document provides a comprehensive analysis of two popular open-source imple
 **Core Idea:** A minimalist, bash-based implementation of the Ralph Wiggum Pattern, designed for simplicity and ease of use with Amp.
 
 **Key Features:**
+
 - **Simplicity:** A single `ralph.sh` script orchestrates the entire loop.
 - **Bash-Based:** Easy to understand and modify for anyone familiar with shell scripting.
 - **Amp-Focused:** Designed specifically for use with the Amp AI coding agent.
@@ -64,6 +69,7 @@ This document provides a comprehensive analysis of two popular open-source imple
 - **Flowchart Visualization:** Includes an interactive flowchart to explain the workflow.
 
 **Architecture:**
+
 - **Language:** Bash
 - **Runtime:** Any Unix-like shell
 - **Memory:** Git history, `progress.txt`, `prd.json`
@@ -71,11 +77,13 @@ This document provides a comprehensive analysis of two popular open-source imple
 - **Skills:** `prd` and `ralph` skills for Amp
 
 **Strengths:**
+
 - **Simplicity:** The minimalist design is easy to understand and get started with.
 - **Portability:** The bash script can run almost anywhere.
 - **Educational:** The flowchart and simple code make it a great learning tool.
 
 **Weaknesses:**
+
 - **Minimalist:** Lacks many of the advanced features of Relentless (TUI, multi-agent, etc.).
 - **Amp-Specific:** Tightly coupled to the Amp agent.
 - **Less Robust:** The bash script is less robust than a compiled TypeScript application.
@@ -84,18 +92,18 @@ This document provides a comprehensive analysis of two popular open-source imple
 
 ## Comparison Table
 
-| Feature | Relentless (ArvorCo) | ralph (snarktank) | RALPH-AGI (Ours) |
-| :--- | :--- | :--- | :--- |
-| **Language** | TypeScript | Bash | Python |
-| **Runtime** | Bun / Node.js | Shell | Python |
-| **UI** | Beautiful TUI | CLI only | CLI + Web UI (planned) |
-| **Multi-Agent** | ✅ Yes (fallback) | ❌ No | ✅ Yes (Builder + Critic) |
-| **Planning** | Hierarchical, interactive | Manual PRD | YAML-based, automated |
-| **Dependencies** | ✅ Yes | ❌ No | ✅ Yes (Beads) |
-| **Memory** | Git, progress.txt, prd.json | Git, progress.txt, prd.json | Memvid (planned) |
-| **Complexity** | High | Low | Medium |
-| **Extensibility** | Skills system | Manual script edits | Hooks system |
-| **Best For** | Complex projects, teams | Learning, simple projects | Production use, multi-domain |
+| Feature           | Relentless (ArvorCo)        | ralph (snarktank)           | RALPH-AGI (Ours)             |
+| :---------------- | :-------------------------- | :-------------------------- | :--------------------------- |
+| **Language**      | TypeScript                  | Bash                        | Python                       |
+| **Runtime**       | Bun / Node.js               | Shell                       | Python                       |
+| **UI**            | Beautiful TUI               | CLI only                    | CLI + Web UI (planned)       |
+| **Multi-Agent**   | ✅ Yes (fallback)           | ❌ No                       | ✅ Yes (Builder + Critic)    |
+| **Planning**      | Hierarchical, interactive   | Manual PRD                  | YAML-based, automated        |
+| **Dependencies**  | ✅ Yes                      | ❌ No                       | ✅ Yes (Beads)               |
+| **Memory**        | Git, progress.txt, prd.json | Git, progress.txt, prd.json | Memvid (planned)             |
+| **Complexity**    | High                        | Low                         | Medium                       |
+| **Extensibility** | Skills system               | Manual script edits         | Hooks system                 |
+| **Best For**      | Complex projects, teams     | Learning, simple projects   | Production use, multi-domain |
 
 ---
 

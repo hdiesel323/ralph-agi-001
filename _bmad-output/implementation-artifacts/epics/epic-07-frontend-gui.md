@@ -31,6 +31,7 @@ Build a **control-first** interface enabling the autonomous "sip coffee" workflo
 ## Phase 1: Control Foundation (Sprint 9-10)
 
 ### Story 7.1: Task Queue System
+
 **Priority:** P0 | **Points:** 5
 
 **As a** developer
@@ -38,6 +39,7 @@ Build a **control-first** interface enabling the autonomous "sip coffee" workflo
 **So that** RALPH can process them autonomously
 
 **Acceptance Criteria:**
+
 - [ ] Task file format: YAML in `.ralph/tasks/`
 - [ ] File watcher for new task files
 - [ ] Task status lifecycle: pending → running → complete/failed
@@ -46,6 +48,7 @@ Build a **control-first** interface enabling the autonomous "sip coffee" workflo
 - [ ] Task validation (required fields, format checking)
 
 **Technical Notes:**
+
 ```yaml
 # .ralph/tasks/001-dark-mode.yaml
 id: dark-mode-toggle
@@ -62,6 +65,7 @@ created_at: 2026-01-17T10:00:00Z
 ---
 
 ### Story 7.2: Git Worktree Manager
+
 **Priority:** P0 | **Points:** 5
 
 **As a** developer
@@ -69,6 +73,7 @@ created_at: 2026-01-17T10:00:00Z
 **So that** multiple tasks can execute in parallel without conflicts
 
 **Acceptance Criteria:**
+
 - [ ] Create worktree: `git worktree add ../ralph-<task-id> -b ralph/<task-id>`
 - [ ] Execute task in worktree directory
 - [ ] Cleanup worktree after merge: `git worktree remove`
@@ -77,6 +82,7 @@ created_at: 2026-01-17T10:00:00Z
 - [ ] Configurable worktree directory (default: `../ralph-worktrees/`)
 
 **Technical Notes:**
+
 ```python
 class WorktreeManager:
     def create(self, task_id: str) -> Path
@@ -88,6 +94,7 @@ class WorktreeManager:
 ---
 
 ### Story 7.3: Parallel Task Executor
+
 **Priority:** P0 | **Points:** 5
 
 **As a** developer
@@ -95,6 +102,7 @@ class WorktreeManager:
 **So that** I can complete more work in less time
 
 **Acceptance Criteria:**
+
 - [ ] Configurable concurrency: `ralph start --parallel=3`
 - [ ] Task scheduling (respects dependencies)
 - [ ] Progress tracking across all parallel tasks
@@ -103,6 +111,7 @@ class WorktreeManager:
 - [ ] CLI: `ralph start` (process all pending tasks)
 
 **Technical Notes:**
+
 - Use asyncio for concurrent execution
 - Each worktree gets its own RalphLoop instance
 - Shared state via file locks or SQLite
@@ -110,6 +119,7 @@ class WorktreeManager:
 ---
 
 ### Story 7.4: Confidence Scoring & Auto-Merge
+
 **Priority:** P0 | **Points:** 5
 
 **As a** developer
@@ -117,6 +127,7 @@ class WorktreeManager:
 **So that** I don't have to review every change
 
 **Acceptance Criteria:**
+
 - [ ] Confidence score from Critic agent (0.0 - 1.0)
 - [ ] Configurable threshold: `ralph config set auto-merge-threshold 0.85`
 - [ ] Auto-merge when confidence >= threshold
@@ -125,6 +136,7 @@ class WorktreeManager:
 - [ ] CLI: `ralph config get auto-merge-threshold`
 
 **Confidence Calculation:**
+
 ```python
 confidence = (
     0.4 * test_pass_rate +      # All tests pass = 1.0
@@ -137,6 +149,7 @@ confidence = (
 ---
 
 ### Story 7.5: Notification Webhooks
+
 **Priority:** P1 | **Points:** 3
 
 **As a** developer
@@ -144,6 +157,7 @@ confidence = (
 **So that** I can review or celebrate without watching
 
 **Acceptance Criteria:**
+
 - [ ] Configurable webhook endpoints in `ralph.yaml`
 - [ ] Events: task_started, pr_created, pr_merged, pr_needs_review, error
 - [ ] Payload includes: task_id, pr_url, confidence, summary
@@ -153,6 +167,7 @@ confidence = (
 ---
 
 ### Story 7.6: Telegram/Slack Integration
+
 **Priority:** P1 | **Points:** 3
 
 **As a** developer
@@ -160,6 +175,7 @@ confidence = (
 **So that** I get notified on my preferred platform
 
 **Acceptance Criteria:**
+
 - [ ] Slack incoming webhook support
 - [ ] Telegram bot API support
 - [ ] Discord webhook support
@@ -171,6 +187,7 @@ confidence = (
 ## Phase 2: Visual Control (Sprint 11-12)
 
 ### Story 7.7: FastAPI Backend
+
 **Priority:** P0 | **Points:** 5
 
 **As a** web user
@@ -178,6 +195,7 @@ confidence = (
 **So that** web clients can control RALPH
 
 **Acceptance Criteria:**
+
 - [ ] FastAPI backend in `ralph_agi/api/`
 - [ ] REST endpoints: `/tasks`, `/tasks/{id}`, `/queue`, `/config`
 - [ ] WebSocket endpoint for real-time updates (`/ws/events`)
@@ -188,6 +206,7 @@ confidence = (
 ---
 
 ### Story 7.8: Kanban Board UI
+
 **Priority:** P0 | **Points:** 8
 
 **As a** developer
@@ -195,6 +214,7 @@ confidence = (
 **So that** I can see and control all tasks at a glance
 
 **Acceptance Criteria:**
+
 - [ ] React + TypeScript + TailwindCSS
 - [ ] Columns: Backlog → Ready → Running → Review → Done
 - [ ] Drag-drop task movement
@@ -203,6 +223,7 @@ confidence = (
 - [ ] Click card for details modal
 
 **Mockup:**
+
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
 │  RALPH-AGI Control Board                    [+ New Task] [⚙ Config] │
@@ -228,6 +249,7 @@ confidence = (
 ---
 
 ### Story 7.9: Visual Task Editor
+
 **Priority:** P1 | **Points:** 5
 
 **As a** developer
@@ -235,6 +257,7 @@ confidence = (
 **So that** I don't have to write YAML manually
 
 **Acceptance Criteria:**
+
 - [ ] Modal/drawer form for new task
 - [ ] Fields: title, description, priority, acceptance criteria
 - [ ] Template dropdown for common task types
@@ -245,6 +268,7 @@ confidence = (
 ---
 
 ### Story 7.10: Pinned Commands / Recipes
+
 **Priority:** P1 | **Points:** 5
 
 **As a** developer
@@ -252,6 +276,7 @@ confidence = (
 **So that** I can execute them with one click
 
 **Acceptance Criteria:**
+
 - [ ] Recipe format in `ralph.yaml` or `.ralph/recipes/`
 - [ ] Quick action buttons in UI header
 - [ ] Keyboard shortcuts (Cmd+1, Cmd+2, etc.)
@@ -261,6 +286,7 @@ confidence = (
 ---
 
 ### Story 7.11: Quick Actions Bar
+
 **Priority:** P1 | **Points:** 3
 
 **As a** developer
@@ -268,6 +294,7 @@ confidence = (
 **So that** I can quickly pause, stop, or approve all
 
 **Acceptance Criteria:**
+
 - [ ] Pause/Resume all tasks
 - [ ] Emergency stop (kill all worktrees)
 - [ ] Merge all approved (confidence >= threshold)
@@ -279,6 +306,7 @@ confidence = (
 ## Phase 3: Dashboard & Polish (Sprint 13-14)
 
 ### Story 7.12: Unified Dashboard Layout
+
 **Priority:** P2 | **Points:** 5
 
 **As a** developer
@@ -286,6 +314,7 @@ confidence = (
 **So that** I have a single view of RALPH's activity
 
 **Acceptance Criteria:**
+
 - [ ] Kanban board (main area)
 - [ ] Activity feed (right sidebar)
 - [ ] Metrics bar (header)
@@ -295,6 +324,7 @@ confidence = (
 ---
 
 ### Story 7.13: Observation Panel
+
 **Priority:** P2 | **Points:** 5
 
 **As a** developer
@@ -302,6 +332,7 @@ confidence = (
 **So that** I can debug issues when needed
 
 **Acceptance Criteria:**
+
 - [ ] Log viewer with level filters (DEBUG, INFO, WARN, ERROR)
 - [ ] Agent reasoning viewer (Builder/Critic output)
 - [ ] Task timeline (events for selected task)
@@ -310,6 +341,7 @@ confidence = (
 ---
 
 ### Story 7.14: Settings UI
+
 **Priority:** P2 | **Points:** 3
 
 **As a** developer
@@ -317,6 +349,7 @@ confidence = (
 **So that** I don't have to edit YAML files
 
 **Acceptance Criteria:**
+
 - [ ] Auto-merge threshold slider
 - [ ] Parallel execution limit
 - [ ] Notification preferences
@@ -326,6 +359,7 @@ confidence = (
 ---
 
 ### Story 7.15: Testing & Launch
+
 **Priority:** P2 | **Points:** 5
 
 **As a** developer
@@ -333,6 +367,7 @@ confidence = (
 **So that** it works reliably
 
 **Acceptance Criteria:**
+
 - [ ] E2E tests for critical workflows
 - [ ] Integration tests for API
 - [ ] Performance audit
@@ -349,12 +384,12 @@ confidence = (
 
 ## Story Point Summary
 
-| Phase | Stories | Points |
-|-------|---------|--------|
-| Phase 1: Control Foundation | 7.1-7.6 | 26 |
-| Phase 2: Visual Control | 7.7-7.11 | 26 |
-| Phase 3: Dashboard & Polish | 7.12-7.15 | 18 |
-| **Total** | **15 stories** | **70 points** |
+| Phase                       | Stories        | Points        |
+| --------------------------- | -------------- | ------------- |
+| Phase 1: Control Foundation | 7.1-7.6        | 26            |
+| Phase 2: Visual Control     | 7.7-7.11       | 26            |
+| Phase 3: Dashboard & Polish | 7.12-7.15      | 18            |
+| **Total**                   | **15 stories** | **70 points** |
 
 ## Definition of Done
 

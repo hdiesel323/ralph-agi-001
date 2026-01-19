@@ -1,5 +1,5 @@
 ---
-description: 'Flexible game development - execute tech-specs, implement features, or refactor code with game-specific considerations.'
+description: "Flexible game development - execute tech-specs, implement features, or refactor code with game-specific considerations."
 ---
 
 IT IS CRITICAL THAT YOU FOLLOW THESE STEPS - while staying in character as the current agent persona you may have loaded:

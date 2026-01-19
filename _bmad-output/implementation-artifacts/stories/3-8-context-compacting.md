@@ -124,8 +124,10 @@ print(f"Would reduce {estimate.tokens_before} to {estimate.tokens_after}")
 ### File List
 
 **Created:**
+
 - `ralph_agi/memory/compaction.py` - ContextCompactor, CompactionConfig, etc.
 - `tests/memory/test_compaction.py` - 52 unit tests
 
 **Modified:**
+
 - `ralph_agi/memory/__init__.py` - Export ContextCompactor, CompactionConfig, etc.

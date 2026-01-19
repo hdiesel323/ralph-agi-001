@@ -1,0 +1,37 @@
+{
+  "worktrees": {
+    "implement-dark-mode-toggle-3a5652": {
+      "task_id": "implement-dark-mode-toggle-3a5652",
+      "path": "/Users/admin/Dropbox/Labs/GitHub/ralph-worktrees/implement-dark-mode-toggle-3a5652",
+      "branch": "ralph/implement-dark-mode-toggle-3a5652",
+      "commit": "eb603983e6638b2beffb062ba3f204a9e6bd9ca9",
+      "created_at": "2026-01-18T20:04:42.367782+00:00",
+      "status": "created"
+    },
+    "refactor-css-classes-44e68b": {
+      "task_id": "refactor-css-classes-44e68b",
+      "path": "/Users/admin/Dropbox/Labs/GitHub/ralph-worktrees/refactor-css-classes-44e68b",
+      "branch": "ralph/refactor-css-classes-44e68b",
+      "commit": "eb603983e6638b2beffb062ba3f204a9e6bd9ca9",
+      "created_at": "2026-01-18T20:04:43.075883+00:00",
+      "status": "created"
+    },
+    "test-start-button-functionality-77e987": {
+      "task_id": "test-start-button-functionality-77e987",
+      "path": "/Users/admin/Dropbox/Labs/GitHub/ralph-worktrees/test-start-button-functionality-77e987",
+      "branch": "ralph/test-start-button-functionality-77e987",
+      "commit": "c82f9bc1c2489ee8a76f678ad427b701065d19cc",
+      "created_at": "2026-01-18T20:05:36.391293+00:00",
+      "status": "created"
+    },
+    "add-dark-mode-faa38d": {
+      "task_id": "add-dark-mode-faa38d",
+      "path": "/Users/admin/Dropbox/Labs/GitHub/ralph-worktrees/add-dark-mode-faa38d",
+      "branch": "ralph/add-dark-mode-faa38d",
+      "commit": "c82f9bc1c2489ee8a76f678ad427b701065d19cc",
+      "created_at": "2026-01-18T20:38:04.812065+00:00",
+      "status": "created"
+    }
+  },
+  "updated_at": "2026-01-18T20:38:04.812125+00:00"
+}

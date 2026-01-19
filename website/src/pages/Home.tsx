@@ -15,7 +15,13 @@ import {
   Twitter,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import Layout from "@/components/Layout";
 
 /* Home Page - Obsidian Vault Design
@@ -129,8 +135,8 @@ export default function Home() {
 
             {/* Description */}
             <p className="text-lg text-muted-foreground/80 max-w-2xl mb-10 leading-relaxed">
-              A comprehensive framework for building autonomous AI agents that can
-              execute complex, multi-step tasks over extended periods with
+              A comprehensive framework for building autonomous AI agents that
+              can execute complex, multi-step tasks over extended periods with
               persistent memory, self-verification, and incremental learning.
             </p>
 
@@ -175,8 +181,9 @@ export default function Home() {
               AGI-like Capabilities
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              RALPH-AGI combines proven patterns from leading AI research to create
-              a system that approaches general intelligence for software development tasks.
+              RALPH-AGI combines proven patterns from leading AI research to
+              create a system that approaches general intelligence for software
+              development tasks.
             </p>
           </motion.div>
 

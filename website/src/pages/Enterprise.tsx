@@ -14,7 +14,13 @@ import {
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -24,17 +30,20 @@ const enterpriseFeatures = [
   {
     icon: <Cloud className="w-5 h-5" />,
     title: "Hosted Cloud Version",
-    description: "No setup required - get started in minutes with our managed infrastructure",
+    description:
+      "No setup required - get started in minutes with our managed infrastructure",
   },
   {
     icon: <Shield className="w-5 h-5" />,
     title: "SSO/SAML Authentication",
-    description: "Enterprise-grade security with single sign-on and SAML 2.0 support",
+    description:
+      "Enterprise-grade security with single sign-on and SAML 2.0 support",
   },
   {
     icon: <BarChart3 className="w-5 h-5" />,
     title: "Team Dashboards & Analytics",
-    description: "Track agent performance, task completion, and team productivity",
+    description:
+      "Track agent performance, task completion, and team productivity",
   },
   {
     icon: <Headphones className="w-5 h-5" />,
@@ -104,7 +113,8 @@ export default function Enterprise() {
               </h1>
             </div>
             <p className="text-muted-foreground text-lg max-w-2xl">
-              For teams that need managed infrastructure, enterprise security, and dedicated support.
+              For teams that need managed infrastructure, enterprise security,
+              and dedicated support.
             </p>
           </motion.div>
         </div>
@@ -144,9 +154,7 @@ export default function Enterprise() {
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <CardDescription>
-                          {feature.description}
-                        </CardDescription>
+                        <CardDescription>{feature.description}</CardDescription>
                       </CardContent>
                     </Card>
                   </motion.div>
@@ -166,7 +174,8 @@ export default function Enterprise() {
                     Join the Waitlist
                   </CardTitle>
                   <CardDescription className="text-base">
-                    Be the first to know when Enterprise Edition launches. Early access members get special pricing.
+                    Be the first to know when Enterprise Edition launches. Early
+                    access members get special pricing.
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -183,7 +192,8 @@ export default function Enterprise() {
                         You're on the list!
                       </h3>
                       <p className="text-muted-foreground">
-                        We'll be in touch when Enterprise Edition is ready. Thanks for your interest!
+                        We'll be in touch when Enterprise Edition is ready.
+                        Thanks for your interest!
                       </p>
                     </motion.div>
                   ) : (
@@ -196,10 +206,15 @@ export default function Enterprise() {
                       className="space-y-6"
                     >
                       {/* Hidden fields for Netlify */}
-                      <input type="hidden" name="form-name" value="enterprise-waitlist" />
+                      <input
+                        type="hidden"
+                        name="form-name"
+                        value="enterprise-waitlist"
+                      />
                       <p className="hidden">
                         <label>
-                          Don't fill this out if you're human: <input name="bot-field" />
+                          Don't fill this out if you're human:{" "}
+                          <input name="bot-field" />
                         </label>
                       </p>
 
@@ -255,7 +270,9 @@ export default function Enterprise() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="useCase">How do you plan to use RALPH-AGI?</Label>
+                        <Label htmlFor="useCase">
+                          How do you plan to use RALPH-AGI?
+                        </Label>
                         <Textarea
                           id="useCase"
                           name="useCase"

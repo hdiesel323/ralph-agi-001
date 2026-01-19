@@ -16,7 +16,7 @@ checkpoint_interval: 1
 
 # Retry configuration for failed iterations
 max_retries: 3
-retry_delays: [1, 2, 4]  # Exponential backoff in seconds
+retry_delays: [1, 2, 4] # Exponential backoff in seconds
 
 # Optional: Log file path (logs to console only if not set)
 # log_file: "ralph-agi.log"

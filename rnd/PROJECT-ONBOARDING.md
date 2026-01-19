@@ -3,6 +3,7 @@
 **Purpose:** Quick reference for onboarding new team members, AI assistants, or tools to the RALPH-AGI project.
 
 **Use this when:**
+
 - Setting up a new AI assistant (Claude, GPT, etc.)
 - Onboarding a new developer
 - Configuring automated tools
@@ -21,6 +22,7 @@
 Current autonomous AI agents fail at long-running tasks due to **context loss**, **lack of long-term memory**, **premature task completion**, and **inability to self-correct**. Even frontier LLMs like Claude 4.5 and GPT-4.1 struggle with multi-day projects that require maintaining coherent understanding across large codebases.
 
 RALPH-AGI solves this by providing a robust architectural harness that enables LLMs to achieve true long-horizon autonomy through:
+
 - Persistent loops (Ralph Wiggum Pattern)
 - Multi-layer memory (short, medium, long-term)
 - Event-driven automation (hooks system)
@@ -33,16 +35,19 @@ RALPH-AGI solves this by providing a robust architectural harness that enables L
 ### Primary Personas
 
 **1. Alex, the Startup CTO**
+
 - Manages a small, agile engineering team
 - Needs to accelerate development velocity 3x with limited resources
 - Wants to automate code reviews, documentation, and testing
 
 **2. Maria, the Marketing Manager**
+
 - Runs campaigns for a financial services company
 - Needs to produce high-quality, compliant content at scale
 - Wants to ensure brand consistency and regulatory compliance
 
 **3. David, the Lead Broker**
+
 - Runs a lead generation business
 - Needs to automate lead pricing, qualification, and distribution
 - Wants to improve lead conversion rates and margins
@@ -52,6 +57,7 @@ RALPH-AGI solves this by providing a robust architectural harness that enables L
 ## What's the vision?
 
 An autonomous agent that can:
+
 - **Code for days** without human intervention
 - **Remember every conversation** and learn from mistakes
 - **Complete complex, multi-step tasks** in software development, marketing, and business operations
@@ -61,6 +67,7 @@ An autonomous agent that can:
 ### The Ultimate Vision
 
 Give the agent a task on Friday night, wake up Monday morning to:
+
 - 50+ commits
 - All tests passing
 - Production-ready code
@@ -98,31 +105,37 @@ Give the agent a task on Friday night, wake up Monday morning to:
 ### 🔄 What's Next
 
 **Week 1 (Current):** Build Proof of Concept
+
 - Implement basic Ralph Wiggum loop
 - Test with 3-5 simple coding tasks
 - Validate API integrations
 
 **Weeks 2-3:** Foundation
+
 - Two-agent architecture (Initializer + Coding Agent)
 - Beads integration (dependency-aware tasks)
 - Git-first workflow
 
 **Weeks 4-5:** Memory Layer
+
 - SQLite (medium-term memory)
 - ChromaDB (long-term memory)
 - Automatic learning extraction
 
 **Weeks 6-7:** Agent Specialization
+
 - Testing Agent
 - QA Agent
 - Code Cleanup Agent
 - Multi-agent coordination
 
 **Week 8:** Safety & Verification
+
 - 5-stage cascaded evaluation pipeline
 - File claims tracking
 
 **Weeks 9-12:** Scale & Optimize
+
 - TLDR code analysis (95% token savings)
 - Claude Code Plugin
 - Cost monitoring dashboard
@@ -134,10 +147,12 @@ Give the agent a task on Friday night, wake up Monday morning to:
 ### Architecture
 
 **Two-Agent System:**
+
 1. **Initializer Agent** - Sets up environment (runs once)
 2. **Coding Agent** - Implements features (loops)
 
 **Supporting Systems:**
+
 - **Memory System:** Short (context), Medium (SQLite), Long (ChromaDB)
 - **Hooks System:** 30+ automatic behaviors at lifecycle points
 - **Beads Task Graph:** Dependency-aware execution
@@ -146,14 +161,14 @@ Give the agent a task on Friday night, wake up Monday morning to:
 
 ### Technology Stack
 
-| Layer | Technology | Rationale |
-| :--- | :--- | :--- |
-| Language | Python 3.11+ | Rich AI/ML ecosystem |
-| LLM | Claude 4.5 / GPT-4.1 | Frontier models with large context |
-| Database | SQLite, ChromaDB | Structured + vector search |
-| Version Control | Git | Industry standard, robust state management |
-| Browser Automation | Puppeteer (MCP-CLI) | E2E testing, web interaction |
-| Deployment | Docker | Containerization |
+| Layer              | Technology           | Rationale                                  |
+| :----------------- | :------------------- | :----------------------------------------- |
+| Language           | Python 3.11+         | Rich AI/ML ecosystem                       |
+| LLM                | Claude 4.5 / GPT-4.1 | Frontier models with large context         |
+| Database           | SQLite, ChromaDB     | Structured + vector search                 |
+| Version Control    | Git                  | Industry standard, robust state management |
+| Browser Automation | Puppeteer (MCP-CLI)  | E2E testing, web interaction               |
+| Deployment         | Docker               | Containerization                           |
 
 ### Unique Differentiators
 
@@ -176,14 +191,14 @@ Give the agent a task on Friday night, wake up Monday morning to:
 
 ### Phase Goals
 
-| Phase | Duration | Key Deliverables |
-| :--- | :--- | :--- |
-| Phase 1: PoC | Week 1 | Basic Ralph loop, 3-5 tasks complete |
-| Phase 2: Foundation | Weeks 2-3 | Two-agent architecture, Beads |
-| Phase 3: Memory | Weeks 4-5 | SQLite + ChromaDB integration |
-| Phase 4: Specialization | Weeks 6-7 | Testing, QA, Cleanup agents |
-| Phase 5: Safety | Week 8 | 5-stage evaluation pipeline |
-| Phase 6: Scale | Weeks 9-12 | TLDR, plugin, cost monitoring |
+| Phase                   | Duration   | Key Deliverables                     |
+| :---------------------- | :--------- | :----------------------------------- |
+| Phase 1: PoC            | Week 1     | Basic Ralph loop, 3-5 tasks complete |
+| Phase 2: Foundation     | Weeks 2-3  | Two-agent architecture, Beads        |
+| Phase 3: Memory         | Weeks 4-5  | SQLite + ChromaDB integration        |
+| Phase 4: Specialization | Weeks 6-7  | Testing, QA, Cleanup agents          |
+| Phase 5: Safety         | Week 8     | 5-stage evaluation pipeline          |
+| Phase 6: Scale          | Weeks 9-12 | TLDR, plugin, cost monitoring        |
 
 ---
 
@@ -192,6 +207,7 @@ Give the agent a task on Friday night, wake up Monday morning to:
 **GitHub:** https://github.com/hdiesel323/ralph-agi-001
 
 **Key Documentation:**
+
 - `DOCUMENTATION-INDEX.md` - Start here
 - `RALPH-AGI-PRODUCT-REQUIREMENTS-DOCUMENT.md` - Complete PRD
 - `RALPH-AGI-TECHNICAL-ARCHITECTURE.md` - System architecture
@@ -235,6 +251,7 @@ Give the agent a task on Friday night, wake up Monday morning to:
 We're building this in public over 12 weeks with weekly progress updates on Twitter.
 
 **Launch announcement highlights:**
+
 - Analysis of 9 autonomous agent systems
 - Built on Anthropic's official guidance + 8 battle-tested patterns
 - 12-week roadmap with transparent metrics

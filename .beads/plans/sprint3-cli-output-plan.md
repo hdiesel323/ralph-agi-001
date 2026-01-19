@@ -12,29 +12,33 @@
 ### Allowed APIs (Verified from Source Code)
 
 #### CLI Module (`ralph_agi/cli.py` - 223 lines)
-| API | Source | Usage |
-|-----|--------|-------|
-| `argparse.ArgumentParser(prog, description, formatter_class, epilog)` | stdlib | Parser creation |
-| `parser.add_argument(--flag, type, default, help)` | stdlib | Flag definition |
-| `parser.add_subparsers(dest, help)` | stdlib | Subcommand support |
-| `subparsers.add_parser(name, help, description)` | stdlib | Subcommand creation |
+
+| API                                                                   | Source | Usage               |
+| --------------------------------------------------------------------- | ------ | ------------------- |
+| `argparse.ArgumentParser(prog, description, formatter_class, epilog)` | stdlib | Parser creation     |
+| `parser.add_argument(--flag, type, default, help)`                    | stdlib | Flag definition     |
+| `parser.add_subparsers(dest, help)`                                   | stdlib | Subcommand support  |
+| `subparsers.add_parser(name, help, description)`                      | stdlib | Subcommand creation |
 
 #### Output Module (`ralph_agi/output.py` - 260 lines)
-| API | Source | Usage |
-|-----|--------|-------|
-| `rich.console.Console(file, force_terminal, highlight)` | rich>=13.0 | Terminal output |
+
+| API                                                       | Source     | Usage             |
+| --------------------------------------------------------- | ---------- | ----------------- |
+| `rich.console.Console(file, force_terminal, highlight)`   | rich>=13.0 | Terminal output   |
 | `rich.panel.Panel(content, title, border_style, padding)` | rich>=13.0 | Completion banner |
-| `rich.text.Text(content, justify)` | rich>=13.0 | Text styling |
+| `rich.text.Text(content, justify)`                        | rich>=13.0 | Text styling      |
 
 #### Integration APIs
-| API | Signature | Source |
-|-----|-----------|--------|
-| `load_config(path)` | `(Optional[str]) -> RalphConfig` | config.py:84 |
-| `RalphLoop.from_config(config)` | `(RalphConfig) -> RalphLoop` | loop.py:135 |
-| `loop.run(handle_signals)` | `(bool) -> bool` | loop.py:465 |
-| `loop.close()` | `() -> None` | loop.py:576 |
+
+| API                             | Signature                        | Source       |
+| ------------------------------- | -------------------------------- | ------------ |
+| `load_config(path)`             | `(Optional[str]) -> RalphConfig` | config.py:84 |
+| `RalphLoop.from_config(config)` | `(RalphConfig) -> RalphLoop`     | loop.py:135  |
+| `loop.run(handle_signals)`      | `(bool) -> bool`                 | loop.py:465  |
+| `loop.close()`                  | `() -> None`                     | loop.py:576  |
 
 ### Anti-Patterns to Avoid
+
 - **DO NOT** use `click` library (project uses argparse)
 - **DO NOT** call `Console.print()` without checking `is_tty` for color logic
 - **DO NOT** forget to call `loop.close()` in finally block
@@ -49,6 +53,7 @@
 **Copy from:** `pyproject.toml:23-28` (existing dependencies block)
 
 **Add:**
+
 ```toml
 dependencies = [
     "PyYAML>=6.0",
@@ -62,6 +67,7 @@ ralph-agi = "ralph_agi.cli:main"  # ADD THIS SECTION
 ```
 
 **Verification:**
+
 ```bash
 grep "rich" pyproject.toml  # Should show: "rich>=13.0"
 grep "ralph-agi" pyproject.toml  # Should show entry point
@@ -122,6 +128,7 @@ class OutputFormatter:
 | `warning(message)` | str | Skip in QUIET |
 
 **TTY vs Non-TTY Pattern:**
+
 ```python
 if self.is_tty:
     self._console.print(text, style="bold cyan")  # Rich styling
@@ -130,6 +137,7 @@ else:
 ```
 
 **Verification:**
+
 ```bash
 python -c "from ralph_agi.output import OutputFormatter, Verbosity; print('OK')"
 ```
@@ -181,6 +189,7 @@ def main(argv: list[str] | None = None) -> int:
 ```
 
 **Exception Handling Pattern (from cli.py:148-191):**
+
 ```python
 try:
     completed = loop.run(handle_signals=True)
@@ -198,6 +207,7 @@ finally:
 ```
 
 **Verification:**
+
 ```bash
 ralph-agi --help
 ralph-agi --version
@@ -213,6 +223,7 @@ ralph-agi run --help
 **Pattern to copy from:** Existing test patterns in tests/core/
 
 **Test Classes (29 tests):**
+
 - `TestVerbosity` - Enum ordering
 - `TestOutputFormatterBasic` - Initialization
 - `TestOutputFormatterSeparator` - separator() method
@@ -228,6 +239,7 @@ ralph-agi run --help
 - `TestOutputFormatterTTYDetection` - is_tty property
 
 **io.StringIO Capture Pattern:**
+
 ```python
 def test_example(self):
     output = io.StringIO()
@@ -239,6 +251,7 @@ def test_example(self):
 ### Task 4.2: Create `tests/cli/test_cli.py`
 
 **Test Classes (27 tests):**
+
 - `TestCreateParser` - Parser creation and flags
 - `TestMainFunction` - Entry point routing
 - `TestRunLoop` - Command execution
@@ -246,6 +259,7 @@ def test_example(self):
 - `TestExitCodes` - Exit code constants
 
 **Mock Pattern:**
+
 ```python
 with patch("ralph_agi.cli.RalphLoop") as mock_loop_class:
     mock_loop = MagicMock()
@@ -259,6 +273,7 @@ with patch("ralph_agi.cli.RalphLoop") as mock_loop_class:
 ```
 
 **Verification:**
+
 ```bash
 pytest tests/test_output.py tests/cli/test_cli.py -v
 ```
@@ -306,14 +321,14 @@ grep -A2 "finally:" ralph_agi/cli.py  # Should show loop.close()
 
 ## Files Created/Modified
 
-| File | Action | Lines |
-|------|--------|-------|
-| `pyproject.toml` | Modified | +4 lines |
-| `ralph_agi/output.py` | Created | 260 lines |
-| `ralph_agi/cli.py` | Created | 223 lines |
-| `tests/test_output.py` | Created | 289 lines |
-| `tests/cli/__init__.py` | Created | 1 line |
-| `tests/cli/test_cli.py` | Created | 322 lines |
+| File                    | Action   | Lines     |
+| ----------------------- | -------- | --------- |
+| `pyproject.toml`        | Modified | +4 lines  |
+| `ralph_agi/output.py`   | Created  | 260 lines |
+| `ralph_agi/cli.py`      | Created  | 223 lines |
+| `tests/test_output.py`  | Created  | 289 lines |
+| `tests/cli/__init__.py` | Created  | 1 line    |
+| `tests/cli/test_cli.py` | Created  | 322 lines |
 
 **Total:** 6 files, ~1099 lines of code + tests
 

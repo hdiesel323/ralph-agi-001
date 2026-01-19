@@ -136,24 +136,24 @@
 
 The Ralph Loop Engine is the central orchestrator of the system. It implements a simple but powerful iterative pattern that processes one task at a time until all tasks are complete or the maximum iteration count is reached.
 
-| Property | Specification |
-|----------|---------------|
-| **Implementation Language** | TypeScript/Node.js or Python |
-| **Loop Type** | Synchronous, single-threaded |
-| **Max Iterations** | Configurable (default: 100) |
-| **Completion Signal** | `<promise>COMPLETE</promise>` in LLM output |
-| **Checkpoint Frequency** | Every iteration (configurable) |
-| **Error Handling** | Retry with exponential backoff, max 3 attempts |
+| Property                    | Specification                                  |
+| --------------------------- | ---------------------------------------------- |
+| **Implementation Language** | TypeScript/Node.js or Python                   |
+| **Loop Type**               | Synchronous, single-threaded                   |
+| **Max Iterations**          | Configurable (default: 100)                    |
+| **Completion Signal**       | `<promise>COMPLETE</promise>` in LLM output    |
+| **Checkpoint Frequency**    | Every iteration (configurable)                 |
+| **Error Handling**          | Retry with exponential backoff, max 3 attempts |
 
 ### 2.2 Memory System
 
 The three-tier memory system provides context persistence across sessions.
 
-| Tier | Storage | Retention | Access Pattern |
-|------|---------|-----------|----------------|
-| **Short-term** | progress.txt | Per-sprint | Sequential append |
-| **Medium-term** | Git history | Permanent | Log traversal |
-| **Long-term** | SQLite + Chroma | Permanent | Semantic search |
+| Tier            | Storage         | Retention  | Access Pattern    |
+| --------------- | --------------- | ---------- | ----------------- |
+| **Short-term**  | progress.txt    | Per-sprint | Sequential append |
+| **Medium-term** | Git history     | Permanent  | Log traversal     |
+| **Long-term**   | SQLite + Chroma | Permanent  | Semantic search   |
 
 **Long-term Memory Schema (SQLite):**
 
@@ -187,31 +187,31 @@ CREATE TABLE summaries (
 
 The Tool Registry implements dynamic discovery using the MCP CLI pattern.
 
-| Operation | Command | Token Cost |
-|-----------|---------|------------|
-| List servers | `mcp-cli` | ~50 tokens |
-| List tools | `mcp-cli <server>` | ~100 tokens |
-| Get schema | `mcp-cli <server>/<tool>` | ~200 tokens |
-| Execute | `mcp-cli <server>/<tool> '<json>'` | Variable |
+| Operation    | Command                            | Token Cost  |
+| ------------ | ---------------------------------- | ----------- |
+| List servers | `mcp-cli`                          | ~50 tokens  |
+| List tools   | `mcp-cli <server>`                 | ~100 tokens |
+| Get schema   | `mcp-cli <server>/<tool>`          | ~200 tokens |
+| Execute      | `mcp-cli <server>/<tool> '<json>'` | Variable    |
 
 **Comparison with Static Loading:**
 
 | Approach | Tokens (6 servers, 60 tools) | Reduction |
-|----------|------------------------------|-----------|
-| Static | ~47,000 | Baseline |
-| Dynamic | ~400 | **99%** |
+| -------- | ---------------------------- | --------- |
+| Static   | ~47,000                      | Baseline  |
+| Dynamic  | ~400                         | **99%**   |
 
 ### 2.4 Evaluation Pipeline
 
 The cascaded evaluation pipeline ensures quality through progressive verification.
 
-| Stage | Command | Timeout | Cost | Blocking |
-|-------|---------|---------|------|----------|
-| Static Analysis | `pnpm type-check && pnpm lint` | 60s | $0.00 | Yes |
-| Unit Tests | `pnpm test` | 300s | $0.00 | Yes |
-| Integration Tests | `pnpm test:integration` | 600s | $0.01 | Optional |
-| E2E Tests | `pnpm test:e2e` | 900s | $0.05 | Optional |
-| LLM Judge | API call | 60s | $0.10 | Optional |
+| Stage             | Command                        | Timeout | Cost  | Blocking |
+| ----------------- | ------------------------------ | ------- | ----- | -------- |
+| Static Analysis   | `pnpm type-check && pnpm lint` | 60s     | $0.00 | Yes      |
+| Unit Tests        | `pnpm test`                    | 300s    | $0.00 | Yes      |
+| Integration Tests | `pnpm test:integration`        | 600s    | $0.01 | Optional |
+| E2E Tests         | `pnpm test:e2e`                | 900s    | $0.05 | Optional |
+| LLM Judge         | API call                       | 60s     | $0.10 | Optional |
 
 ---
 
@@ -358,7 +358,7 @@ interface RalphConfig {
     version: string;
   };
   orchestration: {
-    loopType: 'ralph';
+    loopType: "ralph";
     maxIterations: number;
     completionPromise: string;
     humanInLoop: boolean;
@@ -366,24 +366,24 @@ interface RalphConfig {
   };
   taskManagement: {
     prdPath: string;
-    prdFormat: 'json';
+    prdFormat: "json";
     gitBacked: boolean;
     autoCommit: boolean;
   };
   memory: {
     shortTerm: {
-      type: 'progress_file';
+      type: "progress_file";
       path: string;
-      mode: 'append';
+      mode: "append";
     };
     longTerm: {
       enabled: boolean;
       sqlitePath: string;
-      vectorDb: 'chroma';
+      vectorDb: "chroma";
     };
   };
   tools: {
-    discovery: 'mcp_cli';
+    discovery: "mcp_cli";
     configPath: string;
   };
   evaluation: {
@@ -402,7 +402,7 @@ interface RalphConfig {
 ```typescript
 interface MemoryQuery {
   query: string;
-  type?: 'bugfix' | 'feature' | 'decision' | 'learning';
+  type?: "bugfix" | "feature" | "decision" | "learning";
   dateRange?: { start: Date; end: Date };
   project?: string;
   limit?: number;
@@ -421,7 +421,7 @@ interface MemoryResult {
 const results = await memory.search({
   query: "authentication implementation",
   type: "feature",
-  limit: 5
+  limit: 5,
 });
 ```
 
@@ -466,14 +466,14 @@ const results = await memory.search({
 
 ### 5.2 Resource Requirements
 
-| Component | CPU | Memory | Storage |
-|-----------|-----|--------|---------|
-| RALPH-AGI Process | 2 cores | 4 GB | - |
-| SQLite Database | - | 512 MB | 1 GB |
-| Chroma Vector DB | 1 core | 2 GB | 10 GB |
-| Sandboxed Workspace | 2 cores | 4 GB | 50 GB |
-| Browser (Chromium) | 1 core | 2 GB | - |
-| **Total** | **6 cores** | **12.5 GB** | **61 GB** |
+| Component           | CPU         | Memory      | Storage   |
+| ------------------- | ----------- | ----------- | --------- |
+| RALPH-AGI Process   | 2 cores     | 4 GB        | -         |
+| SQLite Database     | -           | 512 MB      | 1 GB      |
+| Chroma Vector DB    | 1 core      | 2 GB        | 10 GB     |
+| Sandboxed Workspace | 2 cores     | 4 GB        | 50 GB     |
+| Browser (Chromium)  | 1 core      | 2 GB        | -         |
+| **Total**           | **6 cores** | **12.5 GB** | **61 GB** |
 
 ---
 
@@ -497,14 +497,14 @@ The system implements rate limiting at multiple levels to prevent runaway resour
 
 ### 7.1 Metrics
 
-| Metric | Description | Alert Threshold |
-|--------|-------------|-----------------|
-| `ralph_iterations_total` | Total loop iterations | - |
-| `ralph_tasks_completed` | Tasks marked as passes: true | - |
-| `ralph_errors_total` | Total errors encountered | > 5/hour |
-| `ralph_stuck_duration` | Time without progress | > 30 minutes |
-| `ralph_tokens_used` | Total tokens consumed | > 1M/day |
-| `ralph_evaluation_pass_rate` | % of evaluations passing | < 80% |
+| Metric                       | Description                  | Alert Threshold |
+| ---------------------------- | ---------------------------- | --------------- |
+| `ralph_iterations_total`     | Total loop iterations        | -               |
+| `ralph_tasks_completed`      | Tasks marked as passes: true | -               |
+| `ralph_errors_total`         | Total errors encountered     | > 5/hour        |
+| `ralph_stuck_duration`       | Time without progress        | > 30 minutes    |
+| `ralph_tokens_used`          | Total tokens consumed        | > 1M/day        |
+| `ralph_evaluation_pass_rate` | % of evaluations passing     | < 80%           |
 
 ### 7.2 Logging
 

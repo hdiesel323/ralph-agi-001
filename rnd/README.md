@@ -81,6 +81,7 @@ Then reload: `source ~/.bashrc`
 - **status:** `open`, `in-progress`, `answered`, `approved`, `done`
 
 **Examples:**
+
 - `2026-01-10_solutioning_context-window-limits_open.md`
 - `2026-01-10_planning_sprint-01-poc_in-progress.md`
 - `2026-01-10_solutioning_two-agent-architecture_approved.md`
@@ -128,16 +129,16 @@ git push
 
 ## 🏷️ Commit Message Prefixes
 
-| Prefix | Meaning | Example |
-| :--- | :--- | :--- |
-| `q:` | Question | `q: Ask about memory system` |
-| `a:` | Answer | `a: Propose SQLite + ChromaDB` |
-| `plan:` | Planning | `plan: Create sprint 2 plan` |
-| `sol:` | Solutioning | `sol: Document ADR for two-agent arch` |
-| `impl:` | Implementation | `impl: Add checklist for PoC` |
-| `res:` | Research | `res: Add notes on TLDR analysis` |
-| `meet:` | Meeting | `meet: Add notes for 2026-01-11 standup` |
-| `docs:` | Documentation | `docs: Update main README` |
+| Prefix  | Meaning        | Example                                  |
+| :------ | :------------- | :--------------------------------------- |
+| `q:`    | Question       | `q: Ask about memory system`             |
+| `a:`    | Answer         | `a: Propose SQLite + ChromaDB`           |
+| `plan:` | Planning       | `plan: Create sprint 2 plan`             |
+| `sol:`  | Solutioning    | `sol: Document ADR for two-agent arch`   |
+| `impl:` | Implementation | `impl: Add checklist for PoC`            |
+| `res:`  | Research       | `res: Add notes on TLDR analysis`        |
+| `meet:` | Meeting        | `meet: Add notes for 2026-01-11 standup` |
+| `docs:` | Documentation  | `docs: Update main README`               |
 
 ---
 
@@ -145,12 +146,12 @@ git push
 
 **BMAD Phase:** Phase 3: Solutioning → Phase 4: Implementation
 
-| Phase | Status | Current Work |
-| :--- | :--- | :--- |
-| Phase 1: Analysis | ✅ Complete | Research complete (9 implementations) |
-| Phase 2: Planning | ✅ Complete | PRD, Architecture, Roadmap done |
-| Phase 3: Solutioning | 🔄 In Progress | Creating ADRs, answering technical questions |
-| Phase 4: Implementation | ⏳ Next | Sprint 01: PoC ready to start |
+| Phase                   | Status         | Current Work                                 |
+| :---------------------- | :------------- | :------------------------------------------- |
+| Phase 1: Analysis       | ✅ Complete    | Research complete (9 implementations)        |
+| Phase 2: Planning       | ✅ Complete    | PRD, Architecture, Roadmap done              |
+| Phase 3: Solutioning    | 🔄 In Progress | Creating ADRs, answering technical questions |
+| Phase 4: Implementation | ⏳ Next        | Sprint 01: PoC ready to start                |
 
 ---
 

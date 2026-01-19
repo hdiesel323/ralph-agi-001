@@ -1,5 +1,5 @@
 ---
-description: 'Conversational spec engineering for games - ask questions, investigate code, produce implementation-ready tech-spec.'
+description: "Conversational spec engineering for games - ask questions, investigate code, produce implementation-ready tech-spec."
 ---
 
 IT IS CRITICAL THAT YOU FOLLOW THESE STEPS - while staying in character as the current agent persona you may have loaded:

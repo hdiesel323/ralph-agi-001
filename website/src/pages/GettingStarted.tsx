@@ -151,7 +151,13 @@ const cliCommands = [
   },
 ];
 
-function CodeBlock({ code, language = "bash" }: { code: string; language?: string }) {
+function CodeBlock({
+  code,
+  language = "bash",
+}: {
+  code: string;
+  language?: string;
+}) {
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = () => {
@@ -223,7 +229,7 @@ export default function GettingStarted() {
                     { name: "pnpm", version: "8.0+" },
                     { name: "Git", version: "2.30+" },
                     { name: "Anthropic API Key", version: "Required" },
-                  ].map((req) => (
+                  ].map(req => (
                     <div
                       key={req.name}
                       className="flex items-center justify-between p-3 rounded-lg bg-background/50"
@@ -334,7 +340,7 @@ export default function GettingStarted() {
               CLI Commands
             </h2>
             <div className="space-y-4">
-              {cliCommands.map((cmd) => (
+              {cliCommands.map(cmd => (
                 <Card key={cmd.command} className="bg-card/50 backdrop-blur">
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
@@ -395,9 +401,9 @@ ralph-agi logs --tail 20`}
                       Pro Tip
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Use the <code className="text-primary">--notify</code> flag
-                      to receive Slack or email notifications when the project
-                      completes or encounters issues.
+                      Use the <code className="text-primary">--notify</code>{" "}
+                      flag to receive Slack or email notifications when the
+                      project completes or encounters issues.
                     </p>
                   </div>
                 </div>
@@ -431,7 +437,7 @@ ralph-agi logs --tail 20`}
                   href: "/architecture",
                   icon: <Settings className="w-5 h-5" />,
                 },
-              ].map((item) => (
+              ].map(item => (
                 <Card
                   key={item.title}
                   className="bg-card/50 backdrop-blur hover:border-primary/50 transition-colors group"

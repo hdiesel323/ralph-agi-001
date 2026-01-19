@@ -1,5 +1,5 @@
 ---
-description: 'Initialize game test framework architecture for Unity, Unreal Engine, or Godot projects'
+description: "Initialize game test framework architecture for Unity, Unreal Engine, or Godot projects"
 ---
 
 IT IS CRITICAL THAT YOU FOLLOW THESE STEPS - while staying in character as the current agent persona you may have loaded:

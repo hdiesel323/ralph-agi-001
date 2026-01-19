@@ -33,11 +33,13 @@ We will implement a **phased hybrid architecture** that starts with a traditiona
 **Goal:** Provide visibility and control for technical users.
 
 **Architecture:**
+
 - **Frontend:** React + TypeScript + TailwindCSS
 - **Backend API:** FastAPI (Python)
 - **Real-Time:** WebSocket (Socket.io)
 
 **Features:**
+
 - Task list (current, completed, failed)
 - Real-time logs streaming
 - Configuration editor
@@ -51,11 +53,13 @@ We will implement a **phased hybrid architecture** that starts with a traditiona
 **Goal:** Enable natural language interaction.
 
 **Architecture:**
+
 - **Protocol:** AG-UI for agent-UI communication
 - **Client:** CopilotKit or custom AG-UI client
 - **Real-Time:** Bi-directional WebSocket
 
 **Features:**
+
 - Chat with Ralph
 - Natural language commands
 - Real-time status updates in chat
@@ -68,11 +72,13 @@ We will implement a **phased hybrid architecture** that starts with a traditiona
 **Goal:** AI-generated UI components on-demand.
 
 **Architecture:**
+
 - **Framework:** Vercel streamUI or similar
 - **Schema:** Zod schemas for component definitions
 - **Rendering:** React Server Components
 
 **Features:**
+
 - Ralph generates UI components based on context
 - Dynamic dashboards
 - Bespoke visualizations
@@ -85,11 +91,13 @@ We will implement a **phased hybrid architecture** that starts with a traditiona
 **Goal:** Combine all patterns into a cohesive experience.
 
 **Architecture:**
+
 - **Layout:** Dashboard with sidebar navigation
 - **Main View:** Chat interface and generative UI components
 - **UX:** Seamless switching between modes
 
 **Features:**
+
 - All features from previous phases
 - Unified experience
 - Gradual learning curve
@@ -98,12 +106,12 @@ We will implement a **phased hybrid architecture** that starts with a traditiona
 
 ## Implementation Plan
 
-| Phase | Duration | Complexity | Estimated Hours |
-| :--- | :--- | :--- | :--- |
-| Phase 1: Basic Dashboard | 4 weeks | Medium | 80-120 hours |
-| Phase 2: Chat Interface | 4 weeks | High | 100-140 hours |
-| Phase 3: Generative UI | 4 weeks | Very High | 120-160 hours |
-| Phase 4: Hybrid Dashboard | 4 weeks | High | 100-140 hours |
+| Phase                     | Duration | Complexity | Estimated Hours |
+| :------------------------ | :------- | :--------- | :-------------- |
+| Phase 1: Basic Dashboard  | 4 weeks  | Medium     | 80-120 hours    |
+| Phase 2: Chat Interface   | 4 weeks  | High       | 100-140 hours   |
+| Phase 3: Generative UI    | 4 weeks  | Very High  | 120-160 hours   |
+| Phase 4: Hybrid Dashboard | 4 weeks  | High       | 100-140 hours   |
 
 **Total:** 16 weeks, 400-560 hours
 
@@ -112,13 +120,13 @@ We will implement a **phased hybrid architecture** that starts with a traditiona
 ## Consequences
 
 - **Positive:**
-    - Makes RALPH-AGI accessible to non-technical users.
-    - Provides a richer, more interactive user experience.
-    - Enables powerful features like generative UI and human-in-the-loop.
+  - Makes RALPH-AGI accessible to non-technical users.
+  - Provides a richer, more interactive user experience.
+  - Enables powerful features like generative UI and human-in-the-loop.
 - **Negative:**
-    - Significant development effort (16 weeks, 400-560 hours).
-    - Adds a new frontend component to the project.
-    - Requires expertise in frontend technologies (React, AG-UI, etc.).
+  - Significant development effort (16 weeks, 400-560 hours).
+  - Adds a new frontend component to the project.
+  - Requires expertise in frontend technologies (React, AG-UI, etc.).
 
 ---
 

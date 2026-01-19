@@ -73,6 +73,7 @@ so that **the LLM knows how to call tools correctly**.
 ## Implementation Summary
 
 **Delivered:**
+
 - `ToolSchema` - Parsed schema with parameters, validation, LLM formatting
 - `Parameter` - Parameter definition with type, description, required, enum
 - `ToolNotFoundError` - Exception with fuzzy matching suggestions
@@ -129,6 +130,7 @@ class ToolSchema:
 ### LLM Context Format
 
 When providing schema to LLM, format as:
+
 ```
 Tool: read_file
 Description: Read contents of a file

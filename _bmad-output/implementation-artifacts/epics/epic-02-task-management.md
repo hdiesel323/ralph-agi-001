@@ -26,6 +26,7 @@ All tasks defined in `PRD.json` - JSON format chosen because "the model is less 
 ## Stories
 
 ### Story 2.1: PRD.json Parser
+
 **Priority:** P0 | **Points:** 3
 
 **As a** developer
@@ -33,6 +34,7 @@ All tasks defined in `PRD.json` - JSON format chosen because "the model is less 
 **So that** I can access task definitions programmatically
 
 **Acceptance Criteria:**
+
 - [ ] Parse PRD.json according to schema (PRD Appendix A)
 - [ ] Validate required fields: id, description, passes
 - [ ] Return structured Python objects
@@ -41,6 +43,7 @@ All tasks defined in `PRD.json` - JSON format chosen because "the model is less 
 ---
 
 ### Story 2.2: Task Selection Algorithm
+
 **Priority:** P0 | **Points:** 3
 
 **As a** developer
@@ -48,6 +51,7 @@ All tasks defined in `PRD.json` - JSON format chosen because "the model is less 
 **So that** the loop always knows what to do next
 
 **Acceptance Criteria:**
+
 - [ ] Filter tasks where `passes == false`
 - [ ] Filter tasks with no blocking dependencies
 - [ ] Sort by priority (P0 > P1 > P2 > P3 > P4)
@@ -57,6 +61,7 @@ All tasks defined in `PRD.json` - JSON format chosen because "the model is less 
 ---
 
 ### Story 2.3: Dependency Graph
+
 **Priority:** P1 | **Points:** 5
 
 **As a** developer
@@ -64,6 +69,7 @@ All tasks defined in `PRD.json` - JSON format chosen because "the model is less 
 **So that** tasks are completed in correct order
 
 **Acceptance Criteria:**
+
 - [ ] Build graph from PRD dependencies field
 - [ ] Detect circular dependencies (error)
 - [ ] Query: "Is task X ready?" (all deps complete)
@@ -73,6 +79,7 @@ All tasks defined in `PRD.json` - JSON format chosen because "the model is less 
 ---
 
 ### Story 2.4: Task Completion Marking
+
 **Priority:** P0 | **Points:** 2
 
 **As a** developer
@@ -80,6 +87,7 @@ All tasks defined in `PRD.json` - JSON format chosen because "the model is less 
 **So that** progress is persisted
 
 **Acceptance Criteria:**
+
 - [ ] Update `passes: false` to `passes: true`
 - [ ] Add `completed_at` timestamp
 - [ ] Atomic write (no partial updates)
@@ -88,6 +96,7 @@ All tasks defined in `PRD.json` - JSON format chosen because "the model is less 
 ---
 
 ### Story 2.5: Single Feature Constraint
+
 **Priority:** P0 | **Points:** 2
 
 **As a** developer
@@ -95,6 +104,7 @@ All tasks defined in `PRD.json` - JSON format chosen because "the model is less 
 **So that** context quality is maintained
 
 **Acceptance Criteria:**
+
 - [ ] Loop only processes one task per iteration
 - [ ] Task lock during execution
 - [ ] Warning if task seems too large
@@ -103,6 +113,7 @@ All tasks defined in `PRD.json` - JSON format chosen because "the model is less 
 ---
 
 ### Story 2.6: Docker Session Isolation (Research Spike)
+
 **Priority:** P2 | **Points:** 3
 **Type:** Spike
 **Source:** [Clawdbot Patterns Analysis](../../../rnd/research/2026-01-10_clawdbot-patterns-analysis.md)
@@ -113,12 +124,14 @@ All tasks defined in `PRD.json` - JSON format chosen because "the model is less 
 **So that** parallel agents can run safely without interference
 
 **Research Questions:**
+
 - [ ] Docker Compose vs Kubernetes vs lightweight alternatives (nsjail)?
 - [ ] Shared SQLite volume vs message queues for coordination?
 - [ ] Resource limits and network policies per agent?
 - [ ] Developer experience: debugging, logging, local dev?
 
 **Spike Outputs:**
+
 - [ ] Architecture decision document
 - [ ] Docker Compose proof-of-concept
 - [ ] Performance benchmarks (containerized vs native)
@@ -126,6 +139,7 @@ All tasks defined in `PRD.json` - JSON format chosen because "the model is less 
 - [ ] Recommendation: adopt / defer / alternative
 
 **Technical Notes:**
+
 - Clawdbot uses Docker sandboxes for non-primary sessions
 - Primary agent: full access, workers: sandboxed with read-only DB
 - Need to balance isolation with coordination overhead
@@ -140,12 +154,12 @@ All tasks defined in `PRD.json` - JSON format chosen because "the model is less 
 
 **Target:** Stories 2.1, 2.2, 2.4, 2.5 (10 points)
 
-| Story | Points | Priority |
-|-------|--------|----------|
-| 2.1 PRD.json Parser | 3 | P0 |
-| 2.2 Task Selection | 3 | P0 |
-| 2.4 Task Completion | 2 | P0 |
-| 2.5 Single Feature | 2 | P0 |
+| Story               | Points | Priority |
+| ------------------- | ------ | -------- |
+| 2.1 PRD.json Parser | 3      | P0       |
+| 2.2 Task Selection  | 3      | P0       |
+| 2.4 Task Completion | 2      | P0       |
+| 2.5 Single Feature  | 2      | P0       |
 
 **Deferred to Sprint 3:** 2.3 (Dependency Graph), 2.6 (Docker Isolation - Clawdbot Spike)
 

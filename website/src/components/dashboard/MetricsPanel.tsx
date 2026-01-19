@@ -3,11 +3,18 @@
  * Displays real-time execution metrics including cost, tokens, and time.
  */
 
-import { useEffect, useState, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { DollarSign, Hash, Clock, Activity, AlertTriangle, Cpu } from 'lucide-react';
-import { getMetrics } from '@/api/metrics';
-import type { Metrics } from '@/types/task';
+import { useEffect, useState, useCallback } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DollarSign,
+  Hash,
+  Clock,
+  Activity,
+  AlertTriangle,
+  Cpu,
+} from "lucide-react";
+import { getMetrics } from "@/api/metrics";
+import type { Metrics } from "@/types/task";
 
 interface MetricsPanelProps {
   /** Polling interval in milliseconds (default: 2000) */
@@ -16,7 +23,10 @@ interface MetricsPanelProps {
   autoRefresh?: boolean;
 }
 
-export function MetricsPanel({ pollingInterval = 2000, autoRefresh = true }: MetricsPanelProps) {
+export function MetricsPanel({
+  pollingInterval = 2000,
+  autoRefresh = true,
+}: MetricsPanelProps) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
   const [error, setError] = useState<Error | null>(null);
 
@@ -26,7 +36,9 @@ export function MetricsPanel({ pollingInterval = 2000, autoRefresh = true }: Met
       setMetrics(data);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch metrics'));
+      setError(
+        err instanceof Error ? err : new Error("Failed to fetch metrics")
+      );
     }
   }, []);
 
@@ -54,7 +66,9 @@ export function MetricsPanel({ pollingInterval = 2000, autoRefresh = true }: Met
             Live Metrics
           </CardTitle>
           {metrics.tasks_running > 0 && (
-            <span className="text-xs text-green-500 animate-pulse">Recording</span>
+            <span className="text-xs text-green-500 animate-pulse">
+              Recording
+            </span>
           )}
         </div>
       </CardHeader>
@@ -64,7 +78,9 @@ export function MetricsPanel({ pollingInterval = 2000, autoRefresh = true }: Met
         {metrics.current_task && (
           <div className="p-2 bg-blue-500/10 rounded-lg">
             <p className="text-xs text-muted-foreground mb-1">Working on</p>
-            <p className="text-sm font-medium truncate">{metrics.current_task}</p>
+            <p className="text-sm font-medium truncate">
+              {metrics.current_task}
+            </p>
           </div>
         )}
 
@@ -106,10 +122,16 @@ export function MetricsPanel({ pollingInterval = 2000, autoRefresh = true }: Met
         <div className="flex items-center justify-between text-sm pt-2 border-t">
           <div className="flex items-center gap-4">
             <span className="text-muted-foreground">
-              Completed: <span className="text-foreground font-medium">{metrics.tasks_completed}</span>
+              Completed:{" "}
+              <span className="text-foreground font-medium">
+                {metrics.tasks_completed}
+              </span>
             </span>
             <span className="text-muted-foreground">
-              Running: <span className="text-foreground font-medium">{metrics.tasks_running}</span>
+              Running:{" "}
+              <span className="text-foreground font-medium">
+                {metrics.tasks_running}
+              </span>
             </span>
           </div>
           {metrics.errors > 0 && (
@@ -148,10 +170,10 @@ function MetricCard({ icon, label, value, color }: MetricCardProps) {
  */
 function formatNumber(num: number): string {
   if (num >= 1_000_000) {
-    return (num / 1_000_000).toFixed(1) + 'M';
+    return (num / 1_000_000).toFixed(1) + "M";
   }
   if (num >= 1_000) {
-    return (num / 1_000).toFixed(1) + 'K';
+    return (num / 1_000).toFixed(1) + "K";
   }
   return num.toLocaleString();
 }

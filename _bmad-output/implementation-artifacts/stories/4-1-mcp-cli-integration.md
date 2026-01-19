@@ -73,6 +73,7 @@ so that **I can discover and use tools programmatically**.
 ## Implementation Summary
 
 **Delivered:**
+
 - `StdioTransport` - async subprocess management with stdin/stdout JSON-RPC
 - `MCPClient` - full async MCP protocol client with handshake
 - `SyncMCPClient` - synchronous wrapper using background event loop
@@ -87,6 +88,7 @@ so that **I can discover and use tools programmatically**.
 ### MCP Protocol Overview
 
 MCP (Model Context Protocol) uses JSON-RPC 2.0 over various transports:
+
 - **stdio**: Local processes via stdin/stdout (primary for RALPH-AGI)
 - **HTTP**: Remote servers (future consideration)
 - **SSE**: Deprecated, not implementing
@@ -131,7 +133,8 @@ tools:
   mcp_servers:
     filesystem:
       command: "npx"
-      args: ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed"]
+      args:
+        ["-y", "@modelcontextprotocol/server-filesystem", "/path/to/allowed"]
       env:
         NODE_ENV: "production"
 

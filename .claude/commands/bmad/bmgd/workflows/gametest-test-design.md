@@ -1,5 +1,5 @@
 ---
-description: 'Create comprehensive game test scenarios covering gameplay, progression, and quality requirements'
+description: "Create comprehensive game test scenarios covering gameplay, progression, and quality requirements"
 ---
 
 IT IS CRITICAL THAT YOU FOLLOW THESE STEPS - while staying in character as the current agent persona you may have loaded:

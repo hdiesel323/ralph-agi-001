@@ -75,6 +75,7 @@ so that **the agent knows what tools are available without static loading**.
 ## Implementation Summary
 
 **Delivered:**
+
 - `TTLCache` - Generic thread-safe cache with configurable TTL (42 tests)
 - `ToolRegistry` - Multi-server tool discovery with caching (40 tests)
 - `ToolInfo` - Tool metadata dataclass with MCP response parsing

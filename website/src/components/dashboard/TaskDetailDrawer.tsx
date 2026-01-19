@@ -2,10 +2,10 @@
  * TaskDetailDrawer component - Shows full task details in a side drawer.
  */
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
   SheetContent,
@@ -13,7 +13,7 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-} from '@/components/ui/sheet';
+} from "@/components/ui/sheet";
 import {
   ExternalLink,
   GitBranch,
@@ -25,9 +25,9 @@ import {
   AlertCircle,
   Play,
   Merge,
-} from 'lucide-react';
-import type { Task, RepoContext } from '@/types/task';
-import { PRIORITY_CONFIG, STATUS_CONFIG } from '@/types/task';
+} from "lucide-react";
+import type { Task, RepoContext } from "@/types/task";
+import { PRIORITY_CONFIG, STATUS_CONFIG } from "@/types/task";
 
 interface TaskDetailDrawerProps {
   task: Task | null;
@@ -40,18 +40,21 @@ interface TaskDetailDrawerProps {
 }
 
 function formatDate(dateString: string | null): string {
-  if (!dateString) return '-';
+  if (!dateString) return "-";
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+  return date.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
   });
 }
 
-function formatDuration(started: string | null, completed: string | null): string | null {
+function formatDuration(
+  started: string | null,
+  completed: string | null
+): string | null {
   if (!started) return null;
   const start = new Date(started);
   const end = completed ? new Date(completed) : new Date();
@@ -77,8 +80,9 @@ export function TaskDetailDrawer({
   const statusConfig = STATUS_CONFIG[task.status];
   const duration = formatDuration(task.started_at, task.completed_at);
 
-  const canApprove = task.status === 'pending' || task.status === 'pending_approval';
-  const canMerge = task.status === 'pending_merge';
+  const canApprove =
+    task.status === "pending" || task.status === "pending_approval";
+  const canMerge = task.status === "pending_merge";
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -111,9 +115,13 @@ export function TaskDetailDrawer({
                   <span className="font-medium">Pull Request</span>
                 </div>
                 <Button asChild>
-                  <a href={task.pr_url} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={task.pr_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <ExternalLink className="mr-2 h-4 w-4" />
-                    View PR #{task.pr_number || ''}
+                    View PR #{task.pr_number || ""}
                   </a>
                 </Button>
               </div>
@@ -142,13 +150,18 @@ export function TaskDetailDrawer({
               {task.worktree_path && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Worktree</span>
-                  <span className="font-mono text-xs truncate max-w-[200px]" title={task.worktree_path}>
+                  <span
+                    className="font-mono text-xs truncate max-w-[200px]"
+                    title={task.worktree_path}
+                  >
                     {task.worktree_path}
                   </span>
                 </div>
               )}
               {!task.branch && !task.worktree_path && (
-                <span className="text-muted-foreground text-xs">Not yet assigned</span>
+                <span className="text-muted-foreground text-xs">
+                  Not yet assigned
+                </span>
               )}
             </div>
           </div>
@@ -181,7 +194,7 @@ export function TaskDetailDrawer({
               {task.completed_at && (
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground flex items-center gap-1">
-                    {task.status === 'complete' ? (
+                    {task.status === "complete" ? (
                       <CheckCircle className="h-3 w-3 text-green-500" />
                     ) : (
                       <XCircle className="h-3 w-3 text-red-500" />
@@ -211,10 +224,10 @@ export function TaskDetailDrawer({
                   <span
                     className={
                       task.confidence >= 0.9
-                        ? 'text-green-500'
+                        ? "text-green-500"
                         : task.confidence >= 0.7
-                        ? 'text-yellow-500'
-                        : 'text-red-500'
+                          ? "text-yellow-500"
+                          : "text-red-500"
                     }
                   >
                     {(task.confidence * 100).toFixed(0)}%
@@ -246,7 +259,7 @@ export function TaskDetailDrawer({
             <div className="space-y-2">
               <h4 className="text-sm font-medium">Dependencies</h4>
               <div className="flex flex-wrap gap-1">
-                {task.dependencies.map((depId) => (
+                {task.dependencies.map(depId => (
                   <Badge key={depId} variant="outline" className="text-xs">
                     {depId}
                   </Badge>

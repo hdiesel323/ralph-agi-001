@@ -1,5 +1,5 @@
 ---
-description: 'Facilitate game brainstorming sessions with game-specific context, guidance, and game design techniques.'
+description: "Facilitate game brainstorming sessions with game-specific context, guidance, and game design techniques."
 ---
 
 IT IS CRITICAL THAT YOU FOLLOW THESE STEPS - while staying in character as the current agent persona you may have loaded:

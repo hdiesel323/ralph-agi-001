@@ -8,14 +8,14 @@ RALPH is an autonomous AI agent that can execute software engineering tasks with
 
 ### Key Capabilities
 
-| Capability | Description |
-|------------|-------------|
-| **Task Selection** | Automatically picks the next task based on priority and dependencies |
-| **Code Generation** | Writes code using LLM (Claude/GPT) with tool access |
-| **File Operations** | Reads, writes, and modifies files in the project |
-| **Shell Execution** | Runs commands, tests, build scripts |
-| **Self-Verification** | Marks tasks complete only when acceptance criteria are met |
-| **Memory** | Remembers context across iterations for coherent multi-step work |
+| Capability            | Description                                                          |
+| --------------------- | -------------------------------------------------------------------- |
+| **Task Selection**    | Automatically picks the next task based on priority and dependencies |
+| **Code Generation**   | Writes code using LLM (Claude/GPT) with tool access                  |
+| **File Operations**   | Reads, writes, and modifies files in the project                     |
+| **Shell Execution**   | Runs commands, tests, build scripts                                  |
+| **Self-Verification** | Marks tasks complete only when acceptance criteria are met           |
+| **Memory**            | Remembers context across iterations for coherent multi-step work     |
 
 ### Architecture
 
@@ -49,16 +49,19 @@ RALPH is an autonomous AI agent that can execute software engineering tasks with
 We have 3 test scenarios of increasing complexity:
 
 ### Scenario 1: Hello World (Simple)
+
 - **Task**: Create a Python script that prints a message
 - **Complexity**: Single file, no dependencies
 - **Expected**: ~1 iteration, ~5 seconds
 
 ### Scenario 2: Calculator Module (Medium)
+
 - **Task**: Create a calculator module with add/subtract/multiply/divide
 - **Complexity**: Multiple functions, basic logic
 - **Expected**: ~1-2 iterations, ~15 seconds
 
 ### Scenario 3: Multi-Task Project (Complex)
+
 - **Tasks**:
   1. Create a utility module
   2. Add tests for the module
@@ -69,6 +72,7 @@ We have 3 test scenarios of increasing complexity:
 ## Running the Demo
 
 ### Prerequisites
+
 ```bash
 # Set your API key (OpenAI or Anthropic)
 export OPENAI_API_KEY=sk-...
@@ -77,12 +81,14 @@ export ANTHROPIC_API_KEY=sk-ant-...
 ```
 
 ### Quick Demo
+
 ```bash
 cd demo
 ./run_demo.sh
 ```
 
 ### Individual Scenarios
+
 ```bash
 # Scenario 1: Hello World
 cd demo/scenario-1-hello
@@ -109,12 +115,12 @@ During the demo, observe:
 
 ## Success Criteria
 
-| Metric | Target |
-|--------|--------|
-| Task Completion Rate | 100% |
-| Generated Code Runs | Yes |
-| Tests Pass (if applicable) | Yes |
-| PRD Updated | `passes: true` for all tasks |
+| Metric                     | Target                       |
+| -------------------------- | ---------------------------- |
+| Task Completion Rate       | 100%                         |
+| Generated Code Runs        | Yes                          |
+| Tests Pass (if applicable) | Yes                          |
+| PRD Updated                | `passes: true` for all tasks |
 
 ## Technical Details
 

@@ -26,16 +26,16 @@ While other languages have their strengths, Python's unparalleled AI/ML ecosyste
 
 We evaluated five languages across eight critical dimensions:
 
-| Dimension | Python | TypeScript | Go | Rust | Bash |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **AI/ML Ecosystem** | ⭐⭐⭐⭐⭐ (Unbeatable) | ⭐⭐⭐ (Growing) | ⭐⭐ (Limited) | ⭐⭐ (Limited) | ⭐ (None) |
-| **Developer Pool** | ⭐⭐⭐⭐⭐ (Massive) | ⭐⭐⭐⭐ (Large) | ⭐⭐⭐ (Medium) | ⭐⭐ (Small) | ⭐⭐⭐⭐ (Large) |
-| **Performance** | ⭐⭐ (Slow) | ⭐⭐⭐ (Medium) | ⭐⭐⭐⭐ (Fast) | ⭐⭐⭐⭐⭐ (Fastest) | ⭐ (Slowest) |
-| **Concurrency** | ⭐⭐ (GIL issues) | ⭐⭐⭐ (Event loop) | ⭐⭐⭐⭐⭐ (Goroutines) | ⭐⭐⭐⭐ (Fearless) | ⭐ (Manual) |
-| **Tooling/Libraries** | ⭐⭐⭐⭐⭐ (Vast) | ⭐⭐⭐⭐ (NPM) | ⭐⭐⭐ (Good) | ⭐⭐⭐ (Growing) | ⭐⭐ (Pipes) |
-| **Prototyping Speed** | ⭐⭐⭐⭐⭐ (Fastest) | ⭐⭐⭐⭐ (Fast) | ⭐⭐⭐ (Medium) | ⭐ (Slow) | ⭐⭐⭐⭐ (Fast) |
-| **Enterprise Adoption**| ⭐⭐⭐⭐⭐ (High) | ⭐⭐⭐⭐ (High) | ⭐⭐⭐⭐ (High) | ⭐⭐ (Growing) | ⭐ (Low) |
-| **Cross-Platform** | ⭐⭐⭐⭐ (Excellent) | ⭐⭐⭐⭐ (Excellent) | ⭐⭐⭐⭐⭐ (Excellent) | ⭐⭐⭐⭐ (Excellent) | ⭐⭐⭐ (Good) |
+| Dimension               | Python                  | TypeScript           | Go                      | Rust                 | Bash             |
+| :---------------------- | :---------------------- | :------------------- | :---------------------- | :------------------- | :--------------- |
+| **AI/ML Ecosystem**     | ⭐⭐⭐⭐⭐ (Unbeatable) | ⭐⭐⭐ (Growing)     | ⭐⭐ (Limited)          | ⭐⭐ (Limited)       | ⭐ (None)        |
+| **Developer Pool**      | ⭐⭐⭐⭐⭐ (Massive)    | ⭐⭐⭐⭐ (Large)     | ⭐⭐⭐ (Medium)         | ⭐⭐ (Small)         | ⭐⭐⭐⭐ (Large) |
+| **Performance**         | ⭐⭐ (Slow)             | ⭐⭐⭐ (Medium)      | ⭐⭐⭐⭐ (Fast)         | ⭐⭐⭐⭐⭐ (Fastest) | ⭐ (Slowest)     |
+| **Concurrency**         | ⭐⭐ (GIL issues)       | ⭐⭐⭐ (Event loop)  | ⭐⭐⭐⭐⭐ (Goroutines) | ⭐⭐⭐⭐ (Fearless)  | ⭐ (Manual)      |
+| **Tooling/Libraries**   | ⭐⭐⭐⭐⭐ (Vast)       | ⭐⭐⭐⭐ (NPM)       | ⭐⭐⭐ (Good)           | ⭐⭐⭐ (Growing)     | ⭐⭐ (Pipes)     |
+| **Prototyping Speed**   | ⭐⭐⭐⭐⭐ (Fastest)    | ⭐⭐⭐⭐ (Fast)      | ⭐⭐⭐ (Medium)         | ⭐ (Slow)            | ⭐⭐⭐⭐ (Fast)  |
+| **Enterprise Adoption** | ⭐⭐⭐⭐⭐ (High)       | ⭐⭐⭐⭐ (High)      | ⭐⭐⭐⭐ (High)         | ⭐⭐ (Growing)       | ⭐ (Low)         |
+| **Cross-Platform**      | ⭐⭐⭐⭐ (Excellent)    | ⭐⭐⭐⭐ (Excellent) | ⭐⭐⭐⭐⭐ (Excellent)  | ⭐⭐⭐⭐ (Excellent) | ⭐⭐⭐ (Good)    |
 
 ---
 
@@ -54,6 +54,7 @@ RALPH-AGI is an AI-native application. Python's ecosystem is not just a "nice-to
 ### 2. Developer Velocity & Talent Pool
 
 Python's simple syntax and massive developer pool mean we can:
+
 - **Hire faster:** Access to a huge talent pool of AI/ML engineers.
 - **Onboard quicker:** New developers can become productive in days, not weeks.
 - **Prototype faster:** The speed from idea to implementation is unmatched.
@@ -87,7 +88,7 @@ Python is the language of choice for AI in the enterprise. Companies trust Pytho
 
 - **Bash (snarktank/ralph):** Brilliant for its simplicity and as a learning tool, but not a serious choice for a production system. It's not maintainable, scalable, or robust enough.
 
-- **Go:** Excellent for concurrency and performance, but the AI/ML ecosystem is too immature. It would be a great choice for a high-performance LLM *serving* engine, but not for an agent *orchestration* engine.
+- **Go:** Excellent for concurrency and performance, but the AI/ML ecosystem is too immature. It would be a great choice for a high-performance LLM _serving_ engine, but not for an agent _orchestration_ engine.
 
 - **Rust:** The safest and fastest option, but the steep learning curve and slow compile times would kill our development velocity. It's a great choice for performance-critical components (like Memvid), but not for the main application logic.
 

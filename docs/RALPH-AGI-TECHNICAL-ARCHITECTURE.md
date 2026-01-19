@@ -55,32 +55,34 @@ graph TD
 
 ### 2.1. Agents
 
-| Agent | Description | Responsibilities |
-| :--- | :--- | :--- |
-| **Initializer Agent** | Sets up the project environment and task list. Runs only once at the beginning of a task. | - Expands the user prompt into a detailed `feature_list.json`.
+| Agent                 | Description                                                                               | Responsibilities                                               |
+| :-------------------- | :---------------------------------------------------------------------------------------- | :------------------------------------------------------------- |
+| **Initializer Agent** | Sets up the project environment and task list. Runs only once at the beginning of a task. | - Expands the user prompt into a detailed `feature_list.json`. |
+
 - Creates the `progress.txt` file.
 - Initializes the git repository.
 - Sets up the `init.sh` script. |
-| **Coding Agent** | The workhorse of the system. Iterates through the feature list and implements them one by one. | - Reads `progress.txt` and git logs to understand the current state.
+  | **Coding Agent** | The workhorse of the system. Iterates through the feature list and implements them one by one. | - Reads `progress.txt` and git logs to understand the current state.
 - Selects the next feature to work on.
 - Writes and modifies code.
 - Runs tests and debugs errors.
 - Commits completed features to git. |
-| **Specialized Agents** | Domain-specific agents that can be invoked by the Coding Agent for specific tasks. | - **Testing Agent:** Writes and runs unit, integration, and E2E tests.
+  | **Specialized Agents** | Domain-specific agents that can be invoked by the Coding Agent for specific tasks. | - **Testing Agent:** Writes and runs unit, integration, and E2E tests.
 - **QA Agent:** Performs quality assurance checks on code and functionality.
 - **Code Cleanup Agent:** Refactors code and improves readability.
 - **TrendScout Agent:** Monitors for trending topics (for marketing use cases). |
 
 ### 2.2. Supporting Systems
 
-| System | Description | Technology |
-| :--- | :--- | :--- |
-| **Memory System** | A multi-layered system for persistent memory. | - **Short-Term:** Context window
+| System            | Description                                   | Technology                       |
+| :---------------- | :-------------------------------------------- | :------------------------------- |
+| **Memory System** | A multi-layered system for persistent memory. | - **Short-Term:** Context window |
+
 - **Medium-Term:** SQLite database
 - **Long-Term:** ChromaDB vector store |
-| **Hooks System** | An event-driven system for automating behaviors at key lifecycle points. | Custom implementation inspired by Continuous-Claude-v3 |
-| **Beads Task Graph** | A dependency-aware task management system. | Inspired by Google's Blaze/Bazel |
-| **Shared Database** | A central database for asynchronous multi-agent coordination. | SQLite |
+  | **Hooks System** | An event-driven system for automating behaviors at key lifecycle points. | Custom implementation inspired by Continuous-Claude-v3 |
+  | **Beads Task Graph** | A dependency-aware task management system. | Inspired by Google's Blaze/Bazel |
+  | **Shared Database** | A central database for asynchronous multi-agent coordination. | SQLite |
 
 ---
 
@@ -123,14 +125,14 @@ sequenceDiagram
 
 ## 4. Technology Stack
 
-| Layer | Technology | Rationale |
-| :--- | :--- | :--- |
-| **Language** | Python | Rich ecosystem of AI/ML libraries, easy to script. |
-| **LLM** | Claude 4.5 / GPT-4.1 | Frontier models with large context windows and strong reasoning. |
-| **Database** | SQLite, ChromaDB | SQLite for structured data, ChromaDB for vector search. |
-| **Version Control** | Git | Industry standard, provides robust state management. |
-| **Browser Automation** | Puppeteer (via MCP-CLI) | For E2E testing and web interaction. |
-| **Deployment** | Docker | For packaging and deploying the agent. |
+| Layer                  | Technology              | Rationale                                                        |
+| :--------------------- | :---------------------- | :--------------------------------------------------------------- |
+| **Language**           | Python                  | Rich ecosystem of AI/ML libraries, easy to script.               |
+| **LLM**                | Claude 4.5 / GPT-4.1    | Frontier models with large context windows and strong reasoning. |
+| **Database**           | SQLite, ChromaDB        | SQLite for structured data, ChromaDB for vector search.          |
+| **Version Control**    | Git                     | Industry standard, provides robust state management.             |
+| **Browser Automation** | Puppeteer (via MCP-CLI) | For E2E testing and web interaction.                             |
+| **Deployment**         | Docker                  | For packaging and deploying the agent.                           |
 
 ---
 

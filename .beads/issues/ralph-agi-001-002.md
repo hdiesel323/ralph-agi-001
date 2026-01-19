@@ -21,10 +21,11 @@ RALPH-AGI currently supports SIGINT handling for graceful pauses but has no mech
 Implement a scheduler system inspired by Clawdbot's cron/webhook approach:
 
 1. **Cron Support in config.yaml**
+
    ```yaml
    scheduler:
      enabled: true
-     cron: "0 */4 * * *"  # Every 4 hours
+     cron: "0 */4 * * *" # Every 4 hours
      wake_hooks:
        - check_progress
        - run_tests

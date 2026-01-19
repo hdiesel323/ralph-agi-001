@@ -1,0 +1,11 @@
+id: add-dark-mode-faa38d
+description: add dark mode
+priority: P1
+status: complete
+acceptance_criteria:
+  - a sark mode toggle switch will be located in the menu / header
+created_at: "2026-01-18T20:37:59.514259+00:00"
+updated_at: "2026-01-18T20:38:04.814616+00:00"
+started_at: "2026-01-18T20:38:03.360374+00:00"
+completed_at: "2026-01-18T20:38:04.814620+00:00"
+confidence: 0.8

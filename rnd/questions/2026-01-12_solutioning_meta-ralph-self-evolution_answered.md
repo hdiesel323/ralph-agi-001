@@ -25,12 +25,14 @@ I've designed a **three-phase approach** that allows us to integrate self-evolvi
 **What it is:** RALPH learns better strategies for task decomposition and tool usage without modifying its own code.
 
 **How it works:**
+
 1. Log successful and failed task decompositions and tool usage patterns.
 2. Use an LLM to analyze the logs and identify strategies that lead to better outcomes.
 3. Add successful strategies to a library of best practices.
 4. When faced with a new task, RALPH consults the strategy library to choose the best approach.
 
 **Why start here:**
+
 - ✅ **Low risk** - No code modification, just strategy optimization
 - ✅ **Immediate value** - 20% improvement in task success rate
 - ✅ **Data-driven** - Improves with experience
@@ -41,12 +43,14 @@ I've designed a **three-phase approach** that allows us to integrate self-evolvi
 **What it is:** RALPH can propose improvements to specific, non-critical modules.
 
 **What can be modified:**
+
 - Hooks system (event-driven behaviors)
 - Prompt templates (task instructions)
 - Tool usage patterns
 - Configuration files
 
 **Safety guardrails:**
+
 - Human approval required for all changes
 - Sandboxed testing before merging
 - Full audit trail (Git-based)
@@ -57,6 +61,7 @@ I've designed a **three-phase approach** that allows us to integrate self-evolvi
 **What it is:** RALPH can modify its own core loop and other critical components.
 
 **Additional safety guardrails:**
+
 - Formal verification (mathematically prove safety properties)
 - Red teaming (adversarial agent tries to break the modified code)
 - Automatic rollback if performance degrades
@@ -80,6 +85,7 @@ The phased approach provides a safe, controlled path toward full self-modificati
 ### 4. **Proven Patterns**
 
 This approach is based on proven patterns from:
+
 - **Darwin Gödel Machine (Sakana AI)** - Self-improving AI with Darwinian exploration
 - **SuperAGI** - Recursive Agent Trajectory Fine-Tuning
 - **MetaAgent** - Tool meta-learning inspired by "learning-by-doing"
@@ -88,11 +94,11 @@ This approach is based on proven patterns from:
 
 ## Implementation Timeline
 
-| Phase | Timeline | Key Deliverables |
-| :--- | :--- | :--- |
-| **Phase 1: Meta-Learning** | Sprints 3-4 (4 weeks) | Strategy logging, analysis service, strategy library |
+| Phase                                     | Timeline              | Key Deliverables                                                  |
+| :---------------------------------------- | :-------------------- | :---------------------------------------------------------------- |
+| **Phase 1: Meta-Learning**                | Sprints 3-4 (4 weeks) | Strategy logging, analysis service, strategy library              |
 | **Phase 2: Constrained Self-Improvement** | Sprints 5-6 (4 weeks) | Improvement proposals, human approval workflow, sandboxed testing |
-| **Phase 3: Full Self-Modification** | Post-MVP (8-12 weeks) | Core loop modification, formal verification, red teaming |
+| **Phase 3: Full Self-Modification**       | Post-MVP (8-12 weeks) | Core loop modification, formal verification, red teaming          |
 
 ---
 
@@ -114,17 +120,17 @@ Meta-learning (learning how to learn) is a safer and more practical starting poi
 
 ## Success Metrics
 
-| Phase | Metric | Target |
-| :--- | :--- | :--- |
-| **Phase 1** | Task success rate improvement | +20% |
-| **Phase 1** | Reduction in steps per task | -15% |
-| **Phase 1** | Strategies in library | 50+ |
-| **Phase 2** | Beneficial changes implemented | 10+ |
-| **Phase 2** | Test pass rate for approved changes | 99% |
-| **Phase 2** | Human approval time | <5 min |
-| **Phase 3** | Fundamental architecture improvements | 1+ |
-| **Phase 3** | Safety incidents | 0 |
-| **Phase 3** | Recursive self-improvement demonstrated | Yes |
+| Phase       | Metric                                  | Target |
+| :---------- | :-------------------------------------- | :----- |
+| **Phase 1** | Task success rate improvement           | +20%   |
+| **Phase 1** | Reduction in steps per task             | -15%   |
+| **Phase 1** | Strategies in library                   | 50+    |
+| **Phase 2** | Beneficial changes implemented          | 10+    |
+| **Phase 2** | Test pass rate for approved changes     | 99%    |
+| **Phase 2** | Human approval time                     | <5 min |
+| **Phase 3** | Fundamental architecture improvements   | 1+     |
+| **Phase 3** | Safety incidents                        | 0      |
+| **Phase 3** | Recursive self-improvement demonstrated | Yes    |
 
 ---
 

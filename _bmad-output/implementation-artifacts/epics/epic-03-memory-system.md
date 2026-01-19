@@ -26,14 +26,14 @@ Implement the three-tier memory system enabling context persistence across sessi
 
 ### Why Memvid?
 
-| Feature | Memvid | Traditional Stack |
-|---------|--------|-------------------|
-| Storage | Single `.mv2` file | SQLite + ChromaDB |
-| Vector Search | Built-in HNSW | Separate ChromaDB |
-| Full-text Search | Built-in BM25 | Manual implementation |
-| Crash Safety | Append-only frames | Manual WAL setup |
-| Temporal Queries | Native support | Manual implementation |
-| Deployment | Zero config | Multiple services |
+| Feature          | Memvid             | Traditional Stack     |
+| ---------------- | ------------------ | --------------------- |
+| Storage          | Single `.mv2` file | SQLite + ChromaDB     |
+| Vector Search    | Built-in HNSW      | Separate ChromaDB     |
+| Full-text Search | Built-in BM25      | Manual implementation |
+| Crash Safety     | Append-only frames | Manual WAL setup      |
+| Temporal Queries | Native support     | Manual implementation |
+| Deployment       | Zero config        | Multiple services     |
 
 ### Scaling Strategy
 
@@ -45,6 +45,7 @@ Implement the three-tier memory system enabling context persistence across sessi
 ## Stories
 
 ### Story 3.1: Memvid Core Integration
+
 **Priority:** P0 | **Points:** 3
 
 **As a** developer
@@ -52,6 +53,7 @@ Implement the three-tier memory system enabling context persistence across sessi
 **So that** I have a portable, crash-safe memory system
 
 **Acceptance Criteria:**
+
 - [ ] Install memvid package and dependencies
 - [ ] Create `MemoryStore` class wrapping Memvid
 - [ ] Configure `.mv2` file path in config.yaml
@@ -61,6 +63,7 @@ Implement the three-tier memory system enabling context persistence across sessi
 ---
 
 ### Story 3.2: Short-Term Memory (Session Context)
+
 **Priority:** P0 | **Points:** 2
 
 **As a** developer
@@ -68,6 +71,7 @@ Implement the three-tier memory system enabling context persistence across sessi
 **So that** context is preserved within a sprint
 
 **Acceptance Criteria:**
+
 - [ ] Store iteration results as Memvid frames
 - [ ] Frame metadata: session_id, iteration, timestamp
 - [ ] Query frames by current session
@@ -77,6 +81,7 @@ Implement the three-tier memory system enabling context persistence across sessi
 ---
 
 ### Story 3.3: Medium-Term Memory (Git Integration)
+
 **Priority:** P0 | **Points:** 3
 
 **As a** developer
@@ -84,6 +89,7 @@ Implement the three-tier memory system enabling context persistence across sessi
 **So that** code changes are preserved and queryable
 
 **Acceptance Criteria:**
+
 - [ ] Auto-commit after successful task completion
 - [ ] Store commit metadata in Memvid frames
 - [ ] Commit message template: `feat: {description}`
@@ -93,6 +99,7 @@ Implement the three-tier memory system enabling context persistence across sessi
 ---
 
 ### Story 3.4: Long-Term Memory (Persistent Knowledge)
+
 **Priority:** P1 | **Points:** 3
 
 **As a** developer
@@ -100,6 +107,7 @@ Implement the three-tier memory system enabling context persistence across sessi
 **So that** knowledge persists across sessions
 
 **Acceptance Criteria:**
+
 - [ ] Observation types: error, success, learning, preference
 - [ ] Structured observation schema with metadata
 - [ ] Query by observation type and date range
@@ -109,6 +117,7 @@ Implement the three-tier memory system enabling context persistence across sessi
 ---
 
 ### Story 3.5: Vector Search Integration
+
 **Priority:** P1 | **Points:** 3
 
 **As a** developer
@@ -116,6 +125,7 @@ Implement the three-tier memory system enabling context persistence across sessi
 **So that** relevant context is retrieved automatically
 
 **Acceptance Criteria:**
+
 - [ ] Configure embedding model (local or API)
 - [ ] Auto-embed frames on creation
 - [ ] `memory.search_similar(query, limit)` API
@@ -125,6 +135,7 @@ Implement the three-tier memory system enabling context persistence across sessi
 ---
 
 ### Story 3.6: Memory Query API
+
 **Priority:** P1 | **Points:** 3
 
 **As a** developer
@@ -132,6 +143,7 @@ Implement the three-tier memory system enabling context persistence across sessi
 **So that** the loop can easily load context
 
 **Acceptance Criteria:**
+
 - [ ] `memory.search(query, type, limit)` unified API
 - [ ] Filter by: session, type, date range, tags
 - [ ] Combine vector + keyword results
@@ -141,6 +153,7 @@ Implement the three-tier memory system enabling context persistence across sessi
 ---
 
 ### Story 3.7: Lifecycle Hooks
+
 **Priority:** P2 | **Points:** 2
 
 **As a** developer
@@ -148,6 +161,7 @@ Implement the three-tier memory system enabling context persistence across sessi
 **So that** memory is populated without manual effort
 
 **Acceptance Criteria:**
+
 - [ ] Hook: on_iteration_start (load context)
 - [ ] Hook: on_iteration_end (store result)
 - [ ] Hook: on_error (store error + context)
@@ -157,6 +171,7 @@ Implement the three-tier memory system enabling context persistence across sessi
 ---
 
 ### Story 3.8: Context Compacting
+
 **Priority:** P1 | **Points:** 3
 **Source:** [Clawdbot Patterns Analysis](../../../rnd/research/2026-01-10_clawdbot-patterns-analysis.md)
 **Beads:** ralph-agi-001-003
@@ -166,6 +181,7 @@ Implement the three-tier memory system enabling context persistence across sessi
 **So that** context windows don't overflow during long-running tasks
 
 **Acceptance Criteria:**
+
 - [ ] Compaction threshold configuration in config.yaml
 - [ ] LLM-based summarization of older frames (use Haiku)
 - [ ] Archive original frames (don't delete)
@@ -175,6 +191,7 @@ Implement the three-tier memory system enabling context persistence across sessi
 - [ ] Benchmark: 50%+ token reduction on long sessions
 
 **Technical Notes:**
+
 - Compaction strategy:
   - Recent (last N iterations) → Full detail
   - Medium (N to 2N iterations) → Summarized
@@ -183,6 +200,7 @@ Implement the three-tier memory system enabling context persistence across sessi
 - Compaction should be idempotent (safe to run multiple times)
 
 **Config Example:**
+
 ```yaml
 memory:
   compaction:
@@ -199,21 +217,21 @@ memory:
 
 **Sprint 2:** Stories 3.1, 3.2, 3.5, 3.6 (11 points) - COMPLETE
 
-| Story | Points | Priority | Status |
-|-------|--------|----------|--------|
-| 3.1 Memvid Core | 3 | P0 | Complete |
-| 3.2 Short-Term Memory | 2 | P0 | Complete |
-| 3.5 Vector Search | 3 | P1 | Complete |
-| 3.6 Query API | 3 | P1 | Complete |
+| Story                 | Points | Priority | Status   |
+| --------------------- | ------ | -------- | -------- |
+| 3.1 Memvid Core       | 3      | P0       | Complete |
+| 3.2 Short-Term Memory | 2      | P0       | Complete |
+| 3.5 Vector Search     | 3      | P1       | Complete |
+| 3.6 Query API         | 3      | P1       | Complete |
 
 **Sprint 4:** Stories 3.3, 3.4, 3.7, 3.8 (11 points) - COMPLETE
 
-| Story | Points | Priority | Status |
-|-------|--------|----------|--------|
-| 3.3 Git Integration | 3 | P0 | Complete |
-| 3.4 Long-Term Memory | 3 | P1 | Complete |
-| 3.7 Lifecycle Hooks | 2 | P2 | Complete |
-| 3.8 Context Compacting | 3 | P1 | Complete |
+| Story                  | Points | Priority | Status   |
+| ---------------------- | ------ | -------- | -------- |
+| 3.3 Git Integration    | 3      | P0       | Complete |
+| 3.4 Long-Term Memory   | 3      | P1       | Complete |
+| 3.7 Lifecycle Hooks    | 2      | P2       | Complete |
+| 3.8 Context Compacting | 3      | P1       | Complete |
 
 **Total:** 22 points delivered, 266 tests passing
 

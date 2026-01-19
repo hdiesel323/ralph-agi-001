@@ -95,7 +95,11 @@ export default function Layout({ children }: LayoutProps) {
               size="icon"
               onClick={() => setSidebarOpen(!sidebarOpen)}
             >
-              {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {sidebarOpen ? (
+                <X className="w-5 h-5" />
+              ) : (
+                <Menu className="w-5 h-5" />
+              )}
             </Button>
           </div>
         </div>
@@ -142,7 +146,7 @@ export default function Layout({ children }: LayoutProps) {
           {/* Navigation */}
           <ScrollArea className="flex-1 px-4 py-6">
             <nav className="space-y-2">
-              {navItems.map((item) => {
+              {navItems.map(item => {
                 const isActive = location === item.href;
                 return (
                   <Link key={item.href} href={item.href}>
@@ -201,9 +205,7 @@ export default function Layout({ children }: LayoutProps) {
       </aside>
 
       {/* Main Content */}
-      <main className="lg:pl-72 pt-16 lg:pt-0 min-h-screen">
-        {children}
-      </main>
+      <main className="lg:pl-72 pt-16 lg:pt-0 min-h-screen">{children}</main>
     </div>
   );
 }

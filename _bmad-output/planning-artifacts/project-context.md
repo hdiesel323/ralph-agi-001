@@ -42,26 +42,31 @@ RALPH-AGI
 ## Critical Rules
 
 ### 1. Single Feature Per Iteration
+
 - NEVER work on multiple features in one loop iteration
 - Complete one feature fully before moving to next
 - This prevents context bloat and maintains quality
 
 ### 2. PRD.json is Sacred
+
 - ONLY change the `passes` field from `false` to `true`
 - NEVER delete or modify feature descriptions
 - NEVER remove tests or acceptance criteria
 
 ### 3. Append-Only Progress
+
 - `progress.txt` is APPEND-ONLY
 - Never overwrite, only add new entries
 - Each entry should note: work done, decisions, issues, next steps
 
 ### 4. Git Commit After Each Feature
+
 - Every successful feature = one commit
 - Descriptive commit messages following: `feat: {description}`
 - Enables recovery via `git revert` if needed
 
 ### 5. Fail Fast Evaluation
+
 - Run cheap checks first (syntax, types)
 - Only proceed to expensive checks (E2E, LLM Judge) if cheap ones pass
 - If any stage fails, fix before retrying
@@ -98,24 +103,26 @@ ralph-agi/
 
 ## Technology Decisions
 
-| Component | Choice | Rationale |
-|-----------|--------|-----------|
-| Language | Python 3.11+ | Rich AI/ML ecosystem |
-| LLM Primary | Claude Sonnet 4 | Balance of capability/cost |
-| LLM Complex | Claude Opus 4.5 | For architecture, debugging |
-| Database | SQLite | Simple, file-based, no server |
-| Vector DB | ChromaDB | Local, Python-native |
-| Tool Discovery | MCP CLI | 99% token reduction |
+| Component      | Choice          | Rationale                     |
+| -------------- | --------------- | ----------------------------- |
+| Language       | Python 3.11+    | Rich AI/ML ecosystem          |
+| LLM Primary    | Claude Sonnet 4 | Balance of capability/cost    |
+| LLM Complex    | Claude Opus 4.5 | For architecture, debugging   |
+| Database       | SQLite          | Simple, file-based, no server |
+| Vector DB      | ChromaDB        | Local, Python-native          |
+| Tool Discovery | MCP CLI         | 99% token reduction           |
 
 ## Key Patterns
 
 ### Completion Detection
+
 ```python
 if "<promise>COMPLETE</promise>" in llm_output:
     # All tasks done, exit loop
 ```
 
 ### Task Selection
+
 ```python
 # Filter: passes == false AND no blocking dependencies
 # Sort by: priority (P0 > P1 > P2)
@@ -123,6 +130,7 @@ if "<promise>COMPLETE</promise>" in llm_output:
 ```
 
 ### Memory Query
+
 ```python
 # Short-term: Read progress.txt (last 50 lines)
 # Medium-term: git log --oneline -20
@@ -145,9 +153,9 @@ if "<promise>COMPLETE</promise>" in llm_output:
 
 ## Success Metrics (from PRD)
 
-| Metric | Target |
-|--------|--------|
-| Task Completion Rate | >85% (MVP), >95% (Q4) |
-| Human Interventions | <2 per 10 hours |
-| Code Quality Score | 8/10+ (LLM Judge) |
-| Context Efficiency | 50% improvement over static |
+| Metric               | Target                      |
+| -------------------- | --------------------------- |
+| Task Completion Rate | >85% (MVP), >95% (Q4)       |
+| Human Interventions  | <2 per 10 hours             |
+| Code Quality Score   | 8/10+ (LLM Judge)           |
+| Context Efficiency   | 50% improvement over static |

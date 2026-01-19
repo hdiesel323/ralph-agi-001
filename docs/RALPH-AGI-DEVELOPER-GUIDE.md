@@ -110,13 +110,13 @@ The core of RALPH-AGI is a simple `while` loop that iterates until the task is c
 ```python
 def ralph_wiggum_loop(prompt):
     feature_list = initializer_agent.expand_prompt(prompt)
-    
+
     while not all_features_complete(feature_list):
         feature = coding_agent.select_next_feature(feature_list)
         coding_agent.implement_feature(feature)
         git_utils.commit(f"Implement {feature['name']}")
         update_progress(feature)
-    
+
     return "Task complete!"
 ```
 

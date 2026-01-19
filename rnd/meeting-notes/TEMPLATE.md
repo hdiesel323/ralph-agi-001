@@ -17,6 +17,6 @@
 
 ## Action Items
 
-| Action | Owner | Due Date |
-| :--- | :--- | :--- |
+| Action        | Owner   | Due Date   |
+| :------------ | :------ | :--------- |
 | [Action item] | [Owner] | YYYY-MM-DD |

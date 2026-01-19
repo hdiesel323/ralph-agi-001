@@ -37,15 +37,16 @@ RALPH-AGI is an architectural solution, not just a prompting technique. It provi
 
 ## 2. Target Audience & Personas
 
-| Persona | Description | Needs & Goals |
-| :--- | :--- | :--- |
-| **Alex, the Startup CTO** | Manages a small, agile engineering team. Needs to ship features fast with limited resources. | - Accelerate development velocity (3x)
+| Persona                   | Description                                                                                  | Needs & Goals                          |
+| :------------------------ | :------------------------------------------------------------------------------------------- | :------------------------------------- |
+| **Alex, the Startup CTO** | Manages a small, agile engineering team. Needs to ship features fast with limited resources. | - Accelerate development velocity (3x) |
+
 - Automate code reviews, documentation, and testing
 - Reduce time spent on boilerplate and repetitive tasks |
-| **Maria, the Marketing Manager** | Runs campaigns for a financial services company. Needs to produce high-quality, compliant content at scale. | - Automate content creation (blog posts, social media, ad copy)
+  | **Maria, the Marketing Manager** | Runs campaigns for a financial services company. Needs to produce high-quality, compliant content at scale. | - Automate content creation (blog posts, social media, ad copy)
 - Ensure brand consistency and compliance with regulations
 - Improve campaign ROI and A/B testing velocity |
-| **David, the Lead Broker** | Runs a lead generation business. Needs to automate lead pricing, qualification, and distribution. | - Automate lead qualification and pricing
+  | **David, the Lead Broker** | Runs a lead generation business. Needs to automate lead pricing, qualification, and distribution. | - Automate lead qualification and pricing
 - Generate personalized outreach campaigns
 - Improve lead conversion rates and margins |
 
@@ -78,28 +79,28 @@ As Maria, the Marketing Manager, I want RALPH-AGI to generate and publish market
 
 ### 4.1. Functional Requirements
 
-| ID | Requirement | Priority |
-| :--- | :--- | :--- |
-| FR-01 | The system shall support a two-agent architecture (Initializer & Coder). | Must Have |
-| FR-02 | The system shall use a JSON file for the feature list. | Must Have |
-| FR-03 | The system shall maintain a `progress.txt` file for session context. | Must Have |
-| FR-04 | The system shall use a Git-first workflow, committing after each feature. | Must Have |
-| FR-05 | The system shall implement a hooks system for event-driven behaviors. | Must Have |
-| FR-06 | The system shall integrate a multi-layer memory system (short, medium, long-term). | Must Have |
-| FR-07 | The system shall support multi-agent coordination via a shared database. | Should Have |
-| FR-08 | The system shall implement a cascaded evaluation pipeline for quality assurance. | Should Have |
-| FR-09 | The system shall support natural language skill activation. | Could Have |
-| FR-10 | The system shall implement evolutionary algorithms for solution exploration. | Could Have |
+| ID    | Requirement                                                                        | Priority    |
+| :---- | :--------------------------------------------------------------------------------- | :---------- |
+| FR-01 | The system shall support a two-agent architecture (Initializer & Coder).           | Must Have   |
+| FR-02 | The system shall use a JSON file for the feature list.                             | Must Have   |
+| FR-03 | The system shall maintain a `progress.txt` file for session context.               | Must Have   |
+| FR-04 | The system shall use a Git-first workflow, committing after each feature.          | Must Have   |
+| FR-05 | The system shall implement a hooks system for event-driven behaviors.              | Must Have   |
+| FR-06 | The system shall integrate a multi-layer memory system (short, medium, long-term). | Must Have   |
+| FR-07 | The system shall support multi-agent coordination via a shared database.           | Should Have |
+| FR-08 | The system shall implement a cascaded evaluation pipeline for quality assurance.   | Should Have |
+| FR-09 | The system shall support natural language skill activation.                        | Could Have  |
+| FR-10 | The system shall implement evolutionary algorithms for solution exploration.       | Could Have  |
 
 ### 4.2. Non-Functional Requirements
 
-| ID | Requirement | Metric |
-| :--- | :--- | :--- |
+| ID     | Requirement                                                                                           | Metric                                |
+| :----- | :---------------------------------------------------------------------------------------------------- | :------------------------------------ |
 | NFR-01 | **Stateful & Resumable:** The system must be able to resume multi-day tasks from the last checkpoint. | 100% resumability from any checkpoint |
-| NFR-02 | **Token Efficiency:** The system must minimize API costs. | 95% token reduction via TLDR analysis |
-| NFR-03 | **Performance:** The system should execute independent tasks in parallel. | TBD |
-| NFR-04 | **Security:** All API keys and secrets must be stored securely. | No hardcoded secrets in the codebase |
-| NFR-05 | **Scalability:** The system must support multiple concurrent agent loops. | TBD |
+| NFR-02 | **Token Efficiency:** The system must minimize API costs.                                             | 95% token reduction via TLDR analysis |
+| NFR-03 | **Performance:** The system should execute independent tasks in parallel.                             | TBD                                   |
+| NFR-04 | **Security:** All API keys and secrets must be stored securely.                                       | No hardcoded secrets in the codebase  |
+| NFR-05 | **Scalability:** The system must support multiple concurrent agent loops.                             | TBD                                   |
 
 ---
 

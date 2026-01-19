@@ -36,6 +36,7 @@ while (iteration < max && !complete):
 ## Stories
 
 ### Story 1.1: Basic Loop Structure
+
 **Priority:** P0 | **Points:** 3
 
 **As a** developer
@@ -43,6 +44,7 @@ while (iteration < max && !complete):
 **So that** I can process tasks one at a time automatically
 
 **Acceptance Criteria:**
+
 - [ ] `src/core/loop.py` implements main loop
 - [ ] Configurable `max_iterations` parameter
 - [ ] Loop exits on max iterations or completion signal
@@ -52,6 +54,7 @@ while (iteration < max && !complete):
 - [ ] Remaining work visibility after each iteration
 
 **Technical Notes:**
+
 - Use `while` loop, not `for` loop (cleaner exit conditions)
 - Log format: `[2026-01-10T14:30:00] Iteration 1/100: Starting...`
 - Reference: Ryan Carson's implementation (@ryancarson)
@@ -59,6 +62,7 @@ while (iteration < max && !complete):
 ---
 
 ### Story 1.2: Completion Promise Detection
+
 **Priority:** P0 | **Points:** 2
 
 **As a** developer
@@ -66,18 +70,21 @@ while (iteration < max && !complete):
 **So that** it exits gracefully instead of running unnecessarily
 
 **Acceptance Criteria:**
+
 - [ ] Detect `<promise>COMPLETE</promise>` in LLM output
 - [ ] Exit loop immediately when detected
 - [ ] Log completion message with total iterations
 - [ ] Return success status to caller
 
 **Technical Notes:**
+
 - Simple string search is sufficient
 - Configurable promise string via config
 
 ---
 
 ### Story 1.3: Configuration Management
+
 **Priority:** P0 | **Points:** 2
 
 **As a** developer
@@ -85,6 +92,7 @@ while (iteration < max && !complete):
 **So that** I can customize behavior without code changes
 
 **Acceptance Criteria:**
+
 - [ ] `config.yaml` in project root
 - [ ] Load config at startup
 - [ ] Support for: max_iterations, completion_promise, checkpoint_interval
@@ -92,12 +100,14 @@ while (iteration < max && !complete):
 - [ ] Sensible defaults if config missing
 
 **Technical Notes:**
+
 - Use PyYAML for parsing
 - Schema from PRD Appendix C
 
 ---
 
 ### Story 1.4: AFK Mode (Basic)
+
 **Priority:** P0 | **Points:** 2
 
 **As a** developer
@@ -105,18 +115,21 @@ while (iteration < max && !complete):
 **So that** I can start it and walk away
 
 **Acceptance Criteria:**
+
 - [ ] No user input required during execution
 - [ ] All progress logged to file and console
 - [ ] Graceful handling of interrupts (Ctrl+C)
 - [ ] State saved on interrupt for resume
 
 **Technical Notes:**
+
 - Signal handling for SIGINT/SIGTERM
 - Write checkpoint before exit
 
 ---
 
 ### Story 1.5: CLI Entry Point
+
 **Priority:** P1 | **Points:** 2
 
 **As a** developer
@@ -124,6 +137,7 @@ while (iteration < max && !complete):
 **So that** I can easily run RALPH-AGI from terminal
 
 **Acceptance Criteria:**
+
 - [ ] `ralph-agi run` command starts loop
 - [ ] `--max-iterations` flag overrides config
 - [ ] `--config` flag specifies config file
@@ -131,12 +145,14 @@ while (iteration < max && !complete):
 - [ ] Exit codes: 0=success, 1=error, 2=max iterations
 
 **Technical Notes:**
+
 - Use `argparse` or `click`
 - Entry point in `setup.py` or `pyproject.toml`
 
 ---
 
 ### Story 1.6: Scheduled Triggers (AFK Mode Enhanced)
+
 **Priority:** P1 | **Points:** 5
 **Source:** [Clawdbot Patterns Analysis](../../../rnd/research/2026-01-10_clawdbot-patterns-analysis.md)
 **Beads:** ralph-agi-001-002
@@ -146,6 +162,7 @@ while (iteration < max && !complete):
 **So that** RALPH-AGI can resume work automatically after being idle
 
 **Acceptance Criteria:**
+
 - [ ] Cron expression support in config.yaml
 - [ ] System daemon templates (launchd/systemd)
 - [ ] Wake hook execution: `on_scheduled_wake`
@@ -154,15 +171,17 @@ while (iteration < max && !complete):
 - [ ] Wake/sleep event logging
 
 **Technical Notes:**
+
 - Use `croniter` for cron parsing
 - `APScheduler` as cross-platform fallback
 - Wake loads last checkpoint from progress.txt + Memvid
 
 **Config Example:**
+
 ```yaml
 scheduler:
   enabled: true
-  cron: "0 */4 * * *"  # Every 4 hours
+  cron: "0 */4 * * *" # Every 4 hours
   wake_hooks:
     - check_progress
     - run_tests
@@ -172,6 +191,7 @@ scheduler:
 ---
 
 ### Story 1.7: Loop Output Formatting
+
 **Priority:** P1 | **Points:** 2
 **Source:** [Ryan Carson Implementation](../../../rnd/research/2026-01-11_ryan-carson-ralph-implementation.md)
 
@@ -180,6 +200,7 @@ scheduler:
 **So that** I can monitor progress at a glance and debug issues easily
 
 **Acceptance Criteria:**
+
 - [ ] Visual separator bars between iterations (`═══════════════════════`)
 - [ ] Iteration header: "Ralph Iteration 7 of 10"
 - [ ] Remaining work list after each iteration
@@ -189,6 +210,7 @@ scheduler:
 - [ ] Configurable verbosity levels (quiet/normal/verbose)
 
 **Output Format Example:**
+
 ```
 ════════════════════════════════════════════════════════════════
     Ralph Iteration 7 of 10
@@ -208,6 +230,7 @@ Iteration 7 complete. Continuing...
 ```
 
 **Technical Notes:**
+
 - Use `rich` library for terminal formatting (optional)
 - Support both TTY and non-TTY output (CI logs)
 - Color coding: green=success, yellow=warning, red=error
@@ -215,6 +238,7 @@ Iteration 7 complete. Continuing...
 ---
 
 ### Story 1.8: First-Run Setup Wizard (ralph init)
+
 **Priority:** P1 | **Points:** 5
 **Beads:** ralph-agi-001-005
 
@@ -224,26 +248,30 @@ Iteration 7 complete. Continuing...
 
 **Acceptance Criteria:**
 
-*Global Setup (~/.ralph/):*
+_Global Setup (~/.ralph/):_
+
 - [ ] Auto-detect missing global config on first run
 - [ ] Prompt for Anthropic API key (or detect from env)
-- [ ] Validate API key format (sk-ant-* prefix)
+- [ ] Validate API key format (sk-ant-\* prefix)
 - [ ] Offer model selection (Sonnet 4 default, Opus option)
 - [ ] Set max iterations with safety default (10)
 - [ ] Create `~/.ralph/config.yaml`, `~/.ralph/.env`, `~/.ralph/memory/`
 
-*Per-Project Setup (.ralph/):*
+_Per-Project Setup (.ralph/):_
+
 - [ ] `ralph init` creates `.ralph/` directory in project
 - [ ] Optional project-specific config overrides
 - [ ] Auto-add `.ralph/checkpoint.json` to .gitignore
 
-*CLI Flags:*
+_CLI Flags:_
+
 - [ ] `ralph init --global` - only global setup
 - [ ] `ralph init --project` - only per-project
 - [ ] `ralph init --reset` - wipe existing config
 - [ ] `ralph init --yes` - accept all defaults (non-interactive)
 
 **Technical Notes:**
+
 - **Libraries:** Typer + Rich + Questionary (Python)
 - **Config precedence:** env vars > CLI flags > project > global > defaults
 - **Hybrid config:** Global defaults (~/.ralph/) + per-project overrides (.ralph/)
@@ -251,6 +279,7 @@ Iteration 7 complete. Continuing...
 - See beads issue for full implementation code
 
 **Directory Structure:**
+
 ```
 ~/.ralph/                    # Global
 ├── config.yaml              # Defaults
@@ -271,11 +300,11 @@ project/.ralph/              # Per-project
 
 ## Risks & Mitigations
 
-| Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
-| Loop runs forever | Medium | High | Hard max_iterations limit |
-| LLM API failures | High | Medium | Retry with exponential backoff |
-| State corruption on crash | Medium | High | Atomic checkpoints |
+| Risk                      | Likelihood | Impact | Mitigation                     |
+| ------------------------- | ---------- | ------ | ------------------------------ |
+| Loop runs forever         | Medium     | High   | Hard max_iterations limit      |
+| LLM API failures          | High       | Medium | Retry with exponential backoff |
+| State corruption on crash | Medium     | High   | Atomic checkpoints             |
 
 ## Definition of Done
 
@@ -290,6 +319,7 @@ project/.ralph/              # Per-project
 For the PoC, implement Stories 1.1, 1.2, 1.3, and 1.4. Deferred to Sprint 3: 1.5 (CLI), 1.6 (Scheduled Triggers - Clawdbot), 1.7 (Output Formatting - Ryan Carson), 1.8 (Setup Wizard).
 
 **PoC Success Criteria:**
+
 - Loop runs with mock task list
 - Detects completion correctly
 - Handles errors gracefully

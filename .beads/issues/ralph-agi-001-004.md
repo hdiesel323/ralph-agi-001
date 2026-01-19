@@ -15,6 +15,7 @@ source: rnd/research/2026-01-10_clawdbot-patterns-analysis.md
 ## Problem Statement
 
 When running multiple agents in parallel (Epic 2: Task Management), we need isolation to prevent:
+
 - Agents interfering with each other's files
 - Resource contention
 - Security risks from untrusted code execution
@@ -54,7 +55,7 @@ When running multiple agents in parallel (Epic 2: Task Management), we need isol
 
 ```yaml
 # Proof of concept docker-compose.yml
-version: '3.8'
+version: "3.8"
 services:
   gateway:
     build: ./gateway
@@ -78,7 +79,7 @@ services:
       - AGENT_ROLE=worker
       - SANDBOX=true
     volumes:
-      - shared_db:/data:ro  # Read-only DB access
+      - shared_db:/data:ro # Read-only DB access
     # No workspace mount - sandboxed
 
 volumes:

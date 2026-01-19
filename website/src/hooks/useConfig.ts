@@ -2,9 +2,14 @@
  * React hook for configuration management.
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import type { ConfigResponse, ConfigUpdate, RepoContext, RuntimeSettings } from '@/types/task';
-import { getConfig, updateConfig } from '@/api/config';
+import { useState, useEffect, useCallback } from "react";
+import type {
+  ConfigResponse,
+  ConfigUpdate,
+  RepoContext,
+  RuntimeSettings,
+} from "@/types/task";
+import { getConfig, updateConfig } from "@/api/config";
 
 interface UseConfigReturn {
   config: ConfigResponse | null;
@@ -31,7 +36,9 @@ export function useConfig(): UseConfigReturn {
       setConfig(data);
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Failed to fetch config'));
+      setError(
+        err instanceof Error ? err : new Error("Failed to fetch config")
+      );
     } finally {
       setLoading(false);
     }
@@ -42,11 +49,14 @@ export function useConfig(): UseConfigReturn {
     refresh();
   }, [refresh]);
 
-  const updateSettings = useCallback(async (updates: ConfigUpdate): Promise<ConfigResponse> => {
-    const updated = await updateConfig(updates);
-    setConfig(updated);
-    return updated;
-  }, []);
+  const updateSettings = useCallback(
+    async (updates: ConfigUpdate): Promise<ConfigResponse> => {
+      const updated = await updateConfig(updates);
+      setConfig(updated);
+      return updated;
+    },
+    []
+  );
 
   return {
     config,

@@ -124,7 +124,8 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 ### File List
 
 **Modified:**
-- `ralph_agi/memory/store.py` - Added MemoryQueryResult, query(), _apply_filters, _truncate_to_tokens
+
+- `ralph_agi/memory/store.py` - Added MemoryQueryResult, query(), \_apply_filters, \_truncate_to_tokens
 - `ralph_agi/memory/__init__.py` - Exported MemoryQueryResult
 - `tests/memory/test_store.py` - Added 11 tests for query API
 

@@ -35,6 +35,7 @@ AI coding assistants are brilliant... for about 5 minutes.
 Then they forget everything. Lose context. Start hallucinating. You're back to square one.
 
 **Current AI limitations:**
+
 - 🧠 **No persistent memory** - Every conversation starts from zero
 - ⏱️ **Context window limits** - Long tasks get truncated
 - 🎯 **No task completion awareness** - Doesn't know when it's actually done
@@ -42,6 +43,7 @@ Then they forget everything. Lose context. Start hallucinating. You're back to s
 - 👀 **Requires constant supervision** - Can't run autonomously
 
 **What if an AI could:**
+
 - Work on complex tasks for hours (or days) without losing track
 - Remember what it learned yesterday, last week, last month
 - Know when it's genuinely done vs. when it's stuck
@@ -69,6 +71,7 @@ cd ralph-agi-001
 ```
 
 The installer will:
+
 1. Check Python version (requires 3.11+)
 2. Create a Python virtual environment
 3. Install all dependencies
@@ -123,6 +126,7 @@ pip install -e .
 ```
 
 This interactive wizard will:
+
 - Configure your LLM provider (Anthropic, OpenAI, or OpenRouter)
 - Set up git workflow preferences
 - Generate a sample `config.yaml`
@@ -166,6 +170,7 @@ Create a `PRD.json` file describing what you want RALPH to build:
 ```
 
 RALPH will:
+
 - Parse your task file
 - Select the highest priority task
 - Execute it using AI
@@ -181,11 +186,11 @@ All commands can be run via `./run-ralph.sh` or by activating the venv and using
 
 ### Main Commands
 
-| Command | Description |
-|---------|-------------|
-| `run` | Start the autonomous loop |
-| `init` | Interactive setup wizard |
-| `tui` | Launch terminal UI (real-time monitoring) |
+| Command  | Description                                     |
+| -------- | ----------------------------------------------- |
+| `run`    | Start the autonomous loop                       |
+| `init`   | Interactive setup wizard                        |
+| `tui`    | Launch terminal UI (real-time monitoring)       |
 | `daemon` | Run as background service (scheduled execution) |
 
 ### Run Command Options
@@ -245,11 +250,11 @@ checkpoint_interval: 1
 
 # Retry configuration for failed iterations
 max_retries: 3
-retry_delays: [1, 2, 4]  # Exponential backoff in seconds
+retry_delays: [1, 2, 4] # Exponential backoff in seconds
 
 # Git workflow configuration
 git:
-  workflow: "branch"        # direct, branch, or pr
+  workflow: "branch" # direct, branch, or pr
   protected_branches: [main, master]
   branch_prefix: "ralph/"
   auto_push: true
@@ -274,18 +279,19 @@ OPENROUTER_API_KEY=sk-or-...
 
 ### Task Fields
 
-| Field | Required | Description |
-|-------|----------|-------------|
-| `id` | Yes | Unique identifier for the task |
-| `description` | Yes | What needs to be done (be specific!) |
-| `priority` | Yes | P0 (critical), P1 (high), P2 (medium), P3 (low), P4 (backlog) |
-| `status` | Yes | `pending`, `in_progress`, `complete`, `blocked` |
-| `dependencies` | No | List of task IDs that must complete first |
-| `acceptance_criteria` | Recommended | List of conditions that prove completion |
+| Field                 | Required    | Description                                                   |
+| --------------------- | ----------- | ------------------------------------------------------------- |
+| `id`                  | Yes         | Unique identifier for the task                                |
+| `description`         | Yes         | What needs to be done (be specific!)                          |
+| `priority`            | Yes         | P0 (critical), P1 (high), P2 (medium), P3 (low), P4 (backlog) |
+| `status`              | Yes         | `pending`, `in_progress`, `complete`, `blocked`               |
+| `dependencies`        | No          | List of task IDs that must complete first                     |
+| `acceptance_criteria` | Recommended | List of conditions that prove completion                      |
 
 ### Writing Good Tasks
 
 **Good task:**
+
 ```json
 {
   "id": "auth-1",
@@ -302,6 +308,7 @@ OPENROUTER_API_KEY=sk-or-...
 ```
 
 **Bad task:**
+
 ```json
 {
   "id": "auth",
@@ -312,6 +319,7 @@ OPENROUTER_API_KEY=sk-or-...
 ```
 
 **Tips:**
+
 1. **Be specific** - "Add a button" vs "Add a blue 'Submit' button in the form footer"
 2. **Include acceptance criteria** - How will RALPH know it's done?
 3. **Use dependencies** - Tasks that need other tasks completed first
@@ -340,30 +348,30 @@ while not complete and under_budget:
     learn_from_result(result)
 ```
 
-> *"Same energy as Ralph Wiggum eating glue... but with memory that actually works and self-improves so it eventually stops eating glue and starts building real stuff."*
+> _"Same energy as Ralph Wiggum eating glue... but with memory that actually works and self-improves so it eventually stops eating glue and starts building real stuff."_
 
 ### Core Principles
 
-| Principle | Why It Matters |
-|-----------|----------------|
-| **Simple Loop > Complex Orchestration** | A while loop beats fancy agent frameworks |
-| **Persistent Memory** | Context survives across sessions |
-| **Completion Detection** | Knows when to stop (and when to keep going) |
-| **Graceful Failure** | Retries with exponential backoff, learns from errors |
-| **Human-in-the-Loop Option** | AFK mode OR supervised mode |
+| Principle                               | Why It Matters                                       |
+| --------------------------------------- | ---------------------------------------------------- |
+| **Simple Loop > Complex Orchestration** | A while loop beats fancy agent frameworks            |
+| **Persistent Memory**                   | Context survives across sessions                     |
+| **Completion Detection**                | Knows when to stop (and when to keep going)          |
+| **Graceful Failure**                    | Retries with exponential backoff, learns from errors |
+| **Human-in-the-Loop Option**            | AFK mode OR supervised mode                          |
 
 ---
 
 ## The 12-Week Roadmap
 
-| Phase | Weeks | Epic | Goal |
-|-------|-------|------|------|
-| **1. Core Loop** | 1-2 | `epic-01` | Basic execution engine + completion detection |
-| **2. Task Management** | 3-4 | `epic-02` | Beads integration, priorities, dependencies |
-| **3. Memory System** | 5-6 | `epic-03` | Persistent context, semantic search, learning |
-| **4. Tool Integration** | 7-8 | `epic-04` | File ops, git, testing, external APIs |
-| **5. Evaluation Pipeline** | 9-10 | `epic-05` | Self-verification, quality gates, metrics |
-| **6. Polish & Ship** | 11-12 | - | CLI, documentation, real-world testing |
+| Phase                      | Weeks | Epic      | Goal                                          |
+| -------------------------- | ----- | --------- | --------------------------------------------- |
+| **1. Core Loop**           | 1-2   | `epic-01` | Basic execution engine + completion detection |
+| **2. Task Management**     | 3-4   | `epic-02` | Beads integration, priorities, dependencies   |
+| **3. Memory System**       | 5-6   | `epic-03` | Persistent context, semantic search, learning |
+| **4. Tool Integration**    | 7-8   | `epic-04` | File ops, git, testing, external APIs         |
+| **5. Evaluation Pipeline** | 9-10  | `epic-05` | Self-verification, quality gates, metrics     |
+| **6. Polish & Ship**       | 11-12 | -         | CLI, documentation, real-world testing        |
 
 ### Success Metrics
 
@@ -386,21 +394,21 @@ This project synthesizes ideas and patterns from the following (all credit to th
 
 ### Core Inspiration
 
-| Project | Author | Stars | What We Learned |
-|---------|--------|-------|-----------------|
-| [**The Ralph Wiggum Pattern**](https://ghuntley.com/ralph/) | [@GeoffreyHuntley](https://twitter.com/GeoffreyHuntley) | - | The original! Simple loop > complex orchestration |
-| [**Anthropic Agent Guidance**](https://www.anthropic.com/engineering/building-effective-agents) | Anthropic | - | Official best practices for long-running agents |
-| [**Memvid**](https://github.com/memvid/memvid) | memvid | - | Portable AI memory in a single file (Sprint 2) |
-| [**Beads**](https://github.com/steveyegge/beads) | @steveyegge | 9.4k⭐ | Dependency-aware task management |
-| [**Claude-Mem**](https://github.com/thedotmack/claude-mem) | @thedotmack | 12.9k⭐ | Persistent memory architecture |
+| Project                                                                                         | Author                                                  | Stars   | What We Learned                                   |
+| ----------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ------- | ------------------------------------------------- |
+| [**The Ralph Wiggum Pattern**](https://ghuntley.com/ralph/)                                     | [@GeoffreyHuntley](https://twitter.com/GeoffreyHuntley) | -       | The original! Simple loop > complex orchestration |
+| [**Anthropic Agent Guidance**](https://www.anthropic.com/engineering/building-effective-agents) | Anthropic                                               | -       | Official best practices for long-running agents   |
+| [**Memvid**](https://github.com/memvid/memvid)                                                  | memvid                                                  | -       | Portable AI memory in a single file (Sprint 2)    |
+| [**Beads**](https://github.com/steveyegge/beads)                                                | @steveyegge                                             | 9.4k⭐  | Dependency-aware task management                  |
+| [**Claude-Mem**](https://github.com/thedotmack/claude-mem)                                      | @thedotmack                                             | 12.9k⭐ | Persistent memory architecture                    |
 
 ### Additional Research
 
-| Project | What We Learned |
-|---------|-----------------|
-| [**AI-Long-Task**](https://github.com/FareedKhan-dev/ai-long-task) | AlphaEvolve-inspired autonomous execution |
-| [**Continuous-Claude-v3**](https://github.com/zckly/continuous-claude-v3) | Hooks system for automatic behaviors |
-| [**MCP-CLI**](https://github.com/anthropics/anthropic-tools) | Tool integration patterns |
+| Project                                                                   | What We Learned                           |
+| ------------------------------------------------------------------------- | ----------------------------------------- |
+| [**AI-Long-Task**](https://github.com/FareedKhan-dev/ai-long-task)        | AlphaEvolve-inspired autonomous execution |
+| [**Continuous-Claude-v3**](https://github.com/zckly/continuous-claude-v3) | Hooks system for automatic behaviors      |
+| [**MCP-CLI**](https://github.com/anthropics/anthropic-tools)              | Tool integration patterns                 |
 
 ### Research Papers & Posts
 
@@ -440,7 +448,7 @@ For teams that want managed infrastructure and enterprise features:
 💰 Subscription pricing
 ```
 
-*Interested in Enterprise?* [Join the waitlist](https://glittery-pasca-96b28f.netlify.app/enterprise) to get early access and special pricing.
+_Interested in Enterprise?_ [Join the waitlist](https://glittery-pasca-96b28f.netlify.app/enterprise) to get early access and special pricing.
 
 ---
 
@@ -448,26 +456,26 @@ For teams that want managed infrastructure and enterprise features:
 
 This is a 12-week build-in-public journey. Follow along for daily updates, technical deep-dives, and all the wins and fails.
 
-| Platform | Link | Content |
-|----------|------|---------|
-| **Twitter/X** | [@hdiesel_](https://twitter.com/hdiesel_) | Daily updates, hot takes |
-| **Main Thread** | [The Journey](https://x.com/hdiesel_/status/2009969887356256679) | Full build story |
-| **Documentation** | [View Docs](https://glittery-pasca-96b28f.netlify.app) | Technical docs |
-| **Enterprise** | [Join Waitlist](https://glittery-pasca-96b28f.netlify.app/enterprise) | Early access signup |
-| **This Repo** | Star ⭐ for updates | Code, issues, discussions |
+| Platform          | Link                                                                  | Content                   |
+| ----------------- | --------------------------------------------------------------------- | ------------------------- |
+| **Twitter/X**     | [@hdiesel\_](https://twitter.com/hdiesel_)                            | Daily updates, hot takes  |
+| **Main Thread**   | [The Journey](https://x.com/hdiesel_/status/2009969887356256679)      | Full build story          |
+| **Documentation** | [View Docs](https://glittery-pasca-96b28f.netlify.app)                | Technical docs            |
+| **Enterprise**    | [Join Waitlist](https://glittery-pasca-96b28f.netlify.app/enterprise) | Early access signup       |
+| **This Repo**     | Star ⭐ for updates                                                   | Code, issues, discussions |
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology | Why |
-|-------|------------|-----|
-| **Language** | Python 3.11+ | Type hints, async support, ecosystem |
-| **LLM** | Claude (Anthropic) | Best-in-class reasoning, long context |
-| **Task Management** | Beads | Dependency-aware, SQLite-backed |
-| **Memory** | Claude-Mem patterns | Semantic search, compaction |
-| **Testing** | pytest | 99% coverage target |
-| **CI/CD** | GitHub Actions | Automated testing & deployment |
+| Layer               | Technology          | Why                                   |
+| ------------------- | ------------------- | ------------------------------------- |
+| **Language**        | Python 3.11+        | Type hints, async support, ecosystem  |
+| **LLM**             | Claude (Anthropic)  | Best-in-class reasoning, long context |
+| **Task Management** | Beads               | Dependency-aware, SQLite-backed       |
+| **Memory**          | Claude-Mem patterns | Semantic search, compaction           |
+| **Testing**         | pytest              | 99% coverage target                   |
+| **CI/CD**           | GitHub Actions      | Automated testing & deployment        |
 
 ---
 
@@ -505,6 +513,7 @@ ralph-agi-001/
 ### Common Issues
 
 **"Python 3.11 or higher is required"**
+
 ```bash
 # macOS
 brew install python@3.12
@@ -517,17 +526,20 @@ python3.12 -m venv venv
 ```
 
 **"ANTHROPIC_API_KEY not set"**
+
 ```bash
 echo "ANTHROPIC_API_KEY=your-key-here" >> .env
 ```
 
 **"ModuleNotFoundError: No module named 'ralph_agi'"**
+
 ```bash
 source venv/bin/activate
 pip install -e .
 ```
 
 **"Permission denied: ./run-ralph.sh"**
+
 ```bash
 chmod +x run-ralph.sh install.sh
 ```
@@ -550,12 +562,12 @@ python3 -m pytest --cov=ralph_agi    # With coverage
 
 **Not accepting PRs yet** (still in early build phase), but here's how to get involved:
 
-| Action | How |
-|--------|-----|
-| ⭐ **Star the repo** | Get notified of updates |
-| 🐛 **Open issues** | Bug reports, feature ideas, questions |
-| 💬 **Join Twitter** | Daily discussions, polls, feedback |
-| 📧 **Enterprise interest** | DM [@hdiesel_](https://twitter.com/hdiesel_) |
+| Action                     | How                                           |
+| -------------------------- | --------------------------------------------- |
+| ⭐ **Star the repo**       | Get notified of updates                       |
+| 🐛 **Open issues**         | Bug reports, feature ideas, questions         |
+| 💬 **Join Twitter**        | Daily discussions, polls, feedback            |
+| 📧 **Enterprise interest** | DM [@hdiesel\_](https://twitter.com/hdiesel_) |
 
 Once we hit Week 8, we'll open up for community contributions with clear guidelines.
 

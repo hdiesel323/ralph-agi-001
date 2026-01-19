@@ -3,10 +3,10 @@
  * Form for creating and editing tasks.
  */
 
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Dialog,
   DialogContent,
@@ -14,24 +14,24 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Spinner } from '@/components/ui/spinner';
-import type { Task, TaskCreate, TaskPriority } from '@/types/task';
+} from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
+import type { Task, TaskCreate, TaskPriority } from "@/types/task";
 
 const taskSchema = z.object({
-  description: z.string().min(1, 'Description is required'),
-  priority: z.enum(['P0', 'P1', 'P2', 'P3', 'P4']),
+  description: z.string().min(1, "Description is required"),
+  priority: z.enum(["P0", "P1", "P2", "P3", "P4"]),
   acceptance_criteria: z.string().optional(),
   dependencies: z.string().optional(),
 });
@@ -66,10 +66,10 @@ export function TaskEditor({
   } = useForm<TaskFormData>({
     resolver: zodResolver(taskSchema),
     defaultValues: {
-      description: '',
-      priority: 'P2',
-      acceptance_criteria: '',
-      dependencies: '',
+      description: "",
+      priority: "P2",
+      acceptance_criteria: "",
+      dependencies: "",
     },
   });
 
@@ -79,15 +79,15 @@ export function TaskEditor({
       reset({
         description: task.description,
         priority: task.priority,
-        acceptance_criteria: task.acceptance_criteria.join('\n'),
-        dependencies: task.dependencies.join(', '),
+        acceptance_criteria: task.acceptance_criteria.join("\n"),
+        dependencies: task.dependencies.join(", "),
       });
     } else {
       reset({
-        description: '',
-        priority: 'P2',
-        acceptance_criteria: '',
-        dependencies: '',
+        description: "",
+        priority: "P2",
+        acceptance_criteria: "",
+        dependencies: "",
       });
     }
   }, [task, reset]);
@@ -99,10 +99,13 @@ export function TaskEditor({
         description: data.description,
         priority: data.priority as TaskPriority,
         acceptance_criteria: data.acceptance_criteria
-          ? data.acceptance_criteria.split('\n').filter((c) => c.trim())
+          ? data.acceptance_criteria.split("\n").filter(c => c.trim())
           : [],
         dependencies: data.dependencies
-          ? data.dependencies.split(',').map((d) => d.trim()).filter(Boolean)
+          ? data.dependencies
+              .split(",")
+              .map(d => d.trim())
+              .filter(Boolean)
           : [],
       };
       await onSubmit(taskData);
@@ -114,22 +117,22 @@ export function TaskEditor({
   };
 
   const priorityOptions: { value: TaskPriority; label: string }[] = [
-    { value: 'P0', label: 'P0 - Critical' },
-    { value: 'P1', label: 'P1 - High' },
-    { value: 'P2', label: 'P2 - Medium' },
-    { value: 'P3', label: 'P3 - Low' },
-    { value: 'P4', label: 'P4 - Backlog' },
+    { value: "P0", label: "P0 - Critical" },
+    { value: "P1", label: "P1 - High" },
+    { value: "P2", label: "P2 - Medium" },
+    { value: "P3", label: "P3 - Low" },
+    { value: "P4", label: "P4 - Backlog" },
   ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{isEditing ? 'Edit Task' : 'Create Task'}</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit Task" : "Create Task"}</DialogTitle>
           <DialogDescription>
             {isEditing
-              ? 'Update the task details below.'
-              : 'Add a new task to the queue for autonomous processing.'}
+              ? "Update the task details below."
+              : "Add a new task to the queue for autonomous processing."}
           </DialogDescription>
         </DialogHeader>
 
@@ -140,14 +143,17 @@ export function TaskEditor({
             <Textarea
               id="description"
               placeholder="e.g., Add dark mode toggle to settings page"
-              {...register('description')}
-              className={errors.description ? 'border-destructive' : ''}
+              {...register("description")}
+              className={errors.description ? "border-destructive" : ""}
             />
             <p className="text-xs text-muted-foreground">
-              Describe the task clearly. The AI agent will work on this autonomously.
+              Describe the task clearly. The AI agent will work on this
+              autonomously.
             </p>
             {errors.description && (
-              <p className="text-sm text-destructive">{errors.description.message}</p>
+              <p className="text-sm text-destructive">
+                {errors.description.message}
+              </p>
             )}
           </div>
 
@@ -155,14 +161,16 @@ export function TaskEditor({
           <div className="space-y-2">
             <Label htmlFor="priority">How urgent is this?</Label>
             <Select
-              value={watch('priority')}
-              onValueChange={(value) => setValue('priority', value as TaskPriority)}
+              value={watch("priority")}
+              onValueChange={value =>
+                setValue("priority", value as TaskPriority)
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select priority" />
               </SelectTrigger>
               <SelectContent>
-                {priorityOptions.map((option) => (
+                {priorityOptions.map(option => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>
@@ -176,11 +184,15 @@ export function TaskEditor({
 
           {/* Acceptance Criteria */}
           <div className="space-y-2">
-            <Label htmlFor="acceptance_criteria">How will we know it's done?</Label>
+            <Label htmlFor="acceptance_criteria">
+              How will we know it's done?
+            </Label>
             <Textarea
               id="acceptance_criteria"
-              placeholder={"e.g.,\nToggle switch appears in settings\nPreference saves to localStorage\nTheme changes immediately on toggle"}
-              {...register('acceptance_criteria')}
+              placeholder={
+                "e.g.,\nToggle switch appears in settings\nPreference saves to localStorage\nTheme changes immediately on toggle"
+              }
+              {...register("acceptance_criteria")}
               rows={3}
             />
             <p className="text-xs text-muted-foreground">
@@ -190,12 +202,18 @@ export function TaskEditor({
 
           {/* Dependencies */}
           <div className="space-y-2">
-            <Label htmlFor="dependencies">Does this depend on other tasks?</Label>
+            <Label htmlFor="dependencies">
+              Does this depend on other tasks?
+            </Label>
             {availableTasks.length > 0 ? (
               <>
                 <div className="flex flex-wrap gap-1.5 p-2 border rounded-md bg-muted/30 max-h-24 overflow-auto">
-                  {availableTasks.map((t) => {
-                    const currentDeps = watch('dependencies')?.split(',').map(d => d.trim()).filter(Boolean) || [];
+                  {availableTasks.map(t => {
+                    const currentDeps =
+                      watch("dependencies")
+                        ?.split(",")
+                        .map(d => d.trim())
+                        .filter(Boolean) || [];
                     const isSelected = currentDeps.includes(t.id);
                     return (
                       <button
@@ -203,19 +221,27 @@ export function TaskEditor({
                         type="button"
                         onClick={() => {
                           if (isSelected) {
-                            setValue('dependencies', currentDeps.filter(d => d !== t.id).join(', '));
+                            setValue(
+                              "dependencies",
+                              currentDeps.filter(d => d !== t.id).join(", ")
+                            );
                           } else {
-                            setValue('dependencies', [...currentDeps, t.id].join(', '));
+                            setValue(
+                              "dependencies",
+                              [...currentDeps, t.id].join(", ")
+                            );
                           }
                         }}
                         className={`text-xs px-2 py-1 rounded-full transition-colors ${
                           isSelected
-                            ? 'bg-primary text-primary-foreground'
-                            : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted hover:bg-muted/80 text-muted-foreground"
                         }`}
                         title={t.id}
                       >
-                        {t.description.length > 30 ? t.description.slice(0, 30) + '...' : t.description}
+                        {t.description.length > 30
+                          ? t.description.slice(0, 30) + "..."
+                          : t.description}
                       </button>
                     );
                   })}
@@ -229,7 +255,7 @@ export function TaskEditor({
                 No other tasks available to depend on
               </p>
             )}
-            <input type="hidden" {...register('dependencies')} />
+            <input type="hidden" {...register("dependencies")} />
           </div>
 
           <DialogFooter>
@@ -245,10 +271,12 @@ export function TaskEditor({
               {isSubmitting ? (
                 <>
                   <Spinner className="mr-2 h-4 w-4" />
-                  {isEditing ? 'Saving...' : 'Creating...'}
+                  {isEditing ? "Saving..." : "Creating..."}
                 </>
+              ) : isEditing ? (
+                "Save Changes"
               ) : (
-                isEditing ? 'Save Changes' : 'Create Task'
+                "Create Task"
               )}
             </Button>
           </DialogFooter>

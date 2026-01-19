@@ -21,11 +21,13 @@ This document outlines the implementation plan for the RALPH-AGI frontend, based
 **Goal:** Provide a rich, real-time, developer-native experience.
 
 **Architecture:**
+
 - **Framework:** Textual (Python)
 - **Real-Time:** Built-in async support
 - **Language:** Python (same as core application)
 
 **Key Benefits:**
+
 - Developer-native experience for our core audience
 - Faster to build than web UI
 - Same language as core application (no context switching)
@@ -72,6 +74,7 @@ This document outlines the implementation plan for the RALPH-AGI frontend, based
 **Goal:** Combine the power of the TUI with the accessibility of a web UI.
 
 **Architecture:**
+
 - **Frontend:** React + TypeScript + TailwindCSS
 - **Backend API:** FastAPI (Python)
 - **TUI in Web:** xterm.js to embed the Textual TUI directly in the web UI
@@ -179,12 +182,12 @@ This document outlines the implementation plan for the RALPH-AGI frontend, based
 
 ## Implementation Summary
 
-| Phase | Duration | Complexity | Estimated Hours |
-| :--- | :--- | :--- | :--- |
-| Phase 1: TUI | 4 weeks | Medium | 80-120 hours |
-| Phase 2A: Backend & TUI Embed | 4 weeks | High | 80-100 hours |
-| Phase 2B: Advanced Features | 4 weeks | Very High | 120-160 hours |
-| Phase 2C: Hybrid Dashboard | 4 weeks | High | 120-180 hours |
+| Phase                         | Duration | Complexity | Estimated Hours |
+| :---------------------------- | :------- | :--------- | :-------------- |
+| Phase 1: TUI                  | 4 weeks  | Medium     | 80-120 hours    |
+| Phase 2A: Backend & TUI Embed | 4 weeks  | High       | 80-100 hours    |
+| Phase 2B: Advanced Features   | 4 weeks  | Very High  | 120-160 hours   |
+| Phase 2C: Hybrid Dashboard    | 4 weeks  | High       | 120-180 hours   |
 
 **Total:** 16 weeks, 400-560 hours
 

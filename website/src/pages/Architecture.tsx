@@ -153,11 +153,31 @@ const dataFlows = [
 ];
 
 const resourceRequirements = [
-  { component: "RALPH-AGI Process", cpu: "2 cores", memory: "4 GB", storage: "-" },
+  {
+    component: "RALPH-AGI Process",
+    cpu: "2 cores",
+    memory: "4 GB",
+    storage: "-",
+  },
   { component: "SQLite Database", cpu: "-", memory: "512 MB", storage: "1 GB" },
-  { component: "Chroma Vector DB", cpu: "1 core", memory: "2 GB", storage: "10 GB" },
-  { component: "Sandboxed Workspace", cpu: "2 cores", memory: "4 GB", storage: "50 GB" },
-  { component: "Browser (Chromium)", cpu: "1 core", memory: "2 GB", storage: "-" },
+  {
+    component: "Chroma Vector DB",
+    cpu: "1 core",
+    memory: "2 GB",
+    storage: "10 GB",
+  },
+  {
+    component: "Sandboxed Workspace",
+    cpu: "2 cores",
+    memory: "4 GB",
+    storage: "50 GB",
+  },
+  {
+    component: "Browser (Chromium)",
+    cpu: "1 core",
+    memory: "2 GB",
+    storage: "-",
+  },
   { component: "Total", cpu: "6 cores", memory: "12.5 GB", storage: "61 GB" },
 ];
 
@@ -226,7 +246,7 @@ export default function Architecture() {
             </h2>
             <Tabs defaultValue="loop-engine" className="w-full">
               <TabsList className="w-full justify-start mb-6 bg-card/50 p-1 overflow-x-auto">
-                {components.map((comp) => (
+                {components.map(comp => (
                   <TabsTrigger
                     key={comp.id}
                     value={comp.id}
@@ -237,7 +257,7 @@ export default function Architecture() {
                   </TabsTrigger>
                 ))}
               </TabsList>
-              {components.map((comp) => (
+              {components.map(comp => (
                 <TabsContent key={comp.id} value={comp.id}>
                   <Card className="bg-card/50 backdrop-blur">
                     <CardHeader>
@@ -257,7 +277,7 @@ export default function Architecture() {
                     </CardHeader>
                     <CardContent>
                       <div className="grid md:grid-cols-2 gap-4">
-                        {comp.specs.map((spec) => (
+                        {comp.specs.map(spec => (
                           <div
                             key={spec.label}
                             className="flex justify-between items-center p-3 rounded-lg bg-background/50"
@@ -291,7 +311,7 @@ export default function Architecture() {
               Data Flow
             </h2>
             <div className="grid md:grid-cols-2 gap-6">
-              {dataFlows.map((flow) => (
+              {dataFlows.map(flow => (
                 <Card key={flow.title} className="bg-card/50 backdrop-blur">
                   <CardHeader>
                     <CardTitle className="font-display">{flow.title}</CardTitle>
@@ -341,8 +361,8 @@ export default function Architecture() {
                     Three-Tier Memory System
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Short-term (cyan), medium-term (purple), and long-term (gold)
-                    memory tiers with flowing data connections.
+                    Short-term (cyan), medium-term (purple), and long-term
+                    (gold) memory tiers with flowing data connections.
                   </p>
                 </CardContent>
               </Card>
@@ -482,7 +502,7 @@ export default function Architecture() {
                   title: "Rate Limiting",
                   desc: "Multi-level rate limiting prevents runaway resource consumption. API calls, tool executions, and Git commits are all limited.",
                 },
-              ].map((item) => (
+              ].map(item => (
                 <Card key={item.title} className="bg-card/50 backdrop-blur">
                   <CardHeader>
                     <CardTitle className="font-display text-lg">

@@ -31,12 +31,14 @@ We will implement a **phased approach** to multi-agent architecture, starting wi
 ### **Phase 1: Builder + Critic (Sprint 5)**
 
 **Implementation:**
+
 - **When:** Sprint 5, as part of Epic 05 (Evaluation Pipeline).
 - **Pattern:** Builder + Critic loop.
 - **Default:** Single-agent mode (for speed and cost).
 - **Configurable:** Enable critic via `config.yaml` for quality-critical tasks.
 
 **Architecture:**
+
 ```python
 # In RalphLoop
 def execute_task(self, task):
@@ -55,6 +57,7 @@ def execute_task(self, task):
 ```
 
 **Configuration (`config.yaml`):**
+
 ```yaml
 llm:
   builder:
@@ -62,12 +65,13 @@ llm:
     model: "claude-sonnet-4"
 
   critic:
-    enabled: false  # Set to true for quality-critical tasks
+    enabled: false # Set to true for quality-critical tasks
     provider: "openai"
     model: "gpt-4.1"
 ```
 
 **Rationale:**
+
 - **Simplicity:** Easiest to implement within the existing `RalphLoop`.
 - **Effectiveness:** Catches blind spots between different LLM providers (Anthropic vs. OpenAI).
 - **Cost Control:** Disabled by default, only used when quality is paramount.
@@ -78,17 +82,20 @@ llm:
 ### **Phase 2: Architect + Parallel Builders (Post-MVP)**
 
 **Implementation:**
+
 - **When:** Post-MVP (Week 13+), as a major new feature.
 - **Pattern:** Architect + Parallel Builders.
 - **Goal:** Scale development for large projects and achieve 5x productivity gains.
 
 **Architecture:**
+
 1.  **Architect:** The main RALPH-AGI instance, guided by a human, creates specs and plans (`_bmad-output/epics/` and `_bmad-output/stories/`).
 2.  **Builders:** Multiple RALPH-AGI instances are spawned in parallel, each assigned a specific story.
 3.  **Coordination:** Builders work on separate branches and create PRs upon completion.
 4.  **Review:** The Architect (human + RALPH) reviews the PRs against the original spec.
 
 **Rationale:**
+
 - **Scalability:** The only pattern that supports massive parallelization.
 - **Proven Results:** Based on Waleed Kadous's work, which showed a 5x productivity increase.
 - **Human-in-the-Loop:** Keeps human oversight on critical architectural decisions.
@@ -99,20 +106,21 @@ llm:
 
 ### **Sprint 5: Builder + Critic**
 
-| Story | Points | Description |
-| :--- | :--- | :--- |
-| **5.1: Critic Agent** | 3 | Implement `Critic` class with `review()` method |
-| **5.2: Configurable Mode** | 2 | Add `critic.enabled` to `config.yaml` |
-| **5.3: Loop Integration** | 3 | Integrate critic review into `RalphLoop` |
-| **5.4: Quality Criteria** | 2 | Define default quality criteria for code review |
+| Story                      | Points | Description                                     |
+| :------------------------- | :----- | :---------------------------------------------- |
+| **5.1: Critic Agent**      | 3      | Implement `Critic` class with `review()` method |
+| **5.2: Configurable Mode** | 2      | Add `critic.enabled` to `config.yaml`           |
+| **5.3: Loop Integration**  | 3      | Integrate critic review into `RalphLoop`        |
+| **5.4: Quality Criteria**  | 2      | Define default quality criteria for code review |
 
 ### **Post-MVP: Architect + Builders**
 
-| Epic | Description |
-| :--- | :--- |
+| Epic                                   | Description                         |
+| :------------------------------------- | :---------------------------------- |
 | **Epic 06: Multi-Agent Orchestration** | Implement Architect-Builder pattern |
 
 **Stories for Epic 06:**
+
 - Story 6.1: Architect mode for spec/plan generation
 - Story 6.2: Builder mode for spec execution
 - Story 6.3: Orchestrator for spawning/monitoring builders
@@ -123,13 +131,13 @@ llm:
 ## Consequences
 
 - **Positive:**
-    - Increased code quality and robustness.
-    - Clear path to scaling development.
-    - Flexibility to trade cost for quality.
+  - Increased code quality and robustness.
+  - Clear path to scaling development.
+  - Flexibility to trade cost for quality.
 - **Negative:**
-    - Increased LLM costs when critic is enabled.
-    - Added complexity to the core loop.
-    - Post-MVP work on Architect-Builder pattern is a significant undertaking.
+  - Increased LLM costs when critic is enabled.
+  - Added complexity to the core loop.
+  - Post-MVP work on Architect-Builder pattern is a significant undertaking.
 
 ---
 

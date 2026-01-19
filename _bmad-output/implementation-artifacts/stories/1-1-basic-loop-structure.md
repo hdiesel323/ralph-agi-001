@@ -65,11 +65,13 @@ so that **I can process tasks one at a time automatically**.
 ### Critical Architecture Requirements
 
 **From PRD FR-001:**
+
 - Loop operates on SINGLE task at a time (prevents context bloat)
 - Design is intentionally simple - "a for loop is often more effective than complex orchestration"
 - Must support future AFK Mode (autonomous) and Human-in-the-Loop Mode
 
 **From PRD Non-Functional Requirements:**
+
 - Single iteration (excluding tool execution) must complete in < 60 seconds
 - 90% self-recovery rate from common errors
 - All state changes must be atomic
@@ -136,6 +138,7 @@ ralph-agi/
 ### Dependencies
 
 **Required (add to pyproject.toml):**
+
 - Python >= 3.11
 - pytest >= 7.0 (dev dependency)
 - pytest-cov >= 4.0 (dev dependency)
@@ -226,6 +229,7 @@ No debugging issues encountered. All tests passed on first run.
 ### File List
 
 **Created:**
+
 - `src/__init__.py` - Package init with version
 - `src/core/__init__.py` - Core module init with RalphLoop, IterationResult, MaxRetriesExceeded exports
 - `src/core/loop.py` - Main Ralph Loop Engine implementation (111 statements)
@@ -238,8 +242,8 @@ No debugging issues encountered. All tests passed on first run.
 
 ## Change Log
 
-| Date | Change | Author |
-|------|--------|--------|
-| 2026-01-10 | Story created with comprehensive context | BMM create-story |
-| 2026-01-10 | Implementation complete - all 5 tasks done, 26 tests passing, 94% coverage | Claude Opus 4.5 |
-| 2026-01-10 | Code review fixes applied - 4 issues resolved, 33 tests passing, 99% coverage | Claude Opus 4.5 |
+| Date       | Change                                                                        | Author           |
+| ---------- | ----------------------------------------------------------------------------- | ---------------- |
+| 2026-01-10 | Story created with comprehensive context                                      | BMM create-story |
+| 2026-01-10 | Implementation complete - all 5 tasks done, 26 tests passing, 94% coverage    | Claude Opus 4.5  |
+| 2026-01-10 | Code review fixes applied - 4 issues resolved, 33 tests passing, 99% coverage | Claude Opus 4.5  |

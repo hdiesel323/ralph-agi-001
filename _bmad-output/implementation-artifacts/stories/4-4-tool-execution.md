@@ -86,6 +86,7 @@ so that **the agent can take actions in the environment**.
 ## Implementation Summary
 
 **Delivered:**
+
 - `ToolErrorCode` - Enum for error categories (6 types)
 - `ToolError` - Structured error with code, message, details
 - `ToolResult` - Complete execution result with metadata

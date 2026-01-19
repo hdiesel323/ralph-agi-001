@@ -13,16 +13,16 @@
 
 ## Tasks
 
-| Task ID | Description | Owner | Estimated Effort | Status |
-| :--- | :--- | :--- | :--- | :--- |
-| T-01 | Set up Python 3.11+ environment | TBD | 2 hours | To Do |
-| T-02 | Install dependencies (anthropic, openai, etc.) | TBD | 1 hour | To Do |
-| T-03 | Configure API keys in .env file | TBD | 30 min | To Do |
-| T-04 | Implement basic Ralph Wiggum loop in main.py | TBD | 1 day | To Do |
-| T-05 | Implement simple stop hook mechanism | TBD | 4 hours | To Do |
-| T-06 | Create git_utils.py for automatic commits | TBD | 4 hours | To Do |
-| T-07 | Test with 3 simple tasks (Fibonacci, FizzBuzz, etc.) | TBD | 1 day | To Do |
-| T-08 | Document findings and blockers | TBD | 2 hours | To Do |
+| Task ID | Description                                          | Owner | Estimated Effort | Status |
+| :------ | :--------------------------------------------------- | :---- | :--------------- | :----- |
+| T-01    | Set up Python 3.11+ environment                      | TBD   | 2 hours          | To Do  |
+| T-02    | Install dependencies (anthropic, openai, etc.)       | TBD   | 1 hour           | To Do  |
+| T-03    | Configure API keys in .env file                      | TBD   | 30 min           | To Do  |
+| T-04    | Implement basic Ralph Wiggum loop in main.py         | TBD   | 1 day            | To Do  |
+| T-05    | Implement simple stop hook mechanism                 | TBD   | 4 hours          | To Do  |
+| T-06    | Create git_utils.py for automatic commits            | TBD   | 4 hours          | To Do  |
+| T-07    | Test with 3 simple tasks (Fibonacci, FizzBuzz, etc.) | TBD   | 1 day            | To Do  |
+| T-08    | Document findings and blockers                       | TBD   | 2 hours          | To Do  |
 
 ## Acceptance Criteria
 

@@ -49,7 +49,7 @@ export default function PRD() {
             On this page
           </h3>
           <nav className="space-y-1">
-            {tableOfContents.map((item) => (
+            {tableOfContents.map(item => (
               <button
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
@@ -102,21 +102,23 @@ export default function PRD() {
                 <Card className="bg-card/50 backdrop-blur border-primary/20">
                   <CardContent className="pt-6 prose-obsidian text-muted-foreground">
                     <p>
-                      RALPH-AGI represents a comprehensive framework for building
-                      autonomous AI agents capable of executing complex, multi-step
-                      tasks over extended periods. The system synthesizes proven
-                      patterns from multiple sources including the Ralph Wiggum
-                      technique, Anthropic's effective harnesses for long-running
-                      agents, Claude-Mem persistent memory, Beads dependency-aware
-                      task tracking, and MCP CLI dynamic tool discovery.
+                      RALPH-AGI represents a comprehensive framework for
+                      building autonomous AI agents capable of executing
+                      complex, multi-step tasks over extended periods. The
+                      system synthesizes proven patterns from multiple sources
+                      including the Ralph Wiggum technique, Anthropic's
+                      effective harnesses for long-running agents, Claude-Mem
+                      persistent memory, Beads dependency-aware task tracking,
+                      and MCP CLI dynamic tool discovery.
                     </p>
                     <p>
-                      The core innovation lies in combining a simple iterative loop
-                      (the "Ralph Loop") with sophisticated memory management and
-                      self-verification capabilities. This approach enables AI agents
-                      to maintain context across sessions, learn from past
-                      experiences, and autonomously complete projects that would
-                      traditionally require continuous human oversight.
+                      The core innovation lies in combining a simple iterative
+                      loop (the "Ralph Loop") with sophisticated memory
+                      management and self-verification capabilities. This
+                      approach enables AI agents to maintain context across
+                      sessions, learn from past experiences, and autonomously
+                      complete projects that would traditionally require
+                      continuous human oversight.
                     </p>
                   </CardContent>
                 </Card>
@@ -158,7 +160,7 @@ export default function PRD() {
                         title: "Tool Overhead",
                         desc: "Loading all available tools consumes significant context tokens",
                       },
-                    ].map((item) => (
+                    ].map(item => (
                       <Card
                         key={item.title}
                         className="bg-destructive/5 border-destructive/20"
@@ -177,11 +179,11 @@ export default function PRD() {
                     ))}
                   </div>
                   <p>
-                    These limitations result in AI assistants that require constant
-                    human supervision, cannot work on tasks spanning multiple
-                    sessions, and frequently produce code that fails in unexpected
-                    ways. RALPH-AGI addresses each of these challenges through its
-                    integrated architecture.
+                    These limitations result in AI assistants that require
+                    constant human supervision, cannot work on tasks spanning
+                    multiple sessions, and frequently produce code that fails in
+                    unexpected ways. RALPH-AGI addresses each of these
+                    challenges through its integrated architecture.
                   </p>
                 </div>
               </motion.div>
@@ -214,7 +216,9 @@ export default function PRD() {
                         ].map((goal, i) => (
                           <li key={i} className="flex items-start gap-3">
                             <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
-                            <span className="text-muted-foreground">{goal}</span>
+                            <span className="text-muted-foreground">
+                              {goal}
+                            </span>
                           </li>
                         ))}
                       </ul>
@@ -223,7 +227,9 @@ export default function PRD() {
 
                   <Card className="bg-card/50 backdrop-blur">
                     <CardHeader>
-                      <CardTitle className="text-lg">Success Criteria</CardTitle>
+                      <CardTitle className="text-lg">
+                        Success Criteria
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="grid md:grid-cols-3 gap-4">
@@ -231,7 +237,7 @@ export default function PRD() {
                           { metric: "80%", label: "Task Completion Rate" },
                           { metric: "99%", label: "Token Reduction" },
                           { metric: "< 5%", label: "Stuck Rate" },
-                        ].map((item) => (
+                        ].map(item => (
                           <div
                             key={item.label}
                             className="text-center p-4 rounded-lg bg-primary/5 border border-primary/10"
@@ -300,24 +306,30 @@ export default function PRD() {
                         "Multi-project support",
                       ],
                     },
-                  ].map((user) => (
+                  ].map(user => (
                     <Card
                       key={user.title}
                       className="bg-card/50 backdrop-blur hover:border-primary/50 transition-colors"
                     >
                       <CardHeader>
-                        <CardTitle className="font-display">{user.title}</CardTitle>
+                        <CardTitle className="font-display">
+                          {user.title}
+                        </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <p className="text-muted-foreground mb-4">{user.desc}</p>
+                        <p className="text-muted-foreground mb-4">
+                          {user.desc}
+                        </p>
                         <div className="space-y-2">
-                          {user.needs.map((need) => (
+                          {user.needs.map(need => (
                             <div
                               key={need}
                               className="flex items-center gap-2 text-sm"
                             >
                               <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                              <span className="text-muted-foreground">{need}</span>
+                              <span className="text-muted-foreground">
+                                {need}
+                              </span>
                             </div>
                           ))}
                         </div>
@@ -387,7 +399,7 @@ export default function PRD() {
                         "Stage 5: LLM judge for semantic correctness",
                       ],
                     },
-                  ].map((section) => (
+                  ].map(section => (
                     <Card
                       key={section.title}
                       className="bg-card/50 backdrop-blur"
@@ -460,7 +472,8 @@ export default function PRD() {
                             As a {story.as}
                           </span>
                           , I want to {story.want},{" "}
-                          <span className="text-primary">so that</span> {story.so}.
+                          <span className="text-primary">so that</span>{" "}
+                          {story.so}.
                         </p>
                       </CardContent>
                     </Card>
@@ -489,7 +502,9 @@ export default function PRD() {
                         <th className="text-left py-3 px-4 font-medium">
                           Requirement
                         </th>
-                        <th className="text-left py-3 px-4 font-medium">Target</th>
+                        <th className="text-left py-3 px-4 font-medium">
+                          Target
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="text-muted-foreground">
@@ -500,7 +515,11 @@ export default function PRD() {
                         ["Reliability", "Data durability", "> 99.99%"],
                         ["Security", "Sandbox isolation", "Container-level"],
                         ["Security", "Secret management", "Encrypted at rest"],
-                        ["Scalability", "Concurrent projects", "10+ per instance"],
+                        [
+                          "Scalability",
+                          "Concurrent projects",
+                          "10+ per instance",
+                        ],
                         ["Scalability", "Memory storage", "100GB+ per project"],
                       ].map(([cat, req, target], i) => (
                         <tr key={i} className="border-b border-border/50">
@@ -549,7 +568,7 @@ export default function PRD() {
                       target: "> 90%",
                       desc: "Relevance of retrieved memories to current task",
                     },
-                  ].map((item) => (
+                  ].map(item => (
                     <Card
                       key={item.metric}
                       className="bg-card/50 backdrop-blur"
@@ -610,11 +629,8 @@ export default function PRD() {
                       mitigation:
                         "Exponential backoff, model fallback, request queuing",
                     },
-                  ].map((item) => (
-                    <Card
-                      key={item.risk}
-                      className="bg-card/50 backdrop-blur"
-                    >
+                  ].map(item => (
+                    <Card key={item.risk} className="bg-card/50 backdrop-blur">
                       <CardContent className="pt-6">
                         <div className="flex items-start justify-between gap-4">
                           <div>
@@ -716,7 +732,7 @@ export default function PRD() {
                         </CardHeader>
                         <CardContent>
                           <ul className="space-y-2">
-                            {phase.items.map((item) => (
+                            {phase.items.map(item => (
                               <li
                                 key={item}
                                 className="flex items-center gap-2 text-sm text-muted-foreground"

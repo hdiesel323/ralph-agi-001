@@ -23,14 +23,17 @@ RALPH-AGI is currently CLI-only. To reach non-technical users and provide richer
 ## Decision: Phased Hybrid Architecture
 
 ### Phase 1: Basic Dashboard (Weeks 13-16)
+
 **Goal:** Visibility and control for technical users
 
 **Stack:**
+
 - Frontend: React + TypeScript + TailwindCSS
 - Backend API: FastAPI (Python)
 - Real-Time: WebSocket (Socket.io)
 
 **Features:**
+
 - Task list (current, completed, failed)
 - Real-time logs streaming
 - Configuration editor
@@ -38,17 +41,21 @@ RALPH-AGI is currently CLI-only. To reach non-technical users and provide richer
 - Metrics dashboard (cost, time, iterations)
 
 ### Phase 2: Chat Interface (Weeks 17-20)
+
 **Goal:** Natural language interaction
 
 **Features:**
+
 - Chat-first task creation
 - Conversational feedback
 - AG-UI protocol integration
 
 ### Phase 3: Generative UI (Weeks 21-24)
+
 **Goal:** Adaptive, AI-generated interfaces
 
 **Features:**
+
 - Dynamic component generation
 - Context-aware UI adaptation
 - A2UI patterns

@@ -1,0 +1,10 @@
+id: add-user-authentication-87e6d9
+description: Add user authentication
+priority: P0
+status: complete
+created_at: "2026-01-18T19:38:06.607377+00:00"
+updated_at: "2026-01-18T19:38:40.768188+00:00"
+started_at: "2026-01-18T19:38:37.331051+00:00"
+completed_at: "2026-01-18T19:38:40.768200+00:00"
+pr_url: https://github.com/example/repo/pull/123
+confidence: 0.95

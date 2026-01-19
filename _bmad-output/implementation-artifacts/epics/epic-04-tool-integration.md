@@ -28,6 +28,7 @@ Three-step pattern: Discover → Inspect → Execute
 ## Stories
 
 ### Story 4.1: MCP CLI Integration
+
 **Priority:** P0 | **Points:** 3
 
 **As a** developer
@@ -35,6 +36,7 @@ Three-step pattern: Discover → Inspect → Execute
 **So that** I can discover and use tools
 
 **Acceptance Criteria:**
+
 - [ ] Subprocess wrapper for `mcp-cli`
 - [ ] Parse JSON output
 - [ ] Handle errors and timeouts
@@ -43,6 +45,7 @@ Three-step pattern: Discover → Inspect → Execute
 ---
 
 ### Story 4.2: Tool Discovery
+
 **Priority:** P0 | **Points:** 3
 
 **As a** developer
@@ -50,6 +53,7 @@ Three-step pattern: Discover → Inspect → Execute
 **So that** the agent knows what's possible
 
 **Acceptance Criteria:**
+
 - [ ] List all MCP servers
 - [ ] List tools per server
 - [ ] Cache tool list (configurable TTL)
@@ -58,6 +62,7 @@ Three-step pattern: Discover → Inspect → Execute
 ---
 
 ### Story 4.3: Schema Inspection
+
 **Priority:** P0 | **Points:** 2
 
 **As a** developer
@@ -65,6 +70,7 @@ Three-step pattern: Discover → Inspect → Execute
 **So that** the LLM knows how to call tools
 
 **Acceptance Criteria:**
+
 - [ ] Fetch schema for specific tool
 - [ ] Return parameter definitions
 - [ ] Cache schemas (longer TTL)
@@ -73,6 +79,7 @@ Three-step pattern: Discover → Inspect → Execute
 ---
 
 ### Story 4.4: Tool Execution
+
 **Priority:** P0 | **Points:** 3
 
 **As a** developer
@@ -80,6 +87,7 @@ Three-step pattern: Discover → Inspect → Execute
 **So that** the agent can take actions
 
 **Acceptance Criteria:**
+
 - [ ] Execute tool with JSON arguments
 - [ ] Return structured result
 - [ ] Handle errors gracefully
@@ -89,6 +97,7 @@ Three-step pattern: Discover → Inspect → Execute
 ---
 
 ### Story 4.5: Core Tools (File System)
+
 **Priority:** P0 | **Points:** 3
 
 **As a** developer
@@ -96,6 +105,7 @@ Three-step pattern: Discover → Inspect → Execute
 **So that** the agent can read/write code
 
 **Acceptance Criteria:**
+
 - [ ] Read file
 - [ ] Write file
 - [ ] Search files (glob)
@@ -105,6 +115,7 @@ Three-step pattern: Discover → Inspect → Execute
 ---
 
 ### Story 4.6: Core Tools (Shell)
+
 **Priority:** P0 | **Points:** 3
 
 **As a** developer
@@ -112,6 +123,7 @@ Three-step pattern: Discover → Inspect → Execute
 **So that** the agent can run tests/builds
 
 **Acceptance Criteria:**
+
 - [ ] Execute bash command
 - [ ] Capture stdout/stderr
 - [ ] Timeout handling
@@ -121,6 +133,7 @@ Three-step pattern: Discover → Inspect → Execute
 ---
 
 ### Story 4.7: Core Tools (Git)
+
 **Priority:** P0 | **Points:** 2
 
 **As a** developer
@@ -128,6 +141,7 @@ Three-step pattern: Discover → Inspect → Execute
 **So that** the agent can commit changes
 
 **Acceptance Criteria:**
+
 - [ ] git status
 - [ ] git add
 - [ ] git commit

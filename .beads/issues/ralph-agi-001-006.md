@@ -21,14 +21,16 @@ Claude-mem is failing to extract observations from most sessions. Out of 57 JSON
 ## Evidence
 
 ### Quantitative Gap
-| Metric | Count |
-|--------|-------|
-| JSONL session files | 57 |
-| Sessions registered in claude-mem | 35 |
-| Sessions with observations | **1** (3 observations total) |
-| Data loss rate | **97%** |
+
+| Metric                            | Count                        |
+| --------------------------------- | ---------------------------- |
+| JSONL session files               | 57                           |
+| Sessions registered in claude-mem | 35                           |
+| Sessions with observations        | **1** (3 observations total) |
+| Data loss rate                    | **97%**                      |
 
 ### Specific Lost Session
+
 ```
 Session: e470314c-d75a-4f7e-a8b1-92880721e8af
 Content: 543KB multi-agent architecture discussion
@@ -38,6 +40,7 @@ Recovery: Only possible via manual JSONL grep
 ```
 
 ### Database State
+
 ```sql
 -- All 35 sessions stuck in "active"
 SELECT status, COUNT(*) FROM sdk_sessions GROUP BY status;
@@ -52,6 +55,7 @@ WHERE project = 'ralph-agi-001' GROUP BY memory_session_id;
 ## Root Cause Analysis
 
 ### Failure Chain
+
 1. Session starts -> Registered in `sdk_sessions` with status "active"
 2. Claude Code runs -> JSONL file grows with conversation
 3. **Gap:** Observations should be extracted during/after session
@@ -60,12 +64,12 @@ WHERE project = 'ralph-agi-001' GROUP BY memory_session_id;
 
 ### Identified Issues
 
-| Issue | Description | Impact |
-|-------|-------------|--------|
-| **No completion signal** | Sessions never transition to "completed" | Observations never extracted |
-| **No crash recovery** | Orphaned sessions stay "active" forever | Lost work |
-| **No JSONL fallback** | Raw history exists but isn't indexed | Can't search lost conversations |
-| **No reprocessing** | Can't manually trigger observation extraction | Can't recover |
+| Issue                    | Description                                   | Impact                          |
+| ------------------------ | --------------------------------------------- | ------------------------------- |
+| **No completion signal** | Sessions never transition to "completed"      | Observations never extracted    |
+| **No crash recovery**    | Orphaned sessions stay "active" forever       | Lost work                       |
+| **No JSONL fallback**    | Raw history exists but isn't indexed          | Can't search lost conversations |
+| **No reprocessing**      | Can't manually trigger observation extraction | Can't recover                   |
 
 ## Impact on RALPH-AGI
 
@@ -77,11 +81,13 @@ WHERE project = 'ralph-agi-001' GROUP BY memory_session_id;
 ## Proposed Solutions
 
 ### Short-term (Workarounds)
+
 - [x] Manual JSONL search when memory search fails
 - [ ] Script to identify orphaned sessions
 - [ ] Document recovery procedure
 
 ### Medium-term (Fixes)
+
 - [x] Add session completion detection (SessionEnd hook reliability) - CM-1 in claude-mem
 - [x] Implement orphan session recovery (reprocess from JSONL) - CM-2 in claude-mem
 - [x] Add JSONL full-text search as fallback in memory queries - **PR #2 MERGED**
@@ -89,11 +95,13 @@ WHERE project = 'ralph-agi-001' GROUP BY memory_session_id;
 ### Completed Work (2026-01-11)
 
 **Phase 1: Claude-mem Upstream Fixes** (in ~/.claude/plugins/marketplaces/thedotmack/)
+
 - CM-1: Session completion detection with 30s idle timeout
 - CM-2: Orphan session recovery service
 - CM-3: Periodic health check (60s interval)
 
 **Phase 2: RALPH JSONL Fallback** (PR #2 merged to main)
+
 - JSONLBackupStore: Crash-safe append-only backup
 - Dual-write: Every MemoryStore.append() writes to both Memvid and JSONL
 - Fallback search: If Memvid fails, automatically searches JSONL
@@ -101,6 +109,7 @@ WHERE project = 'ralph-agi-001' GROUP BY memory_session_id;
 - 41 new tests (80 total passing)
 
 ### Long-term (Architecture)
+
 - [ ] Real-time observation extraction (not batch)
 - [ ] Transaction-safe session lifecycle
 - [ ] JSONL -> Observations sync daemon
