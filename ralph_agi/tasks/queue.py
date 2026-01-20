@@ -237,6 +237,9 @@ class QueuedTask:
     error: str | None = None
     output: TaskOutput | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
+    # Iteration tracking
+    current_iteration: int = 0
+    max_iterations: int = 10
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "QueuedTask":
@@ -291,6 +294,8 @@ class QueuedTask:
             error=data.get("error"),
             output=output,
             metadata=data.get("metadata", {}),
+            current_iteration=data.get("current_iteration", 0),
+            max_iterations=data.get("max_iterations", 10),
         )
 
     def to_dict(self) -> dict[str, Any]:
@@ -331,6 +336,9 @@ class QueuedTask:
             data["output"] = self.output.to_dict()
         if self.metadata:
             data["metadata"] = self.metadata
+        # Always include iteration tracking
+        data["current_iteration"] = self.current_iteration
+        data["max_iterations"] = self.max_iterations
 
         return data
 

@@ -29,6 +29,7 @@ interface KanbanBoardProps {
   onTaskClick?: (task: Task) => void;
   onApproveTask?: (taskId: string) => void;
   onApproveMerge?: (taskId: string) => void;
+  onCancelTask?: (taskId: string) => void;
   selectedIds?: Set<string>;
   onSelectTask?: (taskId: string) => void;
   selectionMode?: boolean;
@@ -50,6 +51,7 @@ export function KanbanBoard({
   onTaskClick,
   onApproveTask,
   onApproveMerge,
+  onCancelTask,
   selectedIds = new Set(),
   onSelectTask,
   selectionMode = false,
@@ -120,6 +122,7 @@ export function KanbanBoard({
               onTaskClick={onTaskClick}
               onApproveTask={onApproveTask}
               onApproveMerge={onApproveMerge}
+              onCancelTask={onCancelTask}
               selectedIds={selectedIds}
               onSelectTask={onSelectTask}
               selectionMode={selectionMode}

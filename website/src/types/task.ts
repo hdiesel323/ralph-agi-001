@@ -70,6 +70,9 @@ export interface Task {
   error: string | null;
   output: TaskOutput | null;
   metadata: Record<string, unknown>;
+  // Iteration tracking
+  current_iteration: number;
+  max_iterations: number;
 }
 
 /**

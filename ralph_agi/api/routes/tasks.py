@@ -299,3 +299,47 @@ async def approve_merge(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to approve merge: {e}")
+
+
+@router.post("/{task_id}/cancel", response_model=TaskResponse)
+async def cancel_task(
+    task_id: str,
+    queue: TaskQueue = Depends(get_task_queue),
+) -> TaskResponse:
+    """Cancel a task.
+
+    Can cancel tasks in pending, pending_approval, ready, or running status.
+    Running tasks will be marked as cancelled but may continue until the
+    executor detects the cancellation.
+
+    Args:
+        task_id: Task identifier.
+        queue: TaskQueue dependency.
+
+    Returns:
+        The updated task.
+
+    Raises:
+        HTTPException: If task not found or cannot be cancelled.
+    """
+    try:
+        task = queue.get(task_id)
+
+        # Check if task can be cancelled
+        cancellable_statuses = ("pending", "pending_approval", "ready", "running")
+        if task.status.value not in cancellable_statuses:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Task cannot be cancelled: current status is {task.status.value}",
+            )
+
+        # Transition to cancelled
+        task = queue.update_status(task_id, "cancelled", error="Cancelled by user")
+        return task_to_response(task)
+
+    except TaskNotFoundError:
+        raise HTTPException(status_code=404, detail=f"Task not found: {task_id}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to cancel task: {e}")

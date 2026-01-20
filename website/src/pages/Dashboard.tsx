@@ -24,7 +24,7 @@ import { useWebSocket } from "@/hooks/useWebSocket";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useFilterState } from "@/hooks/useFilterState";
 import { useTaskSelection } from "@/hooks/useTaskSelection";
-import { approveTask, approveMerge } from "@/api/tasks";
+import { approveTask, approveMerge, cancelTask } from "@/api/tasks";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { Wifi, WifiOff, Settings, PanelRight } from "lucide-react";
@@ -236,6 +236,14 @@ export function Dashboard() {
       await approveMerge(taskId);
       await refreshTasks();
       setIsDetailDrawerOpen(false);
+    },
+    [refreshTasks]
+  );
+
+  const handleCancelTask = useCallback(
+    async (taskId: string) => {
+      await cancelTask(taskId);
+      await refreshTasks();
     },
     [refreshTasks]
   );
@@ -485,6 +493,7 @@ export function Dashboard() {
             onTaskClick={handleTaskClick}
             onApproveTask={handleApproveTask}
             onApproveMerge={handleApproveMerge}
+            onCancelTask={handleCancelTask}
             selectedIds={selectedIds}
             onSelectTask={toggleTaskSelection}
             selectionMode={hasSelection}
@@ -501,6 +510,7 @@ export function Dashboard() {
             onTaskClick={handleTaskClick}
             onApproveTask={handleApproveTask}
             onApproveMerge={handleApproveMerge}
+            onCancelTask={handleCancelTask}
             selectedIds={selectedIds}
             onSelectTask={toggleTaskSelection}
             selectionMode={hasSelection}

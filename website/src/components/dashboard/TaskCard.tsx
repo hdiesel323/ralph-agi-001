@@ -34,6 +34,8 @@ import {
   Merge,
   Lock,
   Unlock,
+  Square,
+  RefreshCw,
 } from "lucide-react";
 import {
   Tooltip,
@@ -51,6 +53,7 @@ interface TaskCardProps {
   onClick?: (task: Task) => void;
   onApprove?: (taskId: string) => void;
   onApproveMerge?: (taskId: string) => void;
+  onCancel?: (taskId: string) => void;
   isDragging?: boolean;
   isCompact?: boolean;
   allTasks?: Task[];
@@ -92,6 +95,7 @@ export function TaskCard({
   onClick,
   onApprove,
   onApproveMerge,
+  onCancel,
   isDragging,
   isCompact,
   allTasks = [],
@@ -363,6 +367,39 @@ export function TaskCard({
           </div>
         )}
 
+        {/* Iteration progress for running tasks */}
+        {task.status === "running" && task.max_iterations > 0 && (
+          <div className="mt-3">
+            <div className="flex items-center justify-between text-xs mb-1">
+              <span className="text-muted-foreground flex items-center gap-1">
+                <RefreshCw className="w-3 h-3 animate-spin" />
+                Iterations
+              </span>
+              <span
+                className={
+                  task.current_iteration / task.max_iterations >= 0.9
+                    ? "text-red-500 font-medium"
+                    : task.current_iteration / task.max_iterations >= 0.75
+                      ? "text-orange-500"
+                      : "text-muted-foreground"
+                }
+              >
+                {task.current_iteration}/{task.max_iterations}
+              </span>
+            </div>
+            <Progress
+              value={(task.current_iteration / task.max_iterations) * 100}
+              className={`h-1.5 ${
+                task.current_iteration / task.max_iterations >= 0.9
+                  ? "[&>div]:bg-red-500"
+                  : task.current_iteration / task.max_iterations >= 0.75
+                    ? "[&>div]:bg-orange-500"
+                    : ""
+              }`}
+            />
+          </div>
+        )}
+
         {task.confidence !== null && (
           <div className="mt-3">
             <div className="flex items-center justify-between text-xs mb-1">
@@ -426,6 +463,24 @@ export function TaskCard({
             >
               <Merge className="mr-1 h-3 w-3" />
               Approve Merge
+            </Button>
+          </div>
+        )}
+
+        {/* Cancel button for running tasks */}
+        {task.status === "running" && onCancel && (
+          <div className="mt-3">
+            <Button
+              size="sm"
+              variant="destructive"
+              className="h-7 text-xs w-full"
+              onClick={e => {
+                e.stopPropagation();
+                onCancel(task.id);
+              }}
+            >
+              <Square className="mr-1 h-3 w-3" />
+              Cancel Task
             </Button>
           </div>
         )}

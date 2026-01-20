@@ -180,3 +180,11 @@ export async function approveMerge(taskId: string): Promise<Task> {
   );
   return response.data;
 }
+
+/**
+ * Cancel a task (any cancellable status → cancelled)
+ */
+export async function cancelTask(taskId: string): Promise<Task> {
+  const response = await apiClient.post<Task>(`/api/tasks/${taskId}/cancel`);
+  return response.data;
+}

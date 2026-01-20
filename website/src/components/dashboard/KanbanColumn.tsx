@@ -65,6 +65,7 @@ interface KanbanColumnProps {
   onTaskClick?: (task: Task) => void;
   onApproveTask?: (taskId: string) => void;
   onApproveMerge?: (taskId: string) => void;
+  onCancelTask?: (taskId: string) => void;
   selectedIds?: Set<string>;
   onSelectTask?: (taskId: string) => void;
   selectionMode?: boolean;
@@ -79,6 +80,7 @@ export function KanbanColumn({
   onTaskClick,
   onApproveTask,
   onApproveMerge,
+  onCancelTask,
   selectedIds = new Set(),
   onSelectTask,
   selectionMode = false,
@@ -207,6 +209,7 @@ export function KanbanColumn({
                 onClick={onTaskClick}
                 onApprove={onApproveTask}
                 onApproveMerge={onApproveMerge}
+                onCancel={onCancelTask}
                 isCompact={column.id === "done" && task.status === "complete"}
                 allTasks={tasks}
                 isSelected={selectedIds.has(task.id)}

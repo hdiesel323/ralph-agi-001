@@ -143,6 +143,9 @@ class TaskResponse(BaseModel):
     error: Optional[str] = None
     output: Optional[TaskOutputSchema] = None
     metadata: dict[str, Any] = Field(default_factory=dict)
+    # Iteration tracking
+    current_iteration: int = Field(0, description="Current iteration number")
+    max_iterations: int = Field(10, description="Maximum iterations allowed")
 
     class Config:
         from_attributes = True
@@ -356,6 +359,8 @@ def task_to_response(task) -> TaskResponse:
             error=task.error,
             output=_convert_output(task.output),
             metadata=task.metadata,
+            current_iteration=task.current_iteration,
+            max_iterations=task.max_iterations,
         )
     raise ValueError(f"Cannot convert {type(task)} to TaskResponse")
 
