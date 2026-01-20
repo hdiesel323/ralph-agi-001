@@ -102,12 +102,12 @@ def _create_task_callback():
             files_before = _get_project_files(worktree_path)
 
             # Import here to avoid circular imports
-            from ralph_agi.core.config import RalphConfig
+            from ralph_agi.core.config import load_config
             from ralph_agi.llm.agents import BuilderAgent
             from ralph_agi.core.loop import ToolExecutorAdapter, RalphLoop
 
             # Load config
-            config = RalphConfig.load()
+            config = load_config()
 
             # Create tool executor for the worktree
             tool_executor = ToolExecutorAdapter(work_dir=worktree_path)
