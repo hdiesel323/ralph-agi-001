@@ -20,23 +20,23 @@ const EMPTY_STATES: Record<
 > = {
   backlog: {
     icon: <Inbox className="h-8 w-8 text-muted-foreground/50" />,
-    title: "No pending tasks",
-    description: "Create a task with + Add Task or import from PRD",
+    title: "Backlog is empty",
+    description: "Low priority tasks (P3-P4) appear here and need approval before execution",
   },
   ready: {
     icon: <Sparkles className="h-8 w-8 text-blue-400/50" />,
-    title: "Ready queue empty",
-    description: "Approve tasks from Backlog to move them here",
+    title: "Ready queue is empty",
+    description: "High priority tasks (P0-P2) go here directly. Approve Backlog tasks to add more.",
   },
   "in-progress": {
     icon: <Loader2 className="h-8 w-8 text-amber-400/50" />,
     title: "Nothing running",
-    description: "Click Start to begin processing ready tasks",
+    description: "Click the green Start button to begin processing ready tasks",
   },
   done: {
     icon: <CheckCircle2 className="h-8 w-8 text-emerald-400/50" />,
-    title: "No completed tasks yet",
-    description: "Completed tasks will appear here",
+    title: "No completed tasks",
+    description: "Successfully completed, failed, and cancelled tasks appear here for review",
   },
 };
 
@@ -44,12 +44,12 @@ function EmptyColumnState({ columnId }: EmptyColumnStateProps) {
   const state = EMPTY_STATES[columnId] || EMPTY_STATES.backlog;
 
   return (
-    <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+    <div className="flex flex-col items-center justify-center py-8 px-4 text-center border-2 border-dashed border-muted-foreground/20 rounded-lg mx-2 my-2">
       {state.icon}
       <p className="mt-3 text-sm font-medium text-muted-foreground">
         {state.title}
       </p>
-      <p className="mt-1 text-xs text-muted-foreground/70">
+      <p className="mt-1 text-xs text-muted-foreground/70 max-w-[200px]">
         {state.description}
       </p>
     </div>
