@@ -132,8 +132,8 @@ export function TaskEditor({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>{isEditing ? "Edit Task" : "Create Task"}</DialogTitle>
           <DialogDescription>
             {isEditing
@@ -142,7 +142,8 @@ export function TaskEditor({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1 overflow-hidden">
+          <div className="flex-1 overflow-y-auto space-y-4 pr-1">
           {/* Task Description */}
           <div className="space-y-2">
             <Label htmlFor="description">What needs to be done? *</Label>
@@ -282,8 +283,9 @@ export function TaskEditor({
             )}
             <input type="hidden" {...register("dependencies")} />
           </div>
+          </div>
 
-          <DialogFooter>
+          <DialogFooter className="flex-shrink-0 border-t pt-4 mt-4">
             <Button
               type="button"
               variant="outline"
