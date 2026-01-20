@@ -191,8 +191,10 @@ class ToolExecutorAdapter:
         elif tool_name == "git_commit":
             message = arguments.get("message", "")
             self._git_tools.add(".")
-            commit = self._git_tools.commit(message)
-            return f"Committed: {commit.sha[:8]} - {commit.message}"
+            commit_hash = self._git_tools.commit(message)
+            if commit_hash:
+                return f"Committed: {commit_hash[:8]} - {message}"
+            return "Nothing to commit (working tree clean)"
 
         else:
             return f"Unknown tool: {tool_name}"
