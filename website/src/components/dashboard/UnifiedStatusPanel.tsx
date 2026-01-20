@@ -24,7 +24,7 @@ import {
   AlertTriangle,
   Loader2,
 } from "lucide-react";
-import { getMetrics } from "@/api/metrics";
+import { getMetrics, getCumulativeMetrics, type CumulativeMetrics } from "@/api/metrics";
 import {
   useActivityFeed,
   formatRelativeTime,
@@ -43,6 +43,7 @@ export function UnifiedStatusPanel({
   pollingInterval = 2000,
 }: UnifiedStatusPanelProps) {
   const [metrics, setMetrics] = useState<Metrics | null>(null);
+  const [cumulativeMetrics, setCumulativeMetrics] = useState<CumulativeMetrics | null>(null);
   const [isActivityOpen, setIsActivityOpen] = useState(true);
   const { items: activityItems, addEvent } = useActivityFeed({ maxItems: 30 });
 
@@ -56,8 +57,12 @@ export function UnifiedStatusPanel({
 
   const fetchMetrics = useCallback(async () => {
     try {
-      const data = await getMetrics();
-      setMetrics(data);
+      const [currentMetrics, cumulative] = await Promise.all([
+        getMetrics(),
+        getCumulativeMetrics(),
+      ]);
+      setMetrics(currentMetrics);
+      setCumulativeMetrics(cumulative);
     } catch {
       // Silently fail - metrics are optional
     }
@@ -79,40 +84,58 @@ export function UnifiedStatusPanel({
 
   return (
     <div className="space-y-4">
-      {/* Cost & Time - Prominent Header */}
+      {/* Cost & Time - Cumulative Metrics */}
       <Card>
         <CardContent className="pt-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="text-center p-3 bg-emerald-50 dark:bg-emerald-950/30 rounded-lg">
               <div className="flex items-center justify-center gap-1 text-emerald-600 dark:text-emerald-400 mb-1">
                 <DollarSign className="h-4 w-4" />
-                <span className="text-xs font-medium">Cost</span>
+                <span className="text-xs font-medium">Total Cost</span>
               </div>
               <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">
-                ${metrics?.cost.toFixed(4) || "0.0000"}
+                {cumulativeMetrics?.total_cost_formatted || "$0.0000"}
               </p>
             </div>
             <div className="text-center p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg">
               <div className="flex items-center justify-center gap-1 text-blue-600 dark:text-blue-400 mb-1">
                 <Clock className="h-4 w-4" />
-                <span className="text-xs font-medium">Time</span>
+                <span className="text-xs font-medium">Total Time</span>
               </div>
               <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                {metrics?.elapsed_formatted || "0:00"}
+                {cumulativeMetrics?.total_time_formatted || "00:00:00"}
               </p>
             </div>
           </div>
 
-          {/* Token count - smaller */}
+          {/* Token count - cumulative */}
           <div className="flex items-center justify-center gap-2 mt-3 text-sm text-muted-foreground">
             <Hash className="h-3.5 w-3.5" />
-            <span>{formatNumber(metrics?.total_tokens || 0)} tokens</span>
+            <span>{cumulativeMetrics?.total_tokens_formatted || "0"} tokens</span>
             <span className="text-muted-foreground/50">|</span>
             <span className="text-xs">
-              {formatNumber(metrics?.input_tokens || 0)} in /{" "}
-              {formatNumber(metrics?.output_tokens || 0)} out
+              {formatNumber(cumulativeMetrics?.total_input_tokens || 0)} in /{" "}
+              {formatNumber(cumulativeMetrics?.total_output_tokens || 0)} out
             </span>
           </div>
+
+          {/* Empty state message */}
+          {cumulativeMetrics && cumulativeMetrics.total_tokens === 0 && (
+            <p className="text-xs text-muted-foreground text-center mt-3">
+              Metrics will appear when tasks are executed
+            </p>
+          )}
+
+          {/* Success rate */}
+          {cumulativeMetrics && (cumulativeMetrics.tasks_completed > 0 || cumulativeMetrics.tasks_failed > 0) && (
+            <div className="flex items-center justify-center gap-2 mt-2 text-xs text-muted-foreground">
+              <span className="text-green-600">{cumulativeMetrics.tasks_completed} completed</span>
+              <span className="text-muted-foreground/50">|</span>
+              <span className="text-red-500">{cumulativeMetrics.tasks_failed} failed</span>
+              <span className="text-muted-foreground/50">|</span>
+              <span>{cumulativeMetrics.success_rate}% success</span>
+            </div>
+          )}
         </CardContent>
       </Card>
 

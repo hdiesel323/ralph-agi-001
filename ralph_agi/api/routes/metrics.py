@@ -224,3 +224,85 @@ async def add_tokens(
     """
     update_tokens(input_tokens, output_tokens)
     return await get_metrics(executor, queue)
+
+
+@router.get("/cumulative")
+async def get_cumulative_metrics(
+    queue: TaskQueue = Depends(get_task_queue),
+) -> dict:
+    """Get cumulative metrics across all tasks.
+
+    Aggregates cost, tokens, and time from all completed and failed tasks,
+    providing a total view of resource usage.
+
+    Returns:
+        Cumulative metrics including total cost, tokens, and time.
+    """
+    all_tasks = queue.list(include_terminal=True)
+
+    total_cost = 0.0
+    total_tokens = 0
+    total_input_tokens = 0
+    total_output_tokens = 0
+    total_time_seconds = 0.0
+    total_api_calls = 0
+
+    tasks_completed = 0
+    tasks_failed = 0
+    tasks_cancelled = 0
+    tasks_running = 0
+    tasks_pending = 0
+
+    for task in all_tasks:
+        # Count by status
+        if task.status.value == "complete":
+            tasks_completed += 1
+        elif task.status.value == "failed":
+            tasks_failed += 1
+        elif task.status.value == "cancelled":
+            tasks_cancelled += 1
+        elif task.status.value == "running":
+            tasks_running += 1
+        else:
+            tasks_pending += 1
+
+        # Aggregate output metrics
+        if task.output:
+            if task.output.tokens_used:
+                total_tokens += task.output.tokens_used
+            if task.output.api_calls:
+                total_api_calls += task.output.api_calls
+
+        # Calculate execution time
+        if task.started_at and task.completed_at:
+            duration = (task.completed_at - task.started_at).total_seconds()
+            total_time_seconds += duration
+        elif task.started_at and task.status.value == "running":
+            # Include time for currently running tasks
+            duration = (datetime.now() - task.started_at.replace(tzinfo=None)).total_seconds()
+            total_time_seconds += duration
+
+    # Estimate cost based on tokens (using GPT-4o-mini pricing as default)
+    # $0.15/1M input, $0.60/1M output - but we only have total, so estimate 50/50 split
+    estimated_input = total_tokens // 2
+    estimated_output = total_tokens - estimated_input
+    total_cost = (estimated_input / 1_000_000) * 0.15 + (estimated_output / 1_000_000) * 0.60
+
+    return {
+        "total_cost": round(total_cost, 4),
+        "total_cost_formatted": f"${total_cost:.4f}",
+        "total_tokens": total_tokens,
+        "total_tokens_formatted": f"{total_tokens:,}",
+        "total_input_tokens": estimated_input,
+        "total_output_tokens": estimated_output,
+        "total_time_seconds": round(total_time_seconds, 1),
+        "total_time_formatted": _format_elapsed(total_time_seconds),
+        "total_api_calls": total_api_calls,
+        "tasks_total": len(all_tasks),
+        "tasks_completed": tasks_completed,
+        "tasks_failed": tasks_failed,
+        "tasks_cancelled": tasks_cancelled,
+        "tasks_running": tasks_running,
+        "tasks_pending": tasks_pending,
+        "success_rate": round(tasks_completed / max(tasks_completed + tasks_failed, 1) * 100, 1),
+    }
