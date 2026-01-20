@@ -102,12 +102,24 @@ export function QuickActionsBar({
           {executionStatus?.state || "idle"}
         </Badge>
 
-        {queueStats && (
+        {queueStats ? (
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">
-              {pendingCount} pending
-            </span>
-            <span className="text-muted-foreground/40">|</span>
+            {queueStats.ready > 0 && (
+              <>
+                <span className="font-medium text-blue-600">
+                  {queueStats.ready} ready
+                </span>
+                <span className="text-muted-foreground/40">|</span>
+              </>
+            )}
+            {queueStats.pending > 0 && (
+              <>
+                <span className="font-medium text-foreground">
+                  {queueStats.pending} pending
+                </span>
+                <span className="text-muted-foreground/40">|</span>
+              </>
+            )}
             <span>{queueStats.running} running</span>
             <span className="text-muted-foreground/40">|</span>
             <span className="text-green-600">{queueStats.complete} done</span>
@@ -118,6 +130,8 @@ export function QuickActionsBar({
               </>
             )}
           </div>
+        ) : (
+          <span className="text-sm text-muted-foreground">Loading stats...</span>
         )}
       </div>
 
