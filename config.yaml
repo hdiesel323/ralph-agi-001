@@ -24,6 +24,26 @@ retry_delays: [1, 2, 4] # Exponential backoff in seconds
 # Optional: Checkpoint file for AFK mode (saves state on interrupt)
 # checkpoint_path: "checkpoint.json"
 
+# LLM Configuration
+# Controls which AI providers and models are used
+llm:
+  # Builder agent (does the actual coding work)
+  builder_provider: "openai"  # anthropic, openai, or openrouter
+  builder_model: "gpt-4o-mini"
+
+  # Critic agent (reviews the builder's work)
+  critic_provider: "openai"
+  critic_model: "gpt-4o"
+  critic_enabled: true
+
+  # Token limits
+  max_tokens: 4096
+  temperature: 0.0
+
+  # Tool loop settings
+  max_tool_iterations: 10
+  rate_limit_retries: 3
+
 # Git Workflow Configuration
 # Controls how RALPH manages git operations
 git:
