@@ -26,7 +26,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Spinner } from "@/components/ui/spinner";
+import { HelpCircle } from "lucide-react";
 import type { Task, TaskCreate, TaskPriority } from "@/types/task";
 
 const taskSchema = z.object({
@@ -116,12 +122,12 @@ export function TaskEditor({
     }
   };
 
-  const priorityOptions: { value: TaskPriority; label: string }[] = [
-    { value: "P0", label: "P0 - Critical" },
-    { value: "P1", label: "P1 - High" },
-    { value: "P2", label: "P2 - Medium" },
-    { value: "P3", label: "P3 - Low" },
-    { value: "P4", label: "P4 - Backlog" },
+  const priorityOptions: { value: TaskPriority; label: string; hint: string }[] = [
+    { value: "P0", label: "P0 - Critical", hint: "Executes immediately" },
+    { value: "P1", label: "P1 - High", hint: "Executes immediately" },
+    { value: "P2", label: "P2 - Medium", hint: "Executes immediately" },
+    { value: "P3", label: "P3 - Low", hint: "Needs approval" },
+    { value: "P4", label: "P4 - Backlog", hint: "Needs approval" },
   ];
 
   return (
@@ -159,7 +165,23 @@ export function TaskEditor({
 
           {/* Priority Selection */}
           <div className="space-y-2">
-            <Label htmlFor="priority">How urgent is this?</Label>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="priority">How urgent is this?</Label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button type="button" className="inline-flex">
+                    <HelpCircle className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  <p className="font-semibold mb-2">Priority Guide:</p>
+                  <ul className="text-xs space-y-1">
+                    <li><strong>P0-P2:</strong> High priority - Goes to Ready queue and executes immediately</li>
+                    <li><strong>P3-P4:</strong> Low priority - Goes to Backlog and requires manual approval</li>
+                  </ul>
+                </TooltipContent>
+              </Tooltip>
+            </div>
             <Select
               value={watch("priority")}
               onValueChange={value =>
@@ -172,7 +194,10 @@ export function TaskEditor({
               <SelectContent>
                 {priorityOptions.map(option => (
                   <SelectItem key={option.value} value={option.value}>
-                    {option.label}
+                    <div className="flex items-center justify-between w-full gap-4">
+                      <span>{option.label}</span>
+                      <span className="text-xs text-muted-foreground">{option.hint}</span>
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>

@@ -3,6 +3,7 @@
  * Displays a single task as a draggable card.
  */
 
+import { useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import {
@@ -36,6 +37,8 @@ import {
   Unlock,
   Square,
   RefreshCw,
+  Copy,
+  Check,
 } from "lucide-react";
 import {
   Tooltip,
@@ -103,11 +106,24 @@ export function TaskCard({
   onSelect,
   selectionMode = false,
 }: TaskCardProps) {
+  const [copied, setCopied] = useState(false);
+
   // Set up draggable - skip for compact mode
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: task.id,
     disabled: isCompact,
   });
+
+  const copyTaskId = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(task.id);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard access denied - ignore silently
+    }
+  };
 
   const style = transform
     ? {
@@ -238,6 +254,25 @@ export function TaskCard({
                   {duration}
                 </span>
               )}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={copyTaskId}
+                    className="ml-2 inline-flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <span className="font-mono">{task.id.slice(0, 8)}</span>
+                    {copied ? (
+                      <Check className="h-3 w-3 text-green-500" />
+                    ) : (
+                      <Copy className="h-3 w-3" />
+                    )}
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="font-mono text-xs">{task.id}</p>
+                  <p className="text-xs text-muted-foreground">Click to copy full ID</p>
+                </TooltipContent>
+              </Tooltip>
             </CardDescription>
           </div>
 
