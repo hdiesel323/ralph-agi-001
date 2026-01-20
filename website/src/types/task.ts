@@ -16,6 +16,39 @@ export type TaskPriority = "P0" | "P1" | "P2" | "P3" | "P4";
 export type ExecutionState = "idle" | "running" | "stopping" | "stopped";
 
 /**
+ * A single log entry from task execution
+ */
+export interface ExecutionLog {
+  timestamp: string;
+  level: "info" | "warn" | "error";
+  message: string;
+}
+
+/**
+ * A file artifact produced by task execution
+ */
+export interface TaskArtifact {
+  path: string;
+  absolute_path?: string;
+  file_type?: string;
+  size?: number;
+  content?: string;
+}
+
+/**
+ * Output from task execution including results, logs, and artifacts
+ */
+export interface TaskOutput {
+  summary?: string;
+  text?: string;
+  markdown?: string;
+  artifacts: TaskArtifact[];
+  logs: ExecutionLog[];
+  tokens_used?: number;
+  api_calls?: number;
+}
+
+/**
  * Task entity from the API
  */
 export interface Task {
@@ -35,6 +68,7 @@ export interface Task {
   pr_number: number | null;
   confidence: number | null;
   error: string | null;
+  output: TaskOutput | null;
   metadata: Record<string, unknown>;
 }
 

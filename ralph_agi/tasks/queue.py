@@ -99,6 +99,102 @@ class TaskValidationError(QueueError):
 
 
 @dataclass
+class ExecutionLog:
+    """A single log entry from task execution."""
+
+    timestamp: str
+    level: str  # info, warn, error
+    message: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"timestamp": self.timestamp, "level": self.level, "message": self.message}
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "ExecutionLog":
+        return cls(
+            timestamp=data.get("timestamp", ""),
+            level=data.get("level", "info"),
+            message=data.get("message", ""),
+        )
+
+
+@dataclass
+class TaskArtifact:
+    """A file artifact produced by task execution."""
+
+    path: str  # Relative path
+    absolute_path: str | None = None
+    file_type: str | None = None  # Extension
+    size: int | None = None  # Bytes
+    content: str | None = None  # Optional inline content (for small files)
+
+    def to_dict(self) -> dict[str, Any]:
+        data = {"path": self.path}
+        if self.absolute_path:
+            data["absolute_path"] = self.absolute_path
+        if self.file_type:
+            data["file_type"] = self.file_type
+        if self.size is not None:
+            data["size"] = self.size
+        if self.content:
+            data["content"] = self.content
+        return data
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "TaskArtifact":
+        return cls(
+            path=data.get("path", ""),
+            absolute_path=data.get("absolute_path"),
+            file_type=data.get("file_type"),
+            size=data.get("size"),
+            content=data.get("content"),
+        )
+
+
+@dataclass
+class TaskOutput:
+    """Output from task execution including results, logs, and artifacts."""
+
+    summary: str | None = None  # Brief summary of what was done
+    text: str | None = None  # Primary text output
+    markdown: str | None = None  # Markdown formatted output
+    artifacts: list[TaskArtifact] = field(default_factory=list)
+    logs: list[ExecutionLog] = field(default_factory=list)
+    tokens_used: int | None = None
+    api_calls: int | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        data: dict[str, Any] = {}
+        if self.summary:
+            data["summary"] = self.summary
+        if self.text:
+            data["text"] = self.text
+        if self.markdown:
+            data["markdown"] = self.markdown
+        if self.artifacts:
+            data["artifacts"] = [a.to_dict() for a in self.artifacts]
+        if self.logs:
+            data["logs"] = [log.to_dict() for log in self.logs]
+        if self.tokens_used is not None:
+            data["tokens_used"] = self.tokens_used
+        if self.api_calls is not None:
+            data["api_calls"] = self.api_calls
+        return data
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "TaskOutput":
+        return cls(
+            summary=data.get("summary"),
+            text=data.get("text"),
+            markdown=data.get("markdown"),
+            artifacts=[TaskArtifact.from_dict(a) for a in data.get("artifacts", [])],
+            logs=[ExecutionLog.from_dict(log) for log in data.get("logs", [])],
+            tokens_used=data.get("tokens_used"),
+            api_calls=data.get("api_calls"),
+        )
+
+
+@dataclass
 class QueuedTask:
     """A task in the queue.
 
@@ -119,6 +215,7 @@ class QueuedTask:
         pr_number: Pull request number (when complete)
         confidence: Confidence score from evaluation (0.0-1.0)
         error: Error message (if failed)
+        output: Task execution output (results, logs, artifacts)
         metadata: Additional key-value data
     """
 
@@ -138,6 +235,7 @@ class QueuedTask:
     pr_number: int | None = None
     confidence: float | None = None
     error: str | None = None
+    output: TaskOutput | None = None
     metadata: dict[str, Any] = field(default_factory=dict)
 
     @classmethod
@@ -170,6 +268,10 @@ class QueuedTask:
                     return None
             return None
 
+        # Parse output
+        output_data = data.get("output")
+        output = TaskOutput.from_dict(output_data) if output_data else None
+
         return cls(
             id=data["id"],
             description=data["description"],
@@ -187,6 +289,7 @@ class QueuedTask:
             pr_number=data.get("pr_number"),
             confidence=data.get("confidence"),
             error=data.get("error"),
+            output=output,
             metadata=data.get("metadata", {}),
         )
 
@@ -224,6 +327,8 @@ class QueuedTask:
             data["confidence"] = self.confidence
         if self.error:
             data["error"] = self.error
+        if self.output:
+            data["output"] = self.output.to_dict()
         if self.metadata:
             data["metadata"] = self.metadata
 

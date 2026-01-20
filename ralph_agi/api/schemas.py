@@ -64,6 +64,36 @@ class TaskCreate(BaseModel):
     )
 
 
+class ExecutionLogSchema(BaseModel):
+    """A single log entry from task execution."""
+
+    timestamp: str
+    level: str  # info, warn, error
+    message: str
+
+
+class TaskArtifactSchema(BaseModel):
+    """A file artifact produced by task execution."""
+
+    path: str
+    absolute_path: Optional[str] = None
+    file_type: Optional[str] = None
+    size: Optional[int] = None
+    content: Optional[str] = None
+
+
+class TaskOutputSchema(BaseModel):
+    """Output from task execution including results, logs, and artifacts."""
+
+    summary: Optional[str] = None
+    text: Optional[str] = None
+    markdown: Optional[str] = None
+    artifacts: list[TaskArtifactSchema] = Field(default_factory=list)
+    logs: list[ExecutionLogSchema] = Field(default_factory=list)
+    tokens_used: Optional[int] = None
+    api_calls: Optional[int] = None
+
+
 class TaskUpdate(BaseModel):
     """Request body for updating a task."""
 
@@ -78,6 +108,7 @@ class TaskUpdate(BaseModel):
     pr_number: Optional[int] = None
     confidence: Optional[float] = Field(None, ge=0.0, le=1.0)
     error: Optional[str] = None
+    output: Optional[TaskOutputSchema] = None
     metadata: Optional[dict[str, Any]] = None
 
 
@@ -110,6 +141,7 @@ class TaskResponse(BaseModel):
     pr_number: Optional[int] = None
     confidence: Optional[float] = None
     error: Optional[str] = None
+    output: Optional[TaskOutputSchema] = None
     metadata: dict[str, Any] = Field(default_factory=dict)
 
     class Config:
@@ -269,6 +301,37 @@ class MetricsResponse(BaseModel):
 # Conversion helpers
 
 
+def _convert_output(output) -> Optional[TaskOutputSchema]:
+    """Convert TaskOutput to TaskOutputSchema."""
+    if output is None:
+        return None
+    return TaskOutputSchema(
+        summary=output.summary,
+        text=output.text,
+        markdown=output.markdown,
+        artifacts=[
+            TaskArtifactSchema(
+                path=a.path,
+                absolute_path=a.absolute_path,
+                file_type=a.file_type,
+                size=a.size,
+                content=a.content,
+            )
+            for a in output.artifacts
+        ],
+        logs=[
+            ExecutionLogSchema(
+                timestamp=log.timestamp,
+                level=log.level,
+                message=log.message,
+            )
+            for log in output.logs
+        ],
+        tokens_used=output.tokens_used,
+        api_calls=output.api_calls,
+    )
+
+
 def task_to_response(task) -> TaskResponse:
     """Convert a QueuedTask to TaskResponse."""
     from ralph_agi.tasks.queue import QueuedTask
@@ -291,6 +354,7 @@ def task_to_response(task) -> TaskResponse:
             pr_number=task.pr_number,
             confidence=task.confidence,
             error=task.error,
+            output=_convert_output(task.output),
             metadata=task.metadata,
         )
     raise ValueError(f"Cannot convert {type(task)} to TaskResponse")

@@ -15,6 +15,11 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
   ExternalLink,
   GitBranch,
   Clock,
@@ -25,9 +30,14 @@ import {
   AlertCircle,
   Play,
   Merge,
+  ChevronDown,
+  ChevronUp,
+  FileOutput,
 } from "lucide-react";
+import { useState } from "react";
 import type { Task, RepoContext } from "@/types/task";
 import { PRIORITY_CONFIG, STATUS_CONFIG } from "@/types/task";
+import { TaskResults } from "./TaskResults";
 
 interface TaskDetailDrawerProps {
   task: Task | null;
@@ -74,6 +84,8 @@ export function TaskDetailDrawer({
   onApproveMerge,
   onEdit,
 }: TaskDetailDrawerProps) {
+  const [detailsOpen, setDetailsOpen] = useState(false);
+
   if (!task) return null;
 
   const priorityConfig = PRIORITY_CONFIG[task.priority];
@@ -83,6 +95,8 @@ export function TaskDetailDrawer({
   const canApprove =
     task.status === "pending" || task.status === "pending_approval";
   const canMerge = task.status === "pending_merge";
+  const isCompleted = ["complete", "failed", "pending_merge"].includes(task.status);
+  const hasOutput = task.output !== null;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -127,6 +141,19 @@ export function TaskDetailDrawer({
               </div>
             </div>
           )}
+
+          {/* Task Results - Show for completed tasks */}
+          {(isCompleted || hasOutput) && (
+            <div className="space-y-3">
+              <h4 className="text-sm font-medium flex items-center gap-2">
+                <FileOutput className="h-4 w-4" />
+                Execution Results
+              </h4>
+              <TaskResults output={task.output} worktreePath={task.worktree_path} />
+            </div>
+          )}
+
+          {(isCompleted || hasOutput) && <Separator />}
 
           {/* Git Context */}
           <div className="space-y-3">

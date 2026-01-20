@@ -74,6 +74,7 @@ class TaskResult:
         error: Error message if failed
         pr_url: URL of created PR (if any)
         confidence: Confidence score from execution (0.0-1.0)
+        output: Task execution output (results, logs, artifacts)
     """
 
     task_id: str
@@ -85,6 +86,7 @@ class TaskResult:
     error: Optional[str] = None
     pr_url: Optional[str] = None
     confidence: float = 0.0
+    output: Optional["TaskOutput"] = None  # Forward reference to queue.TaskOutput
 
     @property
     def duration_seconds(self) -> Optional[float]:
@@ -338,7 +340,7 @@ class ParallelExecutor:
         try:
             result = future.result()
 
-            # Update queue status
+            # Update queue status and save output
             if result.success:
                 # Use pending_merge instead of complete - requires human approval
                 self._queue.update_status(
@@ -355,6 +357,12 @@ class ParallelExecutor:
                     error=result.error,
                 )
                 self._progress.failed += 1
+
+            # Save output to task if present
+            if result.output:
+                task = self._queue.get(task_id)
+                task.output = result.output
+                self._queue._save_task(task)
 
             self._progress.running -= 1
             self._progress.results.append(result)

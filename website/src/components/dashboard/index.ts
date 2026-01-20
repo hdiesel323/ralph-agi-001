@@ -14,3 +14,4 @@ export { DashboardToolbar } from "./DashboardToolbar";
 export { KeyboardShortcutsDialog } from "./KeyboardShortcutsDialog";
 export { BulkActionsBar } from "./BulkActionsBar";
 export { MobileKanbanTabs } from "./MobileKanbanTabs";
+export { TaskResults } from "./TaskResults";
